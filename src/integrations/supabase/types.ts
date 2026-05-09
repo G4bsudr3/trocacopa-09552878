@@ -316,6 +316,26 @@ export type Database = {
         Args: { _trade: string; _user: string }
         Returns: boolean
       }
+      match_collectors: {
+        Args: { _radius_km?: number }
+        Returns: {
+          album_progress: number
+          avatar_url: string
+          city: string
+          distance_km: number
+          full_name: string
+          give_count: number
+          id: string
+          mutual_count: number
+          plan: string
+          proximity_score: number
+          receive_count: number
+          region_bonus: number
+          same_city: boolean
+          score_pct: number
+          trades_count: number
+        }[]
+      }
       nearby_collectors: {
         Args: { _radius_km?: number }
         Returns: {
@@ -335,6 +355,7 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

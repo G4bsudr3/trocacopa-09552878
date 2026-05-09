@@ -21,10 +21,13 @@ type NearbyRow = {
   album_progress: number;
   trades_count: number;
   distance_km: number;
-  match_count: number;
-  reverse_match_count: number;
+  give_count: number;
+  receive_count: number;
+  mutual_count: number;
+  same_city: boolean;
+  region_bonus: number;
   proximity_score: number;
-  compat_score: number;
+  score_pct: number;
 };
 
 const RADII = [10, 25, 50, 100] as const;
@@ -35,12 +38,12 @@ function Near() {
   const [radius, setRadius] = useState<(typeof RADII)[number]>(50);
 
   const nearby = useQuery({
-    queryKey: ["nearby", user?.id, profile?.lat, profile?.lng, radius],
+    queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius],
     enabled: !!user && profile?.lat != null && profile?.lng != null,
     queryFn: async (): Promise<NearbyRow[]> => {
-      const { data, error } = await supabase.rpc("nearby_collectors", { _radius_km: radius });
+      const { data, error } = await supabase.rpc("match_collectors", { _radius_km: radius });
       if (error) throw error;
-      return (data ?? []) as NearbyRow[];
+      return (data ?? []) as unknown as NearbyRow[];
     },
   });
 
@@ -90,7 +93,7 @@ function Near() {
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Perto de Mim</h1>
-      <p className="text-sm text-muted-foreground">Compatibilidade = matches + proximidade</p>
+      <p className="text-sm text-muted-foreground">Score = trocas viáveis + cidade + álbum</p>
 
       <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none">
         {RADII.map((r) => (
@@ -131,7 +134,7 @@ function Near() {
       ) : nearby.data && nearby.data.length > 0 ? (
         <div className="space-y-3">
           {nearby.data.map((c) => {
-            const compatPct = Math.round((c.compat_score ?? 0) * 100);
+            const score = c.score_pct ?? 0;
             const isClose = c.distance_km < radius * 0.25;
             return (
               <motion.div
@@ -149,41 +152,53 @@ function Near() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold truncate">{c.full_name || "Colecionador"}</p>
-                      {isClose && (
+                      {c.same_city ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary whitespace-nowrap">
+                          📍 Mesma cidade
+                        </span>
+                      ) : isClose ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold whitespace-nowrap">
                           🎯 Perto
                         </span>
-                      )}
+                      ) : null}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {c.city || "—"} · ~{c.distance_km.toFixed(1)} km
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-2xl text-primary text-glow leading-none">{compatPct}%</p>
-                    <p className="text-[10px] text-gold uppercase tracking-wider">compat</p>
+                    <p className="font-display text-2xl text-primary text-glow leading-none">{score}</p>
+                    <p className="text-[10px] text-gold uppercase tracking-wider">match</p>
                   </div>
                 </div>
 
                 <div className="mt-3 h-1.5 bg-surface rounded-full overflow-hidden">
                   <div
                     className="h-full gradient-primary"
-                    style={{ width: `${compatPct}%` }}
+                    style={{ width: `${score}%` }}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-                  <div className="bg-surface rounded-lg px-3 py-2">
-                    <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Tem pra você</p>
-                    <p className="font-display text-lg text-primary leading-none mt-0.5">{c.match_count}</p>
+                <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+                  <div className="bg-surface rounded-lg px-2 py-2">
+                    <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Trocas 1-1</p>
+                    <p className="font-display text-lg text-gold leading-none mt-0.5">{c.mutual_count}</p>
                   </div>
-                  <div className="bg-surface rounded-lg px-3 py-2">
+                  <div className="bg-surface rounded-lg px-2 py-2">
+                    <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Tem pra você</p>
+                    <p className="font-display text-lg text-primary leading-none mt-0.5">{c.give_count}</p>
+                  </div>
+                  <div className="bg-surface rounded-lg px-2 py-2">
                     <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Você oferece</p>
-                    <p className="font-display text-lg text-gold leading-none mt-0.5">{c.reverse_match_count}</p>
+                    <p className="font-display text-lg text-primary leading-none mt-0.5">{c.receive_count}</p>
                   </div>
                 </div>
+
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Score por trocas viáveis, repetidas e proximidade.
+                </p>
 
                 <button
                   onClick={() => startTrade(c.id)}
