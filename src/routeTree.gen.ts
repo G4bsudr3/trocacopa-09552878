@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTradesRouteImport } from './routes/_app.trades'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanRouteImport } from './routes/_app.scan'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppProRouteImport } from './routes/_app.pro'
@@ -21,6 +22,7 @@ import { Route as AppNearRouteImport } from './routes/_app.near'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppAlbumRouteImport } from './routes/_app.album'
 import { Route as AppTradeIdRouteImport } from './routes/_app.trade.$id'
+import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppTradesRoute = AppTradesRouteImport.update({
   id: '/trades',
   path: '/trades',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppScanRoute = AppScanRouteImport.update({
@@ -81,6 +88,11 @@ const AppTradeIdRoute = AppTradeIdRouteImport.update({
   path: '/trade/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileEditRoute = AppProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppProfileRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -90,9 +102,11 @@ export interface FileRoutesByFullPath {
   '/near': typeof AppNearRoute
   '/notifications': typeof AppNotificationsRoute
   '/pro': typeof AppProRoute
-  '/profile': typeof AppProfileRoute
+  '/profile': typeof AppProfileRouteWithChildren
   '/scan': typeof AppScanRoute
+  '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
+  '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
 }
 export interface FileRoutesByTo {
@@ -103,9 +117,11 @@ export interface FileRoutesByTo {
   '/near': typeof AppNearRoute
   '/notifications': typeof AppNotificationsRoute
   '/pro': typeof AppProRoute
-  '/profile': typeof AppProfileRoute
+  '/profile': typeof AppProfileRouteWithChildren
   '/scan': typeof AppScanRoute
+  '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
+  '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
 }
 export interface FileRoutesById {
@@ -118,9 +134,11 @@ export interface FileRoutesById {
   '/_app/near': typeof AppNearRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/pro': typeof AppProRoute
-  '/_app/profile': typeof AppProfileRoute
+  '/_app/profile': typeof AppProfileRouteWithChildren
   '/_app/scan': typeof AppScanRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/_app/trades': typeof AppTradesRoute
+  '/_app/profile/edit': typeof AppProfileEditRoute
   '/_app/trade/$id': typeof AppTradeIdRoute
 }
 export interface FileRouteTypes {
@@ -135,7 +153,9 @@ export interface FileRouteTypes {
     | '/pro'
     | '/profile'
     | '/scan'
+    | '/settings'
     | '/trades'
+    | '/profile/edit'
     | '/trade/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -148,7 +168,9 @@ export interface FileRouteTypes {
     | '/pro'
     | '/profile'
     | '/scan'
+    | '/settings'
     | '/trades'
+    | '/profile/edit'
     | '/trade/$id'
   id:
     | '__root__'
@@ -162,7 +184,9 @@ export interface FileRouteTypes {
     | '/_app/pro'
     | '/_app/profile'
     | '/_app/scan'
+    | '/_app/settings'
     | '/_app/trades'
+    | '/_app/profile/edit'
     | '/_app/trade/$id'
   fileRoutesById: FileRoutesById
 }
@@ -200,6 +224,13 @@ declare module '@tanstack/react-router' {
       path: '/trades'
       fullPath: '/trades'
       preLoaderRoute: typeof AppTradesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/scan': {
@@ -258,8 +289,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTradeIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile/edit': {
+      id: '/_app/profile/edit'
+      path: '/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof AppProfileEditRouteImport
+      parentRoute: typeof AppProfileRoute
+    }
   }
 }
+
+interface AppProfileRouteChildren {
+  AppProfileEditRoute: typeof AppProfileEditRoute
+}
+
+const AppProfileRouteChildren: AppProfileRouteChildren = {
+  AppProfileEditRoute: AppProfileEditRoute,
+}
+
+const AppProfileRouteWithChildren = AppProfileRoute._addFileChildren(
+  AppProfileRouteChildren,
+)
 
 interface AppRouteChildren {
   AppAlbumRoute: typeof AppAlbumRoute
@@ -267,8 +317,9 @@ interface AppRouteChildren {
   AppNearRoute: typeof AppNearRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProRoute: typeof AppProRoute
-  AppProfileRoute: typeof AppProfileRoute
+  AppProfileRoute: typeof AppProfileRouteWithChildren
   AppScanRoute: typeof AppScanRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppTradesRoute: typeof AppTradesRoute
   AppTradeIdRoute: typeof AppTradeIdRoute
 }
@@ -279,8 +330,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppNearRoute: AppNearRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProRoute: AppProRoute,
-  AppProfileRoute: AppProfileRoute,
+  AppProfileRoute: AppProfileRouteWithChildren,
   AppScanRoute: AppScanRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppTradesRoute: AppTradesRoute,
   AppTradeIdRoute: AppTradeIdRoute,
 }
@@ -295,3 +347,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
