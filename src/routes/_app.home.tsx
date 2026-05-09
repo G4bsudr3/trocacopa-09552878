@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Bell, Camera, Repeat, MapPin, BarChart3, Crown } from "lucide-react";
+import { Bell, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TOTAL_STICKERS } from "@/lib/stickers";
@@ -41,10 +41,10 @@ function Home() {
   });
 
   const featured = useQuery({
-    queryKey: ["featured-match", user?.id, profile?.lat, profile?.lng],
-    enabled: !!user && profile?.lat != null,
+    queryKey: ["featured-match", user?.id, profile?.lat, profile?.lng, profile?.city],
+    enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.rpc("match_collectors", { _radius_km: 25 });
+      const { data } = await supabase.rpc("match_collectors", { _radius_km: 50 });
       return ((data ?? []) as any[]).slice(0, 5);
     },
   });
@@ -127,11 +127,7 @@ function Home() {
           <h2 className="font-display text-xl tracking-wide">Trocas Disponíveis</h2>
           <Link to="/near" className="text-xs text-primary font-semibold">Ver todas →</Link>
         </div>
-        {!profile?.lat ? (
-          <Link to="/profile/edit" className="block glass rounded-2xl p-4 text-center text-sm text-muted-foreground">
-            <MapPin className="inline mr-1" size={14} /> Ative sua localização para ver colecionadores perto
-          </Link>
-        ) : featured.isLoading ? (
+        {featured.isLoading ? (
           <div className="flex gap-3 overflow-x-auto pb-3 -mx-5 px-5">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="min-w-[220px] h-32 bg-surface rounded-2xl animate-pulse" />
@@ -155,7 +151,7 @@ function Home() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{c.full_name || "Colecionador"}</p>
-                    <p className="text-xs text-muted-foreground">{c.city || "—"} · ~{c.distance_km.toFixed(1)}km</p>
+                    <p className="text-xs text-muted-foreground">{c.city || "—"}{c.distance_km != null ? ` · ~${c.distance_km.toFixed(1)}km` : ""}</p>
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between">

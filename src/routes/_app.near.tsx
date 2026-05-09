@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, MapPin, Compass, Loader2 } from "lucide-react";
+import { MessageCircle, MapPin, Compass, Loader2, Globe2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -20,7 +20,7 @@ type NearbyRow = {
   plan: string;
   album_progress: number;
   trades_count: number;
-  distance_km: number;
+  distance_km: number | null;
   give_count: number;
   receive_count: number;
   mutual_count: number;
@@ -28,18 +28,29 @@ type NearbyRow = {
   region_bonus: number;
   proximity_score: number;
   score_pct: number;
+  out_of_radius: boolean;
+  compat_album: boolean;
+  recent_active: boolean;
+  nationwide: boolean;
 };
 
-const RADII = [10, 25, 50, 100] as const;
+const RADII = [10, 25, 50, 100, 500] as const;
+type SortMode = "match" | "distance";
 
 function Near() {
   const { user, profile } = useAuth();
   const nav = useNavigate();
   const [radius, setRadius] = useState<(typeof RADII)[number]>(50);
+  const [onlyCity, setOnlyCity] = useState(false);
+  const [onlyMutual, setOnlyMutual] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>("match");
+
+  const hasGeo = profile?.lat != null && profile?.lng != null;
+  const hasCity = !!profile?.city;
 
   const nearby = useQuery({
     queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius],
-    enabled: !!user && profile?.lat != null && profile?.lng != null,
+    enabled: !!user,
     queryFn: async (): Promise<NearbyRow[]> => {
       const { data, error } = await supabase.rpc("match_collectors", { _radius_km: radius });
       if (error) throw error;
@@ -47,9 +58,20 @@ function Near() {
     },
   });
 
+  const filtered = useMemo(() => {
+    let rows = nearby.data ?? [];
+    if (onlyCity) rows = rows.filter((r) => r.same_city);
+    if (onlyMutual) rows = rows.filter((r) => r.mutual_count >= 1);
+    if (sortMode === "distance") {
+      rows = [...rows].sort(
+        (a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9),
+      );
+    }
+    return rows;
+  }, [nearby.data, onlyCity, onlyMutual, sortMode]);
+
   const startTrade = async (otherId: string) => {
     if (!user) return;
-    // Check if there's already an open trade
     const { data: existing } = await supabase
       .from("trades")
       .select("id")
@@ -69,31 +91,22 @@ function Near() {
     nav({ to: "/trade/$id", params: { id: data.id } });
   };
 
-  if (!profile?.lat) {
-    return (
-      <div className="px-5 pt-4 max-w-md mx-auto">
-        <h1 className="font-display text-3xl tracking-wide">Perto de Mim</h1>
-        <div className="glass-strong rounded-3xl p-8 mt-6 text-center">
-          <Compass className="mx-auto text-primary" size={48} />
-          <p className="font-display text-xl mt-3">Ative sua localização</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Para encontrar colecionadores próximos, precisamos da sua localização.
-          </p>
-          <Link
-            to="/profile/edit"
-            className="mt-5 inline-block gradient-primary text-primary-foreground rounded-full px-6 py-3 font-bold glow-primary"
-          >
-            Ativar localização
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Perto de Mim</h1>
       <p className="text-sm text-muted-foreground">Score = trocas viáveis + cidade + álbum</p>
+
+      {!hasGeo && (
+        <Link
+          to="/profile/edit"
+          className="mt-3 flex items-center gap-2 glass rounded-2xl px-4 py-3 text-xs text-muted-foreground"
+        >
+          <Compass size={14} className="text-primary" />
+          {hasCity
+            ? "Ative sua localização para ver distâncias precisas"
+            : "Sem cidade nem localização — mostrando matches do Brasil inteiro"}
+        </Link>
+      )}
 
       <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none">
         {RADII.map((r) => (
@@ -106,20 +119,43 @@ function Near() {
                 : "glass text-muted-foreground"
             }`}
           >
-            {r} km
+            {r >= 500 ? "🌎 Brasil" : `${r} km`}
           </button>
         ))}
       </div>
 
-      <div className="mt-4 h-32 rounded-3xl glass-strong relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_30%,oklch(0.78_0.22_152)_0%,transparent_40%),radial-gradient(circle_at_70%_60%,oklch(0.86_0.16_92)_0%,transparent_40%)]" />
-        <div className="absolute inset-0 grid place-items-center">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-primary/20 animate-ping absolute" />
-            <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center glow-primary relative">
-              <MapPin className="text-primary-foreground" />
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        <button
+          onClick={() => setOnlyCity((v) => !v)}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
+            onlyCity ? "bg-primary/20 text-primary border border-primary/40" : "glass text-muted-foreground"
+          }`}
+        >
+          📍 Só mesma cidade
+        </button>
+        <button
+          onClick={() => setOnlyMutual((v) => !v)}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
+            onlyMutual ? "bg-primary/20 text-primary border border-primary/40" : "glass text-muted-foreground"
+          }`}
+        >
+          🔁 Só com troca 1-1
+        </button>
+        <div className="ml-auto flex gap-1 glass rounded-full p-1">
+          <button
+            onClick={() => setSortMode("match")}
+            className={`px-3 py-1 rounded-full text-[11px] font-bold ${sortMode === "match" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Melhor match
+          </button>
+          <button
+            onClick={() => setSortMode("distance")}
+            className={`px-3 py-1 rounded-full text-[11px] font-bold ${sortMode === "distance" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            disabled={!hasGeo}
+            title={!hasGeo ? "Ative localização" : undefined}
+          >
+            Mais perto
+          </button>
         </div>
       </div>
 
@@ -131,11 +167,11 @@ function Near() {
             <div key={i} className="h-28 bg-surface rounded-2xl animate-pulse" />
           ))}
         </div>
-      ) : nearby.data && nearby.data.length > 0 ? (
+      ) : filtered.length > 0 ? (
         <div className="space-y-3">
-          {nearby.data.map((c) => {
+          {filtered.map((c) => {
             const score = c.score_pct ?? 0;
-            const isClose = c.distance_km < radius * 0.25;
+            const isClose = c.distance_km != null && c.distance_km < radius * 0.25;
             return (
               <motion.div
                 key={c.id}
@@ -152,20 +188,37 @@ function Near() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-semibold truncate">{c.full_name || "Colecionador"}</p>
-                      {c.same_city ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary whitespace-nowrap">
+                      {c.same_city && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">
                           📍 Mesma cidade
                         </span>
-                      ) : isClose ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold whitespace-nowrap">
+                      )}
+                      {!c.same_city && isClose && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold">
                           🎯 Perto
                         </span>
-                      ) : null}
+                      )}
+                      {c.out_of_radius && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent flex items-center gap-1">
+                          <Globe2 size={10} /> Fora do raio
+                        </span>
+                      )}
+                      {c.compat_album && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-surface text-muted-foreground">
+                          📊 Álbum parecido
+                        </span>
+                      )}
+                      {!c.recent_active && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-surface text-muted-foreground">
+                          💤 Inativo
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {c.city || "—"} · ~{c.distance_km.toFixed(1)} km
+                      {c.city || "—"}
+                      {c.distance_km != null ? ` · ~${c.distance_km.toFixed(1)} km` : ""}
                     </p>
                   </div>
                   <div className="text-right">
@@ -175,10 +228,7 @@ function Near() {
                 </div>
 
                 <div className="mt-3 h-1.5 bg-surface rounded-full overflow-hidden">
-                  <div
-                    className="h-full gradient-primary"
-                    style={{ width: `${score}%` }}
-                  />
+                  <div className="h-full gradient-primary" style={{ width: `${score}%` }} />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
@@ -196,10 +246,6 @@ function Near() {
                   </div>
                 </div>
 
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  Score por trocas viáveis, repetidas e proximidade.
-                </p>
-
                 <button
                   onClick={() => startTrade(c.id)}
                   className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition"
@@ -211,9 +257,21 @@ function Near() {
           })}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground text-center py-10 glass rounded-2xl">
-          Ninguém num raio de {radius} km. Tente aumentar o raio acima.
-        </p>
+        <div className="text-sm text-muted-foreground text-center py-10 glass rounded-2xl space-y-2">
+          <p>Nenhum match encontrado.</p>
+          <p className="text-xs">
+            {hasGeo
+              ? "Tente aumentar o raio acima ou cadastrar mais figurinhas."
+              : hasCity
+                ? "Ative sua localização ou aumente para Brasil."
+                : "Cadastre sua cidade e adicione mais figurinhas no álbum."}
+          </p>
+          {!hasGeo && (
+            <Link to="/profile/edit" className="inline-flex items-center gap-1 text-primary font-semibold text-xs">
+              <MapPin size={12} /> Atualizar perfil
+            </Link>
+          )}
+        </div>
       )}
 
       {nearby.isFetching && nearby.data && (

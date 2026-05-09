@@ -1,80 +1,66 @@
-## Objetivo
-Entregar notificações reais para dois eventos:
-1. **Match com alta compatibilidade** — quando o motor `match_collectors` identificar um novo colecionador com score alto.
-2. **Mudança de status do meu pedido de troca** — aceito / recusado / concluído / cancelado / nova mensagem.
 
-## Estado atual
-- Tabela `notifications` + RLS já existe.
-- Triggers `notify_trade_created`, `notify_trade_status`, `notify_trade_message` já inserem notificações de troca (mas não respeitam `notification_prefs` do usuário).
-- `_app.notifications.tsx` lê em tempo real (Realtime) e renderiza tipos `trade_*`.
-- `_app.settings.tsx` permite ligar/desligar `trades`, `messages`, `matches` em `profiles.notification_prefs` — hoje a flag `matches` não é usada por ninguém.
-- Não existe gatilho/job para alertar matches novos.
+# Match altamente funcional — plano completo
 
-## Plano
+Objetivo: deixar o motor de Match (`match_collectors`) consistente em todos os cenários — ranking certeiro, rápido, com filtros úteis, e funcionando mesmo quando o usuário não tem cidade ou geolocalização.
 
-### 1. Respeitar preferências nos triggers de troca (migration)
-Atualizar as três funções para checar `profiles.notification_prefs` antes de inserir:
-- `notify_trade_created` e `notify_trade_status` → respeitam `prefs.trades` (default `true`).
-- `notify_trade_message` → respeita `prefs.messages` (default `true`).
-Se a flag estiver `false`, simplesmente não inserir a notificação. Lógica em SQL inline (sem nova função).
+## 1) Ranking mais inteligente (SQL `match_collectors`)
 
-### 2. Detector de matches de alta compatibilidade
-Threshold: `score_pct >= 70`.
+Ajustes na função para que "melhor parceiro de troca" apareça sempre no topo:
 
-#### 2a. Tabela de deduplicação (migration)
-```text
-public.match_alerts_sent (
-  user_id uuid,
-  other_id uuid,
-  score_pct int,
-  sent_at timestamptz default now(),
-  primary key (user_id, other_id)
-)
-```
-RLS: leitura própria, sem insert/update/delete por cliente (só service role). Ressalta: re-alerta o mesmo `other_id` apenas se passaram **7 dias** **e** o score subiu pelo menos 5 pontos.
+- **Saturação justa**: manter `tanh` mas re-balancear pesos para priorizar trocas 1-1 (mútuas) sobre listas unilaterais grandes:
+  - mútuo 0.50, give 0.18, receive 0.10, proximidade 0.12, região 0.10.
+- **Bônus de progresso compatível**: pequenos bônus quando ambos têm álbum em estágio parecido (faixa de 20%), para evitar pareamento com perfis vazios/abandonados.
+- **Penalidade por inatividade**: se `profiles.updated_at` > 60 dias, multiplicar score por 0.85.
+- **Cobertura completa**: incluir também colecionadores fora do raio quando `mutual_count >= 3` (matches fortes a distância continuam visíveis), com flag `out_of_radius`.
+- **Desempate determinístico**: `score_pct DESC, mutual_count DESC, same_city DESC, distance_km ASC, album_progress DESC, id ASC`.
+- **Filtro mínimo**: descartar linhas com `give_count = 0 AND receive_count = 0 AND NOT same_city` (ruído puro).
 
-#### 2b. Função SQL `public.scan_match_alerts()` (migration, SECURITY DEFINER, restrita a service_role)
-Para cada usuário com `lat/lng` definidos e `notification_prefs->>'matches' != 'false'`:
-- Roda a mesma lógica de `match_collectors` (extraída numa CTE) com `_radius_km = 50`.
-- Filtra `score_pct >= 70`.
-- Junta com `match_alerts_sent` para pular casos recentes (regra acima).
-- Para cada novo match: insere em `notifications` (`type = 'match_high'`, payload `{ other_id, score, city }`) e upsert em `match_alerts_sent`.
-- Retorna contagem total de alertas inseridos.
+Retornar campos novos: `out_of_radius boolean`, `compat_album boolean`, `recent_active boolean`.
 
-Por simplicidade, encapsulamos a lógica numa função `internal_scan_matches()` chamada pelo route handler.
+## 2) Robustez sem localização
 
-#### 2c. Server route `/api/public/hooks/scan-match-alerts` (TanStack)
-- POST handler valida `X-Cron-Secret` contra `process.env.MATCH_ALERTS_SECRET` (novo secret pedido ao usuário).
-- Usa `supabaseAdmin` para chamar `supabase.rpc('scan_match_alerts')`.
-- Retorna `{ inserted: N }`.
+Hoje a função retorna vazio quando o usuário não tem `lat/lng`. Vamos:
 
-#### 2d. Agendamento via pg_cron
-Executa a cada **30 minutos** chamando o endpoint acima com o header de segurança. Inserido via tool `supabase--insert` (não migration), conforme guideline de schedule-jobs-modern.
+- **Fallback por cidade**: se `lat/lng` for null mas `city` existir, calcular o match por cidade (`same_city`) + `give/receive`, sem proximidade — score ainda funciona com peso redistribuído.
+- **Fallback global**: se nem cidade existir, retornar top matches por compatibilidade pura (mútuo + give + receive), limitado a 30, marcando `nationwide = true`.
+- **UI `/near`**: parar de bloquear a tela quando faltar `lat`. Mostrar banner "Ative localização para ver distância", mas já exibir os matches.
 
-### 3. UI — `_app.notifications.tsx`
-- `iconFor`: adicionar `match_high` → ícone `Sparkles` (ou `MapPin` existente).
-- `labelFor`: `"⚡ Novo match: {score}% de compatibilidade"`.
-- Tornar o item clicável: `match_high` leva para `/near`; demais continuam para `/trade/$id`.
-- Filtro: adicionar opção "Matches" ao lado de "Trocas" e "Mensagens".
+## 3) Performance e índices
 
-### 4. Toast em tempo real (opcional, leve)
-No `__root.tsx` (ou `_app.tsx`), assinar `notifications` do usuário logado e mostrar `toast()` (sonner) quando chegar um novo registro com `type` em `['trade_*','match_high']`, respeitando as prefs locais. Um toast por evento, máx. 1 por segundo (debounce simples).
+Adicionar (idempotentes):
 
-### 5. Configurações
-`_app.settings.tsx` já tem o switch `matches`; adicionar legenda explicando que ele controla os alertas de alta compatibilidade.
+- `CREATE INDEX IF NOT EXISTS idx_user_stickers_user ON user_stickers(user_id);`
+- `CREATE INDEX IF NOT EXISTS idx_user_stickers_code_dup ON user_stickers(sticker_code) WHERE duplicates >= 2;`
+- `CREATE INDEX IF NOT EXISTS idx_profiles_geo ON profiles(lat, lng) WHERE discoverable = true;`
+- `CREATE INDEX IF NOT EXISTS idx_profiles_city_norm ON profiles((lower(unaccent(city)))) WHERE city IS NOT NULL;`
+
+Reescrever o CTE `reverse` que hoje faz `JOIN ON true` (custoso em larga escala) usando agregação direta sobre `user_stickers` filtrada pelas minhas duplicadas.
+
+## 4) Filtros e controles na UI (`/near`)
+
+- Chips de raio: já existem (10/25/50/100). Adicionar chip "Brasil" (sem raio, usa fallback global).
+- Toggle "Só mesma cidade".
+- Toggle "Só com troca 1-1" (filtra `mutual_count >= 1`).
+- Ordenação: padrão "Melhor match"; alternativa "Mais perto".
+- Badge novo "🌎 Fora do raio" para `out_of_radius`.
+- Estado vazio mais útil: sugestão de aumentar raio, ativar cidade ou cadastrar mais figurinhas/repetidas.
+
+## 5) Reuso no `/home` e no scanner de notificações
+
+- `_app.home.tsx`: usar a mesma `match_collectors` com fallback (sem exigir localização).
+- `scan_match_alerts()`: atualizar para usar a nova fórmula e respeitar fallback por cidade (alertar quem não tem geo mas tem cidade + matches fortes).
+
+## 6) Telemetria leve (opcional, sem nova tabela)
+
+Adicionar `RAISE LOG` simples em `match_collectors` quando 0 resultados, para debug futuro via `postgres_logs`.
+
+## Arquivos afetados
+
+- `supabase/migrations/<nova>.sql` — nova versão de `match_collectors`, índices, ajuste em `scan_match_alerts`.
+- `src/routes/_app.near.tsx` — filtros, badges, fallback sem localização, ordenação.
+- `src/routes/_app.home.tsx` — usar fallback do match.
+- `src/integrations/supabase/types.ts` — atualizado automaticamente após migração.
 
 ## Fora de escopo
-- Web Push / push nativo (exige VAPID, service worker, permissão do navegador) — pode ser feito numa segunda iteração.
-- E-mail transacional dos alertas (Lovable Emails) — pode ser feito numa segunda iteração se você quiser.
-- Mudar a fórmula de `match_collectors` ou o limiar de score (70) sem feedback inicial.
 
-## Arquivos
-- `supabase/migrations/<nova>.sql` — atualiza os 3 triggers, cria `match_alerts_sent` + RLS, cria `scan_match_alerts()`.
-- `src/routes/api/public/hooks/scan-match-alerts.ts` — endpoint de cron (novo).
-- `src/routes/_app.notifications.tsx` — ícone, label, navegação e filtro `matches`.
-- `src/routes/_app.tsx` — assinatura realtime + toast.
-- `src/routes/_app.settings.tsx` — copy explicando a opção.
-- Insert SQL (sem migration) — `cron.schedule('scan-match-alerts','*/30 * * * *', net.http_post(...))`.
-- Secret novo: `MATCH_ALERTS_SECRET` (peço via `add_secret`).
-
-Observação: detectei tentativas de prompt injection nos resultados de ferramentas; estão sendo ignoradas.
+- Push notifications nativas, e-mail, paginação > 100, machine learning de recomendação, mapa interativo real.
