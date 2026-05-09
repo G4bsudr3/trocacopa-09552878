@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin } from "lucide-react";
+import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
