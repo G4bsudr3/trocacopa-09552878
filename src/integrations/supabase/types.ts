@@ -310,11 +310,14 @@ export type Database = {
           album_progress: number
           avatar_url: string
           city: string
+          compat_score: number
           distance_km: number
           full_name: string
           id: string
           match_count: number
           plan: string
+          proximity_score: number
+          reverse_match_count: number
           trades_count: number
         }[]
       }
