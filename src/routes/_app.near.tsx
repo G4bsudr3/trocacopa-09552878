@@ -21,10 +21,13 @@ type NearbyRow = {
   album_progress: number;
   trades_count: number;
   distance_km: number;
-  match_count: number;
-  reverse_match_count: number;
+  give_count: number;
+  receive_count: number;
+  mutual_count: number;
+  same_city: boolean;
+  region_bonus: number;
   proximity_score: number;
-  compat_score: number;
+  score_pct: number;
 };
 
 const RADII = [10, 25, 50, 100] as const;
