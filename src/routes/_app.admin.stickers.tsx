@@ -154,9 +154,9 @@ function AdminStickers() {
                 )}
               </div>
               <div className="text-[10px] font-mono">{r.code}</div>
+              <div className="text-[10px] truncate">{r.player_name ?? <span className="text-muted-foreground">—</span>}</div>
               <div className="text-[10px] text-muted-foreground truncate">{r.flag_emoji} {r.country_name}</div>
-              <div className="text-[9px] text-muted-foreground">#{r.position} · {r.kind}</div>
-            </button>
+              <div className="text-[9px] text-muted-foreground">#{r.position} · {r.kind}{r.player_name_source ? ` · ${r.player_name_source}` : ""}</div>
           ))}
         </div>
       )}
