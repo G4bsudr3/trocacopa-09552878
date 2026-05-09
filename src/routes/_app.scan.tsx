@@ -80,7 +80,8 @@ function Scan() {
 
       if (code && (catalog.data ?? []).some((s) => s.code.toLowerCase() === code.toLowerCase())) {
         const real = (catalog.data ?? []).find((s) => s.code.toLowerCase() === code.toLowerCase())!;
-        setQuery(real.code);
+        setResult(real);
+        setQuery("");
         const label = player ? `${real.code} — ${player} ${flag ?? real.flag_emoji}` : `${real.code} ${real.flag_emoji}`;
         toast.success(`Identificada: ${label} (${Math.round(conf * 100)}%)`);
       } else if (sugg.length) {
