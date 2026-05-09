@@ -323,14 +323,20 @@ function Album() {
               </button>
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-20 h-28 rounded-2xl flex flex-col items-center justify-center font-display ${
+                  className={`w-20 h-28 rounded-2xl flex flex-col items-center justify-center font-display overflow-hidden relative ${
                     current.owned
-                      ? "gradient-primary text-primary-foreground glow-primary"
+                      ? "border border-primary/40 glow-primary"
                       : "bg-surface text-muted-foreground"
                   }`}
                 >
-                  <span className="text-3xl leading-none">{current.flag_emoji}</span>
-                  <span className="text-sm mt-1">{current.code}</span>
+                  {current.image_url ? (
+                    <img src={current.image_url} alt={current.code} className={`absolute inset-0 w-full h-full object-cover ${current.owned ? "" : "blur-[6px] grayscale opacity-60"}`} />
+                  ) : (
+                    <>
+                      <span className="text-3xl leading-none">{current.flag_emoji}</span>
+                      <span className="text-sm mt-1">{current.code}</span>
+                    </>
+                  )}
                 </div>
                 <div>
                   <p className="font-display text-2xl">{current.country_name}</p>
