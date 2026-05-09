@@ -58,6 +58,7 @@ function Scan() {
     const dataUrl = await fileToDataUrl(file);
     setPreview(dataUrl);
     setScanning(true);
+    setSuggestions([]);
     try {
       const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
       if (error) throw error;
@@ -66,18 +67,25 @@ function Scan() {
       if (data?.error) return toast.error("Falha ao analisar: " + data.error);
 
       const code: string | null = data?.code;
+      const player: string | null = data?.player_name;
       const country: string | null = data?.country_name;
+      const flag: string | null = data?.flag_emoji;
       const conf: number = data?.confidence ?? 0;
+      const sugg = Array.isArray(data?.suggestions) ? data.suggestions : [];
 
       if (code && (catalog.data ?? []).some((s) => s.code.toLowerCase() === code.toLowerCase())) {
         const real = (catalog.data ?? []).find((s) => s.code.toLowerCase() === code.toLowerCase())!;
         setQuery(real.code);
-        toast.success(`Identificada: ${real.code} ${real.flag_emoji} (${Math.round(conf * 100)}%)`);
-      } else if (country) {
-        setQuery(country);
-        toast.message(`País reconhecido: ${country} — escolha o número`);
+        const label = player ? `${real.code} — ${player} ${flag ?? real.flag_emoji}` : `${real.code} ${real.flag_emoji}`;
+        toast.success(`Identificada: ${label} (${Math.round(conf * 100)}%)`);
+      } else if (sugg.length) {
+        setSuggestions(sugg);
+        toast.message(`Não tenho certeza — ${sugg.length} sugestão${sugg.length > 1 ? "ões" : ""} abaixo`);
+      } else if (player || country) {
+        setQuery(player || country || "");
+        toast.message(player ? `Jogador: ${player}${country ? ` (${country})` : ""}` : `País: ${country}`);
       } else {
-        toast.error("Não consegui ler o código. Tente uma foto mais nítida ou digite manualmente.");
+        toast.error("Não consegui ler. Tente uma foto mais nítida ou digite manualmente.");
       }
     } catch (e: any) {
       toast.error(e?.message || "Erro ao escanear");
