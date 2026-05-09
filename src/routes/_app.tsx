@@ -27,13 +27,14 @@ function AppLayout() {
   );
 }
 
-const tabs = [
+type Tab = { to: string; icon: typeof Home; label: string; center?: boolean };
+const tabs: Tab[] = [
   { to: "/home", icon: Home, label: "Início" },
   { to: "/album", icon: BookOpen, label: "Álbum" },
   { to: "/scan", icon: ScanLine, label: "Escanear", center: true },
   { to: "/near", icon: MapPin, label: "Perto" },
   { to: "/profile", icon: User, label: "Perfil" },
-] as const;
+];
 
 function BottomNav() {
   const loc = useLocation();
