@@ -41,10 +41,10 @@ function Home() {
   });
 
   const featured = useQuery({
-    queryKey: ["featured-nearby", user?.id, profile?.lat, profile?.lng],
+    queryKey: ["featured-match", user?.id, profile?.lat, profile?.lng],
     enabled: !!user && profile?.lat != null,
     queryFn: async () => {
-      const { data } = await supabase.rpc("nearby_collectors", { _radius_km: 25 });
+      const { data } = await supabase.rpc("match_collectors", { _radius_km: 25 });
       return ((data ?? []) as any[]).slice(0, 5);
     },
   });
