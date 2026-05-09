@@ -1,56 +1,59 @@
 ## Objetivo
 
-Polir o visual do "Meu Álbum" (cadeado central + overlay elegante) **e** garantir que TODAS as 980 figurinhas tenham imagem — incluindo as 104 jogadores que ainda caem no fallback de emoji.
+Quando a IA reconhece a figurinha (ou jogador/país), mostrar a **foto oficial real** da figurinha (`stickers.image_url`) no card de resultado, junto com o estado atual de posse (não tenho / tenho / quantas repetidas), e ajustar os botões para refletir esse estado.
 
-## Parte 1 — Polir visual (`src/routes/_app.album.tsx`)
+Apenas mudanças de UI no scanner — nenhuma alteração na edge function `scan-sticker` nem em banco.
 
-Hoje (linhas 391-410) a célula renderiza:
-- imagem com `blur-[6px] grayscale opacity-60` quando não-owned
-- ícone de cadeado pequeno na base
+## Mudanças em `src/routes/_app.scan.tsx`
 
-**Melhorias:**
+### 1. Novo estado `result`
 
-- **Overlay escuro mais elegante:** trocar `bg-background/30` por `bg-gradient-to-t from-background/85 via-background/40 to-background/10`, dando profundidade.
-- **Cadeado centralizado dentro de um círculo glass:** posicionar `Lock` em um círculo `w-9 h-9 rounded-full glass-strong` no centro vertical da célula, em vez de pequeno na base.
-- **Blur mais sutil:** `blur-[4px] grayscale-[80%] opacity-70 scale-105` (continua "preview", mas dá pra reconhecer cores/forma).
-- **Animação revelação:** quando o usuário marca como owned, a imagem desfaz o blur com `transition-all duration-500`.
-- **Faixa do código no rodapé:** já existe (linha 421-425); manter, mas trocar para `bg-gradient-to-t from-background/95 to-transparent` e mostrar **código + emoji** (ex: "BRA10 🇧🇷").
-- **Hover/long-press dica:** badge `?` no canto sup-esq quando não-owned, em `bg-muted text-muted-foreground`.
-- **Mesmo tratamento na modal de detalhe** (linha 266) — manter blur só se não-owned, com transição.
+Adicionar `const [result, setResult] = useState<Sticker | null>(null)` (tipo do `useStickerCatalog`). Guarda a figurinha identificada pela IA com confiança alta.
 
-## Parte 2 — Backfill das 104 figurinhas sem imagem
+Quando `handleFile` encontrar um `code` válido no catálogo:
+- Em vez de só setar `setQuery(real.code)`, fazer `setResult(real)` (e limpar `setSuggestions([])`, `setQuery("")`).
 
-São jogadores de seleções não-cobertas pelo scrape original. Scrape externo é frágil; em vez disso, **gerar uma carta-placeholder polida** que se parece com a figurinha oficial e funciona como preview legítimo.
+### 2. Card de resultado (substitui o uso atual de `matches` quando há `result`)
 
-**Nova edge function `generate-sticker-images` (admin-only):**
+Renderizado logo abaixo do botão de tirar foto, antes da busca manual. Layout:
 
-1. Lê `stickers WHERE kind='player' AND image_url IS NULL`.
-2. Para cada uma, monta um **SVG 600×800** com:
-   - Fundo gradiente nas cores aproximadas da bandeira (paleta hard-coded por `country_code`).
-   - Silhueta de jogador (path SVG simples, mesma para todos).
-   - Bandeira emoji grande no canto sup-dir.
-   - Nome do país no topo.
-   - Número da camisa (`position % 20` ou índice dentro do país) grande no centro.
-   - Código no rodapé (ex: "ALG10").
-3. Converte SVG → PNG via `https://deno.land/x/resvg_wasm` (ou simplesmente faz upload do SVG, que o `<img>` renderiza nativamente).
-4. Faz upload em `sticker-images/players/{code}.svg` no bucket público.
-5. `UPDATE stickers SET image_url = '<public-url>' WHERE code = ...`.
+```text
+┌─────────────────────────────────────┐
+│  [foto oficial 96x128]  BRA10  🇧🇷  │
+│   (image_url, nítida)   Vinícius Jr │
+│                         Grupo G·pos10│
+│                                      │
+│   [✓ Possuída]  [+1 Repetida 🔁 x2] │
+│   [Não é essa] [Trocar foto]         │
+└─────────────────────────────────────┘
+```
 
-Decisão pragmática: **fazer upload como SVG mesmo** — bucket já é público, navegadores renderizam SVG em `<img>` sem problema, e elimina a dependência de WASM. Tamanho ~3KB por figurinha.
+Detalhes visuais:
+- `<img src={result.image_url} />` em `w-24 h-32 rounded-xl object-cover` com `glass-strong` ring; fallback para o bloco gradient + flag_emoji atual quando `image_url` é null.
+- Badge dourado `x{duplicates}` no canto da imagem se `duplicates > 1`.
+- Botão "Tenho" vira `✓ Já possuída` (disabled visual) quando `owned === true`; clicar volta a chamar `toggleOwned`.
+- Botão "Repetida" mostra contagem atual: `+1 Repetida` e, se `duplicates >= 1`, "x{duplicates+1}".
+- "Não é essa" → limpa `result` e mostra `suggestions` (se vieram) ou volta para busca manual.
+- "Trocar foto" → reabre `fileRef`.
 
-**Botão "Gerar imagens faltantes"** em `src/routes/_app.admin.stickers.tsx` que invoca a função e mostra resultado (ok/falhas).
+### 3. Suggestions e matches list — também usar foto
 
-## Parte 3 — Cache de imagem no álbum
+Nos blocos `suggestions.map(...)` (linhas 188-206) e `matches.map(...)` (linhas 213-255):
+- Buscar a sticker no catálogo (`catalog.data.find`) para obter `image_url`.
+- Substituir o quadradinho `gradient-primary + flag_emoji` por `<img src={image_url} className="w-10 h-14 rounded-lg object-cover" />` quando disponível; manter o fallback gradient+flag quando `image_url` for null.
+- Em `matches`, também: se `duplicates > 1`, exibir badge dourado pequeno `x{n}` sobre a thumbnail; manter os dois botões mas desabilitar "Tenho" quando já owned.
 
-- Adicionar `<img loading="lazy" decoding="async" />` (já tem lazy) e `fetchPriority="low"` para itens não-owned, para priorizar as figurinhas que o usuário tem.
+### 4. Limpeza
 
-## Arquivos
-
-- `src/routes/_app.album.tsx` — polish visual (célula + modal)
-- `supabase/functions/generate-sticker-images/index.ts` (nova)
-- `src/routes/_app.admin.stickers.tsx` — botão "Gerar imagens faltantes"
+- `register()` passa a também chamar `setResult(null)` ao final.
+- Fechar o preview (`X`) limpa `result` e `suggestions` também.
 
 ## Fora de escopo
 
-- Não scrapear sites externos (frágil, varia por país).
-- Não trocar o emoji da bandeira no resto do app.
+- Não muda a edge function `scan-sticker`.
+- Não muda nada no álbum/cadastro.
+- Não adiciona novos campos no banco — usa `image_url` já existente nos 936 stickers (104 que ainda não têm imagem caem no fallback do bloco gradient+flag).
+
+## Arquivos
+
+- `src/routes/_app.scan.tsx` (única edição)
