@@ -157,6 +157,10 @@ export type Database = {
           group_letter: string
           image_url: string | null
           kind: string
+          ocr_confidence: number | null
+          ocr_processed_at: string | null
+          player_name: string | null
+          player_name_source: string | null
           position: number
         }
         Insert: {
@@ -167,6 +171,10 @@ export type Database = {
           group_letter: string
           image_url?: string | null
           kind: string
+          ocr_confidence?: number | null
+          ocr_processed_at?: string | null
+          player_name?: string | null
+          player_name_source?: string | null
           position: number
         }
         Update: {
@@ -177,6 +185,10 @@ export type Database = {
           group_letter?: string
           image_url?: string | null
           kind?: string
+          ocr_confidence?: number | null
+          ocr_processed_at?: string | null
+          player_name?: string | null
+          player_name_source?: string | null
           position?: number
         }
         Relationships: []
@@ -321,6 +333,8 @@ export type Database = {
           trades_count: number
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "user"
