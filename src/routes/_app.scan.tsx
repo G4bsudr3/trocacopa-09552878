@@ -49,6 +49,40 @@ function Scan() {
     }
     setRecent((r) => [code, ...r.filter((n) => n !== code)].slice(0, 6));
     setQuery("");
+    setPreview(null);
+  };
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem");
+    const dataUrl = await fileToDataUrl(file);
+    setPreview(dataUrl);
+    setScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
+      if (error) throw error;
+      if (data?.error === "credits_exhausted") return toast.error("Créditos de IA esgotados");
+      if (data?.error === "rate_limited") return toast.error("Muitas requisições, aguarde um instante");
+      if (data?.error) return toast.error("Falha ao analisar: " + data.error);
+
+      const code: string | null = data?.code;
+      const country: string | null = data?.country_name;
+      const conf: number = data?.confidence ?? 0;
+
+      if (code && (catalog.data ?? []).some((s) => s.code.toLowerCase() === code.toLowerCase())) {
+        const real = (catalog.data ?? []).find((s) => s.code.toLowerCase() === code.toLowerCase())!;
+        setQuery(real.code);
+        toast.success(`Identificada: ${real.code} ${real.flag_emoji} (${Math.round(conf * 100)}%)`);
+      } else if (country) {
+        setQuery(country);
+        toast.message(`País reconhecido: ${country} — escolha o número`);
+      } else {
+        toast.error("Não consegui ler o código. Tente uma foto mais nítida ou digite manualmente.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao escanear");
+    } finally {
+      setScanning(false);
+    }
   };
 
   return (
