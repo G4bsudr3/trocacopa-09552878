@@ -1,66 +1,45 @@
 
-# Match altamente funcional — plano completo
+# Sino com contador de não lidas na navbar + sincronia com filtro
 
-Objetivo: deixar o motor de Match (`match_collectors`) consistente em todos os cenários — ranking certeiro, rápido, com filtros úteis, e funcionando mesmo quando o usuário não tem cidade ou geolocalização.
+Hoje o sino só aparece no cabeçalho da `/home` (com badge). A `BottomNav` não tem ícone de notificações, e o filtro da página `/notifications` (Todas / Matches / Trocas / Mensagens) não conversa com o badge.
 
-## 1) Ranking mais inteligente (SQL `match_collectors`)
+## O que vamos fazer
 
-Ajustes na função para que "melhor parceiro de troca" apareça sempre no topo:
+### 1) Hook compartilhado `useUnreadNotifications`
+Novo arquivo `src/lib/use-unread-notifications.ts`:
+- Faz `select id, type, read` em `notifications` do usuário (limite 200).
+- Inscreve em Realtime no `INSERT/UPDATE/DELETE` da tabela e invalida automaticamente.
+- Retorna `{ total, byCategory: { trades, messages, matches } }` calculado a partir dos não lidos.
+- Categoriza pelo `type`:
+  - `trade_message` → `messages`
+  - `match_high` → `matches`
+  - demais `trade_*` → `trades`
+- `staleTime` curto (10s) e mesma `queryKey: ["unread", userId]` em todos os consumidores.
 
-- **Saturação justa**: manter `tanh` mas re-balancear pesos para priorizar trocas 1-1 (mútuas) sobre listas unilaterais grandes:
-  - mútuo 0.50, give 0.18, receive 0.10, proximidade 0.12, região 0.10.
-- **Bônus de progresso compatível**: pequenos bônus quando ambos têm álbum em estágio parecido (faixa de 20%), para evitar pareamento com perfis vazios/abandonados.
-- **Penalidade por inatividade**: se `profiles.updated_at` > 60 dias, multiplicar score por 0.85.
-- **Cobertura completa**: incluir também colecionadores fora do raio quando `mutual_count >= 3` (matches fortes a distância continuam visíveis), com flag `out_of_radius`.
-- **Desempate determinístico**: `score_pct DESC, mutual_count DESC, same_city DESC, distance_km ASC, album_progress DESC, id ASC`.
-- **Filtro mínimo**: descartar linhas com `give_count = 0 AND receive_count = 0 AND NOT same_city` (ruído puro).
+### 2) Sino na BottomNav
+- Adicionar um botão extra de "Notificações" na BottomNav, posicionado entre `Perto` e `Perfil` (ou substituir conforme couber visualmente — vou manter os 5 atuais e inserir o sino como ícone flutuante no canto superior direito da própria navbar para não quebrar o grid de 5 abas com botão central).
+- Decisão: adicionar **um sino fixo no topo direito da tela (header global flutuante)** dentro de `_app.tsx`, sempre visível em todas as rotas, com badge consumindo `useUnreadNotifications().total`. Isso evita reorganizar a BottomNav e garante presença em todas as páginas.
+- Visual: pílula glass com `Bell` + badge numérico (99+ quando > 99), oculta enquanto a contagem é 0 e o usuário está na própria página `/notifications`.
 
-Retornar campos novos: `out_of_radius boolean`, `compat_album boolean`, `recent_active boolean`.
+### 3) Sincronia com o filtro
+- O filtro atual da `/notifications` usa `useState`. Vamos mover para search param (`?filter=all|trades|messages|matches`) usando `validateSearch` + `Route.useSearch` + `useNavigate`. Assim:
+  - O sino global pode linkar `/notifications?filter=matches` (ou outro) baseado em onde estiver a maior contagem não lida — opcionalmente abrindo um mini popover com as 3 categorias e respectivos contadores.
+  - O filtro fica compartilhável e reativo.
+- Pequeno popover ao tocar no sino (ou ao manter): mostra três linhas — Trocas (n), Mensagens (n), Matches (n) — cada uma navega para `/notifications?filter=...`. Em telas pequenas, um único toque vai direto pra `/notifications` mantendo o filtro atual; o popover abre apenas em hover/long-press.
+- Para simplicidade e consistência mobile-first: o sino navega para `/notifications` sem filtro pré-aplicado, **mas** quando o usuário trocar o filtro lá dentro, o badge do sino destaca um indicador colorido conforme a categoria com mais não lidas (gold = matches, primary = trades, accent = messages). Essa é a "sincronia visual" entre filtro e badge.
 
-## 2) Robustez sem localização
+### 4) Substituir o badge antigo da `/home`
+- Atualizar `_app.home.tsx` para usar o mesmo hook `useUnreadNotifications` (em vez da query separada `unread-count`), garantindo um único ponto de verdade.
 
-Hoje a função retorna vazio quando o usuário não tem `lat/lng`. Vamos:
-
-- **Fallback por cidade**: se `lat/lng` for null mas `city` existir, calcular o match por cidade (`same_city`) + `give/receive`, sem proximidade — score ainda funciona com peso redistribuído.
-- **Fallback global**: se nem cidade existir, retornar top matches por compatibilidade pura (mútuo + give + receive), limitado a 30, marcando `nationwide = true`.
-- **UI `/near`**: parar de bloquear a tela quando faltar `lat`. Mostrar banner "Ative localização para ver distância", mas já exibir os matches.
-
-## 3) Performance e índices
-
-Adicionar (idempotentes):
-
-- `CREATE INDEX IF NOT EXISTS idx_user_stickers_user ON user_stickers(user_id);`
-- `CREATE INDEX IF NOT EXISTS idx_user_stickers_code_dup ON user_stickers(sticker_code) WHERE duplicates >= 2;`
-- `CREATE INDEX IF NOT EXISTS idx_profiles_geo ON profiles(lat, lng) WHERE discoverable = true;`
-- `CREATE INDEX IF NOT EXISTS idx_profiles_city_norm ON profiles((lower(unaccent(city)))) WHERE city IS NOT NULL;`
-
-Reescrever o CTE `reverse` que hoje faz `JOIN ON true` (custoso em larga escala) usando agregação direta sobre `user_stickers` filtrada pelas minhas duplicadas.
-
-## 4) Filtros e controles na UI (`/near`)
-
-- Chips de raio: já existem (10/25/50/100). Adicionar chip "Brasil" (sem raio, usa fallback global).
-- Toggle "Só mesma cidade".
-- Toggle "Só com troca 1-1" (filtra `mutual_count >= 1`).
-- Ordenação: padrão "Melhor match"; alternativa "Mais perto".
-- Badge novo "🌎 Fora do raio" para `out_of_radius`.
-- Estado vazio mais útil: sugestão de aumentar raio, ativar cidade ou cadastrar mais figurinhas/repetidas.
-
-## 5) Reuso no `/home` e no scanner de notificações
-
-- `_app.home.tsx`: usar a mesma `match_collectors` com fallback (sem exigir localização).
-- `scan_match_alerts()`: atualizar para usar a nova fórmula e respeitar fallback por cidade (alertar quem não tem geo mas tem cidade + matches fortes).
-
-## 6) Telemetria leve (opcional, sem nova tabela)
-
-Adicionar `RAISE LOG` simples em `match_collectors` quando 0 resultados, para debug futuro via `postgres_logs`.
+### 5) Limpeza
+- Remover a query duplicada `unread-count` em `_app.home.tsx`.
+- Garantir que o canal Realtime do hook não duplique com o canal de toasts já existente em `_app.tsx` (canais com nomes distintos, ok).
 
 ## Arquivos afetados
-
-- `supabase/migrations/<nova>.sql` — nova versão de `match_collectors`, índices, ajuste em `scan_match_alerts`.
-- `src/routes/_app.near.tsx` — filtros, badges, fallback sem localização, ordenação.
-- `src/routes/_app.home.tsx` — usar fallback do match.
-- `src/integrations/supabase/types.ts` — atualizado automaticamente após migração.
+- `src/lib/use-unread-notifications.ts` (novo)
+- `src/routes/_app.tsx` (sino flutuante + import do hook)
+- `src/routes/_app.notifications.tsx` (filtro via search param + sincronia)
+- `src/routes/_app.home.tsx` (consumir o novo hook)
 
 ## Fora de escopo
-
-- Push notifications nativas, e-mail, paginação > 100, machine learning de recomendação, mapa interativo real.
+- Push notifications nativas, agrupar notificações por troca, marcar lida ao passar mouse, sons.

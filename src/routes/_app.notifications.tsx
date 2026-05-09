@@ -1,12 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useUnreadNotifications } from "@/lib/use-unread-notifications";
+
+const FILTERS = ["all", "trades", "messages", "matches"] as const;
+type Filter = (typeof FILTERS)[number];
 
 export const Route = createFileRoute("/_app/notifications")({
   head: () => ({ meta: [{ title: "Notificações — TrocaCopa" }] }),
+  validateSearch: (s: Record<string, unknown>): { filter: Filter } => {
+    const f = s.filter;
+    return { filter: FILTERS.includes(f as Filter) ? (f as Filter) : "all" };
+  },
   component: Notifs,
 });
 
@@ -19,7 +27,7 @@ type Notif = {
   created_at: string;
 };
 
-type Filter = "all" | "trades" | "messages" | "matches";
+
 
 function iconFor(type: string) {
   if (type === "match_high") return <Sparkles size={20} className="text-gold" />;
@@ -56,7 +64,11 @@ function timeAgo(iso: string) {
 function Notifs() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<Filter>("all");
+  const { filter } = Route.useSearch();
+  const navigate = useNavigate({ from: "/notifications" });
+  const unread = useUnreadNotifications();
+  const setFilter = (f: Filter) =>
+    navigate({ search: { filter: f } });
 
   const notifs = useQuery({
     queryKey: ["notifications", user?.id],
@@ -140,12 +152,24 @@ function Notifs() {
       </div>
 
       <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-none">
-        {([["all","Todas"],["matches","Matches"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
+        {([
+          ["all", "Todas", unread.total],
+          ["matches", "Matches", unread.byCategory.matches],
+          ["trades", "Trocas", unread.byCategory.trades],
+          ["messages", "Mensagens", unread.byCategory.messages],
+        ] as const).map(([k, l, n]) => (
           <button
             key={k}
             onClick={() => setFilter(k)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
-          >{l}</button>
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
+          >
+            {l}
+            {n > 0 && (
+              <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${filter === k ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground"}`}>
+                {n > 99 ? "99+" : n}
+              </span>
+            )}
+          </button>
         ))}
       </div>
 
