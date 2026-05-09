@@ -275,13 +275,13 @@ function Album() {
                 <div>
                   <p className="font-display text-2xl">{current.country_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {current.kind === "country"
-                      ? `Grupo ${current.group_letter}`
-                      : current.kind === "history"
-                        ? "FIFA World Cup History"
+                    {current.kind === "crest"
+                      ? "Brasão"
+                      : current.kind === "team"
+                        ? "Foto do time"
                         : current.kind === "special"
-                          ? "Coca-Cola"
-                          : "Capa do álbum"}
+                          ? "Especial"
+                          : `Jogador #${current.position}`}
                   </p>
                   <p className="text-xs mt-1">
                     {current.owned ? (
