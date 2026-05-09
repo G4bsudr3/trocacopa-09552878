@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info } from "lucide-react";
+import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useIsAdmin } from "@/lib/use-admin";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
@@ -17,6 +18,7 @@ const APP_VERSION = "1.0.0";
 
 function Settings() {
   const { user, profile, refreshProfile, signOut } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [gpsBusy, setGpsBusy] = useState(false);
@@ -103,6 +105,9 @@ function Settings() {
         </button>
         {profile?.plan !== "pro" && (
           <Row icon={<Crown size={18} className="text-gold" />} label="TrocaCopa Pro" to="/pro" />
+        )}
+        {isAdmin && (
+          <Row icon={<Shield size={18} className="text-primary" />} label="Admin · Figurinhas" to="/admin/stickers" />
         )}
       </Section>
 
