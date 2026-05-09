@@ -92,10 +92,28 @@ function AdminStickers() {
 
   return (
     <div className="px-5 pt-4 max-w-5xl mx-auto pb-10">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Link to="/settings" className="glass rounded-full p-2"><ChevronLeft size={18} /></Link>
         <h1 className="font-display text-2xl">Admin · Figurinhas</h1>
-        <span className="ml-auto text-xs text-muted-foreground">{filtered.length}/{rows.length}</span>
+        <span className="text-xs text-muted-foreground">{filtered.length}/{rows.length}</span>
+        <div className="ml-auto flex gap-2">
+          <button
+            onClick={() => runImport(true, true)}
+            disabled={importing}
+            className="px-3 py-2 rounded-full glass text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+            title="Importa só nomes nas figurinhas que ainda não têm"
+          >
+            <Download size={13} /> Só nomes
+          </button>
+          <button
+            onClick={() => runImport(false, false)}
+            disabled={importing}
+            className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+          >
+            {importing ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+            Importar 980
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
@@ -104,7 +122,7 @@ function AdminStickers() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar (código ou país)"
+            placeholder="Buscar (código, país ou jogador)"
             className="bg-transparent flex-1 py-3 text-sm outline-none"
           />
         </div>
