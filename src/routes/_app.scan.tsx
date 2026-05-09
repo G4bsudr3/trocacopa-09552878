@@ -20,6 +20,7 @@ function Scan() {
   const [recent, setRecent] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ code: string; player_name: string | null; country_name: string | null; flag_emoji: string | null; score: number }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const matches = !query
