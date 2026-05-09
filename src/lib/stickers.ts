@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const TOTAL_STICKERS = 994;
+export const TOTAL_STICKERS = 864;
 
-export type StickerKind = "cover" | "country" | "history" | "special";
+export type StickerKind = "cover" | "country" | "history" | "special" | "crest" | "team" | "player";
 
 export type StickerCatalogItem = {
   code: string;
