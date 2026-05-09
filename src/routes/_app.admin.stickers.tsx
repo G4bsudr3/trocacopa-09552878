@@ -37,7 +37,7 @@ function AdminStickers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stickers")
-        .select("code,country_code,country_name,flag_emoji,kind,position,image_url")
+        .select("code,country_code,country_name,flag_emoji,kind,position,image_url,player_name,player_name_source")
         .order("country_code")
         .order("position");
       if (error) throw error;
