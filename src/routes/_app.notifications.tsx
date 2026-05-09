@@ -68,7 +68,7 @@ function Notifs() {
   const navigate = useNavigate({ from: "/notifications" });
   const unread = useUnreadNotifications();
   const setFilter = (f: Filter) =>
-    navigate({ search: (prev) => ({ ...prev, filter: f }) });
+    navigate({ search: { filter: f } });
 
   const notifs = useQuery({
     queryKey: ["notifications", user?.id],
