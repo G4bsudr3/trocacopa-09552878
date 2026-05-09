@@ -185,6 +185,13 @@ function Notifs() {
                 </button>
               </div>
             );
+            if (n.type === "match_high") {
+              return (
+                <Link key={n.id} to="/near" onClick={() => !n.read && markRead(n.id)}>
+                  {inner}
+                </Link>
+              );
+            }
             return n.payload.trade_id ? (
               <Link
                 key={n.id}
