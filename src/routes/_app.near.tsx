@@ -93,7 +93,7 @@ function Near() {
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Perto de Mim</h1>
-      <p className="text-sm text-muted-foreground">Compatibilidade = matches + proximidade</p>
+      <p className="text-sm text-muted-foreground">Score = trocas viáveis + cidade + álbum</p>
 
       <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none">
         {RADII.map((r) => (
