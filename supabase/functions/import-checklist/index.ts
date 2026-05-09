@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
   const byCode = new Map<string, Row>();
   for (const r of allRows) if (!byCode.has(r.code)) byCode.set(r.code, r);
 
-  let inserted = 0, updated = 0, imageOk = 0, imageFailed = 0;
+  let inserted = 0, updated = 0, imageOk = 0, imageFailed = 0, skippedDone = 0, skippedImage = 0;
   const errors: { code: string; error: string }[] = [];
 
   let targets = [...byCode.values()];
@@ -166,6 +166,21 @@ Deno.serve(async (req) => {
       return !ex || !ex.player_name;
     });
   }
+  // Skip already-done items unless force
+  if (!force) {
+    const before = targets.length;
+    targets = targets.filter((r) => {
+      const ex = existingMap.get(r.code);
+      const done = ex && ex.player_name_source === "checklist" && ex.player_name && (skipImages || ex.image_url);
+      return !done;
+    });
+    skippedDone = before - targets.length;
+  }
+
+  const totalRemaining = targets.length;
+  // Apply limit per request to stay under wall-clock
+  targets = targets.slice(0, limit);
+  const remaining = Math.max(0, totalRemaining - targets.length);
 
   // 2) Process each row in chunks
   const ROW_CHUNK = 5;
@@ -178,8 +193,11 @@ Deno.serve(async (req) => {
         const flag = flagByCC.get(cc) ?? FLAG_FALLBACK[cc] ?? "";
         const country_name = nameByCC.get(cc) ?? row.team;
 
-        let image_url: string | null = existingMap.get(row.code)?.image_url ?? null;
-        if (!skipImages) {
+        const ex = existingMap.get(row.code);
+        let image_url: string | null = ex?.image_url ?? null;
+        const needsImage = !skipImages && (force || !image_url);
+        if (!needsImage && !skipImages && image_url) skippedImage++;
+        if (needsImage) {
           const img = await downloadImage(row.seq);
           if (img) {
             const path = `${row.code}.jpg`;
@@ -212,7 +230,7 @@ Deno.serve(async (req) => {
           image_url,
         };
 
-        const wasExisting = existingMap.has(row.code);
+        const wasExisting = !!ex;
         const { error: upsertErr } = await admin.from("stickers").upsert(payload, { onConflict: "code" });
         if (upsertErr) throw upsertErr;
         if (wasExisting) updated++; else inserted++;
@@ -220,13 +238,16 @@ Deno.serve(async (req) => {
         errors.push({ code: row.code, error: String(e?.message ?? e) });
       }
     }));
-    await new Promise((r) => setTimeout(r, 150));
+    await new Promise((r) => setTimeout(r, 100));
   }
 
   return new Response(JSON.stringify({
     teams_scraped: TEAMS.length - scrapeErrors.length,
     rows_total: byCode.size,
-    targets: targets.length,
+    processed: targets.length,
+    skipped_done: skippedDone,
+    skipped_image_existing: skippedImage,
+    remaining,
     inserted, updated, image_ok: imageOk, image_failed: imageFailed,
     scrape_errors: scrapeErrors.slice(0, 10),
     errors: errors.slice(0, 20),
