@@ -3,8 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Lock, Check, Plus, Minus, X, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { useAlbum } from "@/lib/use-album";
-import type { Sticker } from "@/lib/mock-data";
+import { useAlbum, type Sticker } from "@/lib/use-album";
 
 export const Route = createFileRoute("/_app/album")({
   head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
@@ -14,7 +13,7 @@ export const Route = createFileRoute("/_app/album")({
 type Filter = "all" | "owned" | "missing" | "dup";
 
 function Album() {
-  const { stickers, total, toggleOwned, addDuplicate, removeDuplicate, reset } = useAlbum();
+  const { stickers, total, toggleOwned, addDuplicate, removeDuplicate, reset, isLoading } = useAlbum();
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Sticker | null>(null);
