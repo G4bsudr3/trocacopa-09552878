@@ -14,14 +14,15 @@ type Notif = {
   id: string;
   user_id: string;
   type: string;
-  payload: { trade_id?: string; from?: string; preview?: string };
+  payload: { trade_id?: string; from?: string; preview?: string; other_id?: string; score?: number; city?: string };
   read: boolean;
   created_at: string;
 };
 
-type Filter = "all" | "trades" | "messages";
+type Filter = "all" | "trades" | "messages" | "matches";
 
 function iconFor(type: string) {
+  if (type === "match_high") return <Sparkles size={20} className="text-gold" />;
   if (type.startsWith("trade_message")) return <MessageCircle size={20} className="text-primary" />;
   if (type === "trade_request") return <Repeat size={20} className="text-gold" />;
   if (type === "trade_accepted" || type === "trade_completed") return <CheckCircle2 size={20} className="text-primary" />;
@@ -31,6 +32,7 @@ function iconFor(type: string) {
 
 function labelFor(n: Notif) {
   switch (n.type) {
+    case "match_high": return `⚡ Novo match: ${n.payload.score ?? "?"}% de compatibilidade${n.payload.city ? ` em ${n.payload.city}` : ""}`;
     case "trade_request": return "Você recebeu um pedido de troca";
     case "trade_accepted": return "Sua troca foi aceita!";
     case "trade_declined": return "Sua troca foi recusada";
