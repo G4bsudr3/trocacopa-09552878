@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_app/album")({
   component: Album,
 });
 
-type Tab = "selecoes" | "history" | "coca";
+type Tab = "selecoes" | "especiais";
 type Filter = "all" | "owned" | "missing" | "dup";
 
 function Album() {
@@ -20,7 +20,7 @@ function Album() {
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Sticker | null>(null);
-  const [openGroup, setOpenGroup] = useState<string | null>("A");
+  const [openCountry, setOpenCountry] = useState<string | null>(null);
 
   const owned = stickers.filter((s) => s.owned).length;
   const dups = stickers.filter((s) => s.duplicates > 1).length;
@@ -34,18 +34,12 @@ function Album() {
     return true;
   };
 
-  const cover = useMemo(() => stickers.find((s) => s.kind === "cover") ?? null, [stickers]);
-  const countries = useMemo(
-    () => stickers.filter((s) => s.kind === "country" && passFilter(s)),
+  const countryStickers = useMemo(
+    () => stickers.filter((s) => s.kind !== "special" && passFilter(s)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [stickers, filter, q],
   );
-  const fwc = useMemo(
-    () => stickers.filter((s) => s.kind === "history" && passFilter(s)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stickers, filter, q],
-  );
-  const coca = useMemo(
+  const specials = useMemo(
     () => stickers.filter((s) => s.kind === "special" && passFilter(s)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [stickers, filter, q],
@@ -62,8 +56,7 @@ function Album() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "selecoes", label: "Seleções" },
-    { key: "history", label: "História FWC" },
-    { key: "coca", label: "Coca-Cola" },
+    { key: "especiais", label: "Especiais" },
   ];
 
   const onCellTap = (s: Sticker) => {
