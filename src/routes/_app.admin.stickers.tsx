@@ -177,7 +177,7 @@ function AdminStickers() {
                 if (error) throw error;
                 if (data?.error) return toast.error(data.error);
                 toast.success(`Geradas ${data?.ok ?? 0} imagens (${data?.failed ?? 0} falhas)`);
-                refresh();
+                qc.invalidateQueries({ queryKey: ["admin-stickers"] });
               } catch (e: any) {
                 toast.error(e?.message || "Falha ao gerar");
               }
