@@ -264,7 +264,16 @@ function Album() {
                   }`}
                 >
                   {current.image_url ? (
-                    <img src={current.image_url} alt={current.code} className={`absolute inset-0 w-full h-full object-cover ${current.owned ? "" : "blur-[6px] grayscale opacity-60"}`} />
+                    <>
+                      <img src={current.image_url} alt={current.code} className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${current.owned ? "" : "blur-[5px] grayscale-[80%] opacity-75 scale-110"}`} />
+                      {!current.owned && (
+                        <span className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/30 to-background/10 flex items-center justify-center">
+                          <span className="w-9 h-9 rounded-full glass-strong flex items-center justify-center">
+                            <Lock size={14} className="text-foreground" />
+                          </span>
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <>
                       <span className="text-3xl leading-none">{current.flag_emoji}</span>
