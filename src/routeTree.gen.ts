@@ -23,6 +23,7 @@ import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppAlbumRouteImport } from './routes/_app.album'
 import { Route as AppTradeIdRouteImport } from './routes/_app.trade.$id'
 import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
+import { Route as AppAdminStickersRouteImport } from './routes/_app.admin.stickers'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -93,6 +94,11 @@ const AppProfileEditRoute = AppProfileEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => AppProfileRoute,
 } as any)
+const AppAdminStickersRoute = AppAdminStickersRouteImport.update({
+  id: '/admin/stickers',
+  path: '/admin/stickers',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
+  '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
 }
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
+  '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
 }
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/trades': typeof AppTradesRoute
+  '/_app/admin/stickers': typeof AppAdminStickersRoute
   '/_app/profile/edit': typeof AppProfileEditRoute
   '/_app/trade/$id': typeof AppTradeIdRoute
 }
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/trades'
+    | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/trades'
+    | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
   id:
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/_app/scan'
     | '/_app/settings'
     | '/_app/trades'
+    | '/_app/admin/stickers'
     | '/_app/profile/edit'
     | '/_app/trade/$id'
   fileRoutesById: FileRoutesById
@@ -296,6 +308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileEditRouteImport
       parentRoute: typeof AppProfileRoute
     }
+    '/_app/admin/stickers': {
+      id: '/_app/admin/stickers'
+      path: '/admin/stickers'
+      fullPath: '/admin/stickers'
+      preLoaderRoute: typeof AppAdminStickersRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -321,6 +340,7 @@ interface AppRouteChildren {
   AppScanRoute: typeof AppScanRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTradesRoute: typeof AppTradesRoute
+  AppAdminStickersRoute: typeof AppAdminStickersRoute
   AppTradeIdRoute: typeof AppTradeIdRoute
 }
 
@@ -334,6 +354,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppScanRoute: AppScanRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTradesRoute: AppTradesRoute,
+  AppAdminStickersRoute: AppAdminStickersRoute,
   AppTradeIdRoute: AppTradeIdRoute,
 }
 
