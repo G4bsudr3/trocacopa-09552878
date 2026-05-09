@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin } from "lucide-react";
+import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -14,14 +14,15 @@ type Notif = {
   id: string;
   user_id: string;
   type: string;
-  payload: { trade_id?: string; from?: string; preview?: string };
+  payload: { trade_id?: string; from?: string; preview?: string; other_id?: string; score?: number; city?: string };
   read: boolean;
   created_at: string;
 };
 
-type Filter = "all" | "trades" | "messages";
+type Filter = "all" | "trades" | "messages" | "matches";
 
 function iconFor(type: string) {
+  if (type === "match_high") return <Sparkles size={20} className="text-gold" />;
   if (type.startsWith("trade_message")) return <MessageCircle size={20} className="text-primary" />;
   if (type === "trade_request") return <Repeat size={20} className="text-gold" />;
   if (type === "trade_accepted" || type === "trade_completed") return <CheckCircle2 size={20} className="text-primary" />;
@@ -31,6 +32,7 @@ function iconFor(type: string) {
 
 function labelFor(n: Notif) {
   switch (n.type) {
+    case "match_high": return `⚡ Novo match: ${n.payload.score ?? "?"}% de compatibilidade${n.payload.city ? ` em ${n.payload.city}` : ""}`;
     case "trade_request": return "Você recebeu um pedido de troca";
     case "trade_accepted": return "Sua troca foi aceita!";
     case "trade_declined": return "Sua troca foi recusada";
@@ -114,7 +116,13 @@ function Notifs() {
 
   const all = notifs.data ?? [];
   const items = all.filter((n) =>
-    filter === "all" ? true : filter === "messages" ? n.type === "trade_message" : n.type.startsWith("trade_") && n.type !== "trade_message"
+    filter === "all"
+      ? true
+      : filter === "messages"
+      ? n.type === "trade_message"
+      : filter === "matches"
+      ? n.type === "match_high"
+      : n.type.startsWith("trade_") && n.type !== "trade_message"
   );
 
   return (
@@ -131,12 +139,12 @@ function Notifs() {
         </div>
       </div>
 
-      <div className="flex gap-2 mt-4">
-        {([["all","Todas"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
+      <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-none">
+        {([["all","Todas"],["matches","Matches"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
           <button
             key={k}
             onClick={() => setFilter(k)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
           >{l}</button>
         ))}
       </div>
@@ -177,6 +185,13 @@ function Notifs() {
                 </button>
               </div>
             );
+            if (n.type === "match_high") {
+              return (
+                <Link key={n.id} to="/near" onClick={() => !n.read && markRead(n.id)}>
+                  {inner}
+                </Link>
+              );
+            }
             return n.payload.trade_id ? (
               <Link
                 key={n.id}

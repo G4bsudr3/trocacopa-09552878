@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      match_alerts_sent: {
+        Row: {
+          other_id: string
+          score_pct: number
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          other_id: string
+          score_pct: number
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          other_id?: string
+          score_pct?: number
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -353,6 +374,7 @@ export type Database = {
           trades_count: number
         }[]
       }
+      scan_match_alerts: { Args: never; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }

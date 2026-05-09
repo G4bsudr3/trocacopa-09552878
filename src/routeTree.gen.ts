@@ -24,6 +24,7 @@ import { Route as AppAlbumRouteImport } from './routes/_app.album'
 import { Route as AppTradeIdRouteImport } from './routes/_app.trade.$id'
 import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
 import { Route as AppAdminStickersRouteImport } from './routes/_app.admin.stickers'
+import { Route as ApiPublicHooksScanMatchAlertsRouteImport } from './routes/api/public/hooks/scan-match-alerts'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -99,6 +100,12 @@ const AppAdminStickersRoute = AppAdminStickersRouteImport.update({
   path: '/admin/stickers',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicHooksScanMatchAlertsRoute =
+  ApiPublicHooksScanMatchAlertsRouteImport.update({
+    id: '/api/public/hooks/scan-match-alerts',
+    path: '/api/public/hooks/scan-match-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
+  '/api/public/hooks/scan-match-alerts': typeof ApiPublicHooksScanMatchAlertsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
+  '/api/public/hooks/scan-match-alerts': typeof ApiPublicHooksScanMatchAlertsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_app/admin/stickers': typeof AppAdminStickersRoute
   '/_app/profile/edit': typeof AppProfileEditRoute
   '/_app/trade/$id': typeof AppTradeIdRoute
+  '/api/public/hooks/scan-match-alerts': typeof ApiPublicHooksScanMatchAlertsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
+    | '/api/public/hooks/scan-match-alerts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
+    | '/api/public/hooks/scan-match-alerts'
   id:
     | '__root__'
     | '/'
@@ -200,12 +212,14 @@ export interface FileRouteTypes {
     | '/_app/admin/stickers'
     | '/_app/profile/edit'
     | '/_app/trade/$id'
+    | '/api/public/hooks/scan-match-alerts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicHooksScanMatchAlertsRoute: typeof ApiPublicHooksScanMatchAlertsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -315,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminStickersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/hooks/scan-match-alerts': {
+      id: '/api/public/hooks/scan-match-alerts'
+      path: '/api/public/hooks/scan-match-alerts'
+      fullPath: '/api/public/hooks/scan-match-alerts'
+      preLoaderRoute: typeof ApiPublicHooksScanMatchAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -364,6 +385,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicHooksScanMatchAlertsRoute: ApiPublicHooksScanMatchAlertsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
