@@ -52,7 +52,10 @@ function Scan() {
     setRecent((r) => [code, ...r.filter((n) => n !== code)].slice(0, 6));
     setQuery("");
     setPreview(null);
+    setResult(null);
   };
+
+  const dupCount = (code: string) => stickers.find((x) => x.code === code)?.duplicates ?? 0;
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem");
