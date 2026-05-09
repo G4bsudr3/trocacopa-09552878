@@ -9,38 +9,185 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTradesRouteImport } from './routes/_app.trades'
+import { Route as AppScanRouteImport } from './routes/_app.scan'
+import { Route as AppProfileRouteImport } from './routes/_app.profile'
+import { Route as AppProRouteImport } from './routes/_app.pro'
+import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppNearRouteImport } from './routes/_app.near'
+import { Route as AppHomeRouteImport } from './routes/_app.home'
+import { Route as AppAlbumRouteImport } from './routes/_app.album'
+import { Route as AppTradeIdRouteImport } from './routes/_app.trade.$id'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppTradesRoute = AppTradesRouteImport.update({
+  id: '/trades',
+  path: '/trades',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppScanRoute = AppScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProRoute = AppProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNearRoute = AppNearRouteImport.update({
+  id: '/near',
+  path: '/near',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAlbumRoute = AppAlbumRouteImport.update({
+  id: '/album',
+  path: '/album',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTradeIdRoute = AppTradeIdRouteImport.update({
+  id: '/trade/$id',
+  path: '/trade/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/album': typeof AppAlbumRoute
+  '/home': typeof AppHomeRoute
+  '/near': typeof AppNearRoute
+  '/notifications': typeof AppNotificationsRoute
+  '/pro': typeof AppProRoute
+  '/profile': typeof AppProfileRoute
+  '/scan': typeof AppScanRoute
+  '/trades': typeof AppTradesRoute
+  '/trade/$id': typeof AppTradeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/album': typeof AppAlbumRoute
+  '/home': typeof AppHomeRoute
+  '/near': typeof AppNearRoute
+  '/notifications': typeof AppNotificationsRoute
+  '/pro': typeof AppProRoute
+  '/profile': typeof AppProfileRoute
+  '/scan': typeof AppScanRoute
+  '/trades': typeof AppTradesRoute
+  '/trade/$id': typeof AppTradeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/album': typeof AppAlbumRoute
+  '/_app/home': typeof AppHomeRoute
+  '/_app/near': typeof AppNearRoute
+  '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/pro': typeof AppProRoute
+  '/_app/profile': typeof AppProfileRoute
+  '/_app/scan': typeof AppScanRoute
+  '/_app/trades': typeof AppTradesRoute
+  '/_app/trade/$id': typeof AppTradeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/album'
+    | '/home'
+    | '/near'
+    | '/notifications'
+    | '/pro'
+    | '/profile'
+    | '/scan'
+    | '/trades'
+    | '/trade/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/album'
+    | '/home'
+    | '/near'
+    | '/notifications'
+    | '/pro'
+    | '/profile'
+    | '/scan'
+    | '/trades'
+    | '/trade/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/album'
+    | '/_app/home'
+    | '/_app/near'
+    | '/_app/notifications'
+    | '/_app/pro'
+    | '/_app/profile'
+    | '/_app/scan'
+    | '/_app/trades'
+    | '/_app/trade/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +195,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/trades': {
+      id: '/_app/trades'
+      path: '/trades'
+      fullPath: '/trades'
+      preLoaderRoute: typeof AppTradesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/scan': {
+      id: '/_app/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AppScanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile': {
+      id: '/_app/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/pro': {
+      id: '/_app/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof AppProRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/near': {
+      id: '/_app/near'
+      path: '/near'
+      fullPath: '/near'
+      preLoaderRoute: typeof AppNearRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/album': {
+      id: '/_app/album'
+      path: '/album'
+      fullPath: '/album'
+      preLoaderRoute: typeof AppAlbumRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/trade/$id': {
+      id: '/_app/trade/$id'
+      path: '/trade/$id'
+      fullPath: '/trade/$id'
+      preLoaderRoute: typeof AppTradeIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppAlbumRoute: typeof AppAlbumRoute
+  AppHomeRoute: typeof AppHomeRoute
+  AppNearRoute: typeof AppNearRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
+  AppProRoute: typeof AppProRoute
+  AppProfileRoute: typeof AppProfileRoute
+  AppScanRoute: typeof AppScanRoute
+  AppTradesRoute: typeof AppTradesRoute
+  AppTradeIdRoute: typeof AppTradeIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAlbumRoute: AppAlbumRoute,
+  AppHomeRoute: AppHomeRoute,
+  AppNearRoute: AppNearRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
+  AppProRoute: AppProRoute,
+  AppProfileRoute: AppProfileRoute,
+  AppScanRoute: AppScanRoute,
+  AppTradesRoute: AppTradesRoute,
+  AppTradeIdRoute: AppTradeIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
