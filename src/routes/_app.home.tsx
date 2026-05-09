@@ -159,8 +159,8 @@ function Home() {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Match</span>
-                  <span className="font-display text-2xl text-primary text-glow">{c.match_count}</span>
+                  <span className="text-xs text-muted-foreground">Score</span>
+                  <span className="font-display text-2xl text-primary text-glow">{c.score_pct ?? 0}</span>
                 </div>
                 <Link to="/near" className="mt-3 block w-full gradient-primary text-center text-primary-foreground rounded-full py-2 text-xs font-bold">
                   Ver
