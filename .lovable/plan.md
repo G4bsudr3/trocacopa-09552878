@@ -1,45 +1,84 @@
+## Objetivo
 
-# Sino com contador de não lidas na navbar + sincronia com filtro
+Quando o usuário escaneia uma figurinha em `/scan`, o OCR deve extrair **nome do jogador**, **país** e (quando legível) **código**, e então **resolver automaticamente para o código correto** consultando o catálogo `stickers` (que já contém `player_name`, `country_name`, `country_code`, `position`, `kind`).
 
-Hoje o sino só aparece no cabeçalho da `/home` (com badge). A `BottomNav` não tem ícone de notificações, e o filtro da página `/notifications` (Todas / Matches / Trocas / Mensagens) não conversa com o badge.
+Hoje o `scan-sticker` só pede `code` e `country_name` — se o código está borrado ou cortado, falha. O catálogo já tem `player_name` populado pelo `ocr-stickers` em massa, então podemos fazer match reverso pelo nome.
 
-## O que vamos fazer
+## Mudanças
 
-### 1) Hook compartilhado `useUnreadNotifications`
-Novo arquivo `src/lib/use-unread-notifications.ts`:
-- Faz `select id, type, read` em `notifications` do usuário (limite 200).
-- Inscreve em Realtime no `INSERT/UPDATE/DELETE` da tabela e invalida automaticamente.
-- Retorna `{ total, byCategory: { trades, messages, matches } }` calculado a partir dos não lidos.
-- Categoriza pelo `type`:
-  - `trade_message` → `messages`
-  - `match_high` → `matches`
-  - demais `trade_*` → `trades`
-- `staleTime` curto (10s) e mesma `queryKey: ["unread", userId]` em todos os consumidores.
+### 1. `supabase/functions/scan-sticker/index.ts` — prompt + resolução
 
-### 2) Sino na BottomNav
-- Adicionar um botão extra de "Notificações" na BottomNav, posicionado entre `Perto` e `Perfil` (ou substituir conforme couber visualmente — vou manter os 5 atuais e inserir o sino como ícone flutuante no canto superior direito da própria navbar para não quebrar o grid de 5 abas com botão central).
-- Decisão: adicionar **um sino fixo no topo direito da tela (header global flutuante)** dentro de `_app.tsx`, sempre visível em todas as rotas, com badge consumindo `useUnreadNotifications().total`. Isso evita reorganizar a BottomNav e garante presença em todas as páginas.
-- Visual: pílula glass com `Bell` + badge numérico (99+ quando > 99), oculta enquanto a contagem é 0 e o usuário está na própria página `/notifications`.
+**Novo prompt** (Gemini 2.5 Flash, multimodal) extrai 4 campos:
 
-### 3) Sincronia com o filtro
-- O filtro atual da `/notifications` usa `useState`. Vamos mover para search param (`?filter=all|trades|messages|matches`) usando `validateSearch` + `Route.useSearch` + `useNavigate`. Assim:
-  - O sino global pode linkar `/notifications?filter=matches` (ou outro) baseado em onde estiver a maior contagem não lida — opcionalmente abrindo um mini popover com as 3 categorias e respectivos contadores.
-  - O filtro fica compartilhável e reativo.
-- Pequeno popover ao tocar no sino (ou ao manter): mostra três linhas — Trocas (n), Mensagens (n), Matches (n) — cada uma navega para `/notifications?filter=...`. Em telas pequenas, um único toque vai direto pra `/notifications` mantendo o filtro atual; o popover abre apenas em hover/long-press.
-- Para simplicidade e consistência mobile-first: o sino navega para `/notifications` sem filtro pré-aplicado, **mas** quando o usuário trocar o filtro lá dentro, o badge do sino destaca um indicador colorido conforme a categoria com mais não lidas (gold = matches, primary = trades, accent = messages). Essa é a "sincronia visual" entre filtro e badge.
+```json
+{
+  "code": "BRA10 | FWC5 | CC3 | null",
+  "country_name": "Brasil | null",
+  "player_name": "Vinícius Júnior | null",
+  "jersey_number": 10 | null,
+  "kind_hint": "player | history | sponsor | cover | null",
+  "confidence": 0..1
+}
+```
 
-### 4) Substituir o badge antigo da `/home`
-- Atualizar `_app.home.tsx` para usar o mesmo hook `useUnreadNotifications` (em vez da query separada `unread-count`), garantindo um único ponto de verdade.
+Prompt enfatiza:
+- Código fica no canto inferior (3 letras + 1-20, ou `FWC`/`CC` + número, ou `00`).
+- Nome do jogador é o texto grande sob a foto.
+- Bandeira/escudo indica país.
+- Se for capa, FWC ou CC, `player_name` deve ser `null`.
 
-### 5) Limpeza
-- Remover a query duplicada `unread-count` em `_app.home.tsx`.
-- Garantir que o canal Realtime do hook não duplique com o canal de toasts já existente em `_app.tsx` (canais com nomes distintos, ok).
+**Resolução server-side** (nova função `resolveCode`) na ordem:
 
-## Arquivos afetados
-- `src/lib/use-unread-notifications.ts` (novo)
-- `src/routes/_app.tsx` (sino flutuante + import do hook)
-- `src/routes/_app.notifications.tsx` (filtro via search param + sincronia)
-- `src/routes/_app.home.tsx` (consumir o novo hook)
+1. Se `code` veio e existe em `stickers` → usa.
+2. Se `country_name` + `jersey_number` → busca `stickers` por `country_name ILIKE` (ou via `unaccent`) + `position = number` + `kind = 'player'`.
+3. Se `player_name` → busca `stickers` por similaridade (`pg_trgm` `similarity()` >= 0.45) ordenado por score, opcionalmente filtrando por `country_name` se também veio.
+4. Se nada bate, devolve `code: null` mas inclui `suggestions: [{code, player_name, country_name, score}]` (top 3) para a UI mostrar.
+
+A função usa `SUPABASE_SERVICE_ROLE_KEY` para consultar `stickers` (já é leitura, mas evita bater em RLS de auth).
+
+**Resposta nova:**
+```json
+{
+  "code": "BRA10",
+  "country_name": "Brasil",
+  "player_name": "Vinícius Júnior",
+  "confidence": 0.88,
+  "match_source": "code | country+number | player_name | suggestion",
+  "suggestions": [...]   // só quando code é null
+}
+```
+
+### 2. `src/routes/_app.scan.tsx` — usar nome + sugestões
+
+- Mensagem de sucesso passa a mostrar `${code} — ${player_name} ${flag_emoji}` quando disponível.
+- Quando `code` é `null` mas `suggestions` tem itens, exibir um pequeno painel "Você quis dizer?" com até 3 cards clicáveis (jogador + país + código). Tocar adiciona via `confirmSelect(code)`.
+- Mantém fallback atual (digitar manualmente) quando nem isso resolve.
+
+### 3. Índice de busca por nome (migration leve)
+
+Adicionar índice GIN trigram para acelerar o match:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_stickers_player_name_trgm
+  ON public.stickers USING gin (lower(unaccent(coalesce(player_name,''))) gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_stickers_country_position
+  ON public.stickers (lower(unaccent(country_name)), position) WHERE kind = 'player';
+```
+
+`pg_trgm` e `unaccent` já estão habilitados (visíveis nas funções existentes).
+
+### 4. Garantir catálogo populado
+
+O match por nome só funciona se `stickers.player_name` estiver preenchido. O admin job `ocr-stickers` já faz isso em massa a partir de `image_url`. Vou verificar pela tela `/admin/stickers` se ainda há figurinhas com `player_name = null` e, se houver, sugerir rodar o batch — mas isso é operação, não código.
+
+## Arquivos
+
+- `supabase/functions/scan-sticker/index.ts` (reescrita do prompt + resolução)
+- `src/routes/_app.scan.tsx` (UI de sugestões + mensagem com nome)
+- nova migration com 2 índices
 
 ## Fora de escopo
-- Push notifications nativas, agrupar notificações por troca, marcar lida ao passar mouse, sons.
+
+- Não mexo no `ocr-stickers` (batch admin) nem no fluxo `identify-page`.
+- Não altero schema da tabela `stickers`.
