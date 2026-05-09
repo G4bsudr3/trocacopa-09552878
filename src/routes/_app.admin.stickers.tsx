@@ -170,6 +170,24 @@ function AdminStickers() {
           >
             Reimportar tudo
           </button>
+          <button
+            onClick={async () => {
+              try {
+                const { data, error } = await supabase.functions.invoke("generate-sticker-images", { body: {} });
+                if (error) throw error;
+                if (data?.error) return toast.error(data.error);
+                toast.success(`Geradas ${data?.ok ?? 0} imagens (${data?.failed ?? 0} falhas)`);
+                refresh();
+              } catch (e: any) {
+                toast.error(e?.message || "Falha ao gerar");
+              }
+            }}
+            disabled={importing}
+            className="px-3 py-2 rounded-full glass text-xs font-semibold disabled:opacity-50"
+            title="Cria SVG placeholder bonito para jogadores sem imagem"
+          >
+            Gerar imagens faltantes
+          </button>
         </div>
       </div>
 
