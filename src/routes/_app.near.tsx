@@ -90,9 +90,25 @@ function Near() {
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Perto de Mim</h1>
-      <p className="text-sm text-muted-foreground">Colecionadores num raio de 25km</p>
+      <p className="text-sm text-muted-foreground">Compatibilidade = matches + proximidade</p>
 
-      <div className="mt-4 h-40 rounded-3xl glass-strong relative overflow-hidden">
+      <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-none">
+        {RADII.map((r) => (
+          <button
+            key={r}
+            onClick={() => setRadius(r)}
+            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition ${
+              radius === r
+                ? "gradient-primary text-primary-foreground glow-primary"
+                : "glass text-muted-foreground"
+            }`}
+          >
+            {r} km
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 h-32 rounded-3xl glass-strong relative overflow-hidden">
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_30%_30%,oklch(0.78_0.22_152)_0%,transparent_40%),radial-gradient(circle_at_70%_60%,oklch(0.86_0.16_92)_0%,transparent_40%)]" />
         <div className="absolute inset-0 grid place-items-center">
           <div className="relative">
@@ -104,7 +120,7 @@ function Near() {
         </div>
       </div>
 
-      <h2 className="font-display text-xl tracking-wide mt-6 mb-3">Ordenado por compatibilidade</h2>
+      <h2 className="font-display text-xl tracking-wide mt-6 mb-3">Melhores matches</h2>
 
       {nearby.isLoading ? (
         <div className="space-y-2">
@@ -114,47 +130,74 @@ function Near() {
         </div>
       ) : nearby.data && nearby.data.length > 0 ? (
         <div className="space-y-3">
-          {nearby.data.map((c) => (
-            <motion.div
-              key={c.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="glass rounded-2xl p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground shrink-0">
-                  {c.avatar_url ? (
-                    <img src={c.avatar_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    (c.full_name?.[0] || "?").toUpperCase()
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold">{c.full_name || "Colecionador"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {c.city || "—"} · ~{c.distance_km.toFixed(1)} km
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-display text-2xl text-primary text-glow leading-none">{c.match_count}</p>
-                  <p className="text-[10px] text-gold uppercase tracking-wider">match 🔥</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-3">
-                Tem <span className="text-primary font-semibold">{c.match_count}</span> figurinhas que você precisa
-              </p>
-              <button
-                onClick={() => startTrade(c.id)}
-                className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition"
+          {nearby.data.map((c) => {
+            const compatPct = Math.round((c.compat_score ?? 0) * 100);
+            const isClose = c.distance_km < radius * 0.25;
+            return (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="glass rounded-2xl p-4"
               >
-                <MessageCircle size={16} /> Iniciar Troca
-              </button>
-            </motion.div>
-          ))}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground shrink-0">
+                    {c.avatar_url ? (
+                      <img src={c.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      (c.full_name?.[0] || "?").toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold truncate">{c.full_name || "Colecionador"}</p>
+                      {isClose && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold whitespace-nowrap">
+                          🎯 Perto
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {c.city || "—"} · ~{c.distance_km.toFixed(1)} km
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display text-2xl text-primary text-glow leading-none">{compatPct}%</p>
+                    <p className="text-[10px] text-gold uppercase tracking-wider">compat</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 h-1.5 bg-surface rounded-full overflow-hidden">
+                  <div
+                    className="h-full gradient-primary"
+                    style={{ width: `${compatPct}%` }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                  <div className="bg-surface rounded-lg px-3 py-2">
+                    <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Tem pra você</p>
+                    <p className="font-display text-lg text-primary leading-none mt-0.5">{c.match_count}</p>
+                  </div>
+                  <div className="bg-surface rounded-lg px-3 py-2">
+                    <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Você oferece</p>
+                    <p className="font-display text-lg text-gold leading-none mt-0.5">{c.reverse_match_count}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => startTrade(c.id)}
+                  className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition"
+                >
+                  <MessageCircle size={16} /> Iniciar Troca
+                </button>
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground text-center py-10 glass rounded-2xl">
-          Ninguém por perto ainda. Convide amigos para usar o TrocaCopa!
+          Ninguém num raio de {radius} km. Tente aumentar o raio acima.
         </p>
       )}
 
