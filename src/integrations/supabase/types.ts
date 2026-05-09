@@ -41,6 +41,21 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_waitlist: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           album_progress: number
@@ -48,6 +63,7 @@ export type Database = {
           bio: string | null
           city: string | null
           created_at: string
+          discoverable: boolean
           full_name: string | null
           id: string
           lat: number | null
@@ -64,6 +80,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string
+          discoverable?: boolean
           full_name?: string | null
           id: string
           lat?: number | null
@@ -80,6 +97,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string
+          discoverable?: boolean
           full_name?: string | null
           id?: string
           lat?: number | null
