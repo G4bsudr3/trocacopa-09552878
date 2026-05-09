@@ -2,3 +2,6 @@ project_id = "mnxlzdsroqzdbqejszwm"
 
 [functions.identify-page]
 verify_jwt = false
+
+[functions.seed-test-users]
+verify_jwt = false

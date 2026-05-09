@@ -1,41 +1,41 @@
-## Objetivo
-Hoje o `nearby_collectors` ordena por `match_count DESC, distance ASC` dentro de 25 km. Vamos transformar a proximidade em parte do **score de compatibilidade**, não só desempate, e dar mais controle ao usuário.
+## Criar usuários de teste
 
-## 1. Score de compatibilidade (banco)
-Migração para reescrever `public.nearby_collectors(_radius_km, _max_distance_km)`:
+Criar 3 usuários no sistema de autenticação com perfis e roles configurados:
 
-- Continuar calculando `match_count` (figurinhas que o outro tem repetidas e eu preciso) e `dist_km`.
-- Calcular também `reverse_match_count` (figurinhas que EU tenho repetidas e o outro precisa) — troca bidirecional.
-- Novo campo derivado `proximity_score = GREATEST(0, 1 - dist_km / _radius_km)` (1 = colado em mim, 0 = na borda do raio).
-- Novo `compat_score`:
-  ```
-  compat_score = 
-      0.55 * LEAST(match_count, 30) / 30        -- o que ele me oferece
-    + 0.25 * LEAST(reverse_match_count, 30) / 30 -- o que eu ofereço
-    + 0.20 * proximity_score                     -- proximidade
-  ```
-  Pesos pensados para que matches ganhem de quase tudo, mas dois usuários com matches parecidos sejam ordenados pelo mais perto.
-- `ORDER BY compat_score DESC, dist_km ASC`.
-- Retornar colunas extras: `reverse_match_count`, `compat_score`, `proximity_score`.
+### 1. Admin
+- **Email:** juan@trocacopa.com.br
+- **Senha:** trocacopa123
+- **Nome:** Juan (Admin)
+- **Plano:** pro
+- **Role:** admin (inserido em `user_roles`)
 
-## 2. Raio configurável
-- Aceitar `_radius_km` de 5 a 200 (default 50).
-- UI ganha um seletor de raio (chips: 10 / 25 / 50 / 100 km) que é passado para o RPC.
+### 2. Usuário Pro
+- **Email:** pro@trocacopa.com.br
+- **Senha:** trocacopa123
+- **Nome:** Usuário Pro
+- **Plano:** pro
+- **Role:** user
 
-## 3. UI `/near`
-- Cabeçalho: "Ordenado por compatibilidade (matches + proximidade)".
-- Cada card mostra: distância, match (eles têm pra mim), "você oferece N pra ele", e barra de compatibilidade (`compat_score * 100`%).
-- Badge "🎯 Perto" quando `dist_km < raio * 0.25`.
-- Estado vazio sugere aumentar raio.
+### 3. Usuário Comum
+- **Email:** user@trocacopa.com.br
+- **Senha:** trocacopa123
+- **Nome:** Usuário Comum
+- **Plano:** free
+- **Role:** user
 
-## 4. Tipos
-Atualizar `NearbyRow` em `_app.near.tsx` com os campos novos. `types.ts` é regenerado pela migração.
+### Como será feito
+Como `auth.users` não pode ser populado via SQL migration de forma segura (senhas precisam de hash bcrypt do GoTrue), vou criar uma **edge function temporária** (`seed-test-users`) que usa `supabaseAdmin.auth.admin.createUser()` com `email_confirm: true` para criar os 3 usuários já confirmados. Em seguida, insere/atualiza:
+- `profiles` (full_name, plan, city default)
+- `user_roles` (admin para o Juan)
 
-## Fora do escopo
-- Mudar tabelas, RLS, ou estrutura do catálogo.
-- Realtime / notificações.
-- Match em lote nos /trades.
+Depois invoco a função uma única vez via `curl_edge_functions` e confirmo o resultado.
 
-## Arquivos
-- `supabase/migrations/<novo>.sql` — substitui a função `nearby_collectors`.
-- `src/routes/_app.near.tsx` — seletor de raio + novo card com score.
+### Fora do escopo
+- Não vou popular figurinhas de exemplo nos usuários de teste (pode ser feito depois se quiser).
+- Não vou alterar políticas RLS existentes.
+
+### Arquivos
+- `supabase/functions/seed-test-users/index.ts` (novo, temporário)
+- Invocação única via curl
+
+Aprovar para prosseguir?
