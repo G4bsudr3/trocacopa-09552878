@@ -1,13 +1,56 @@
-import { createFileRoute, Outlet, Link, useLocation, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useLocation, Navigate, useNavigate } from "@tanstack/react-router";
 import { Home, BookOpen, ScanLine, MapPin, User } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
 function AppLayout() {
-  const { session, loading } = useAuth();
+  const { session, loading, user, profile } = useAuth();
+  const nav = useNavigate();
+  const lastToastRef = useRef(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const prefs = (profile?.notification_prefs as { trades?: boolean; messages?: boolean; matches?: boolean } | null) ?? {};
+    const ch = supabase
+      .channel(`notif-toast-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (p) => {
+          const n = p.new as { type: string; payload: { trade_id?: string; score?: number; city?: string; preview?: string } };
+          if (n.type === "trade_message" && prefs.messages === false) return;
+          if (n.type === "match_high" && prefs.matches === false) return;
+          if (n.type.startsWith("trade_") && n.type !== "trade_message" && prefs.trades === false) return;
+          if (Date.now() - lastToastRef.current < 1000) return;
+          lastToastRef.current = Date.now();
+
+          let title = "Nova notificação";
+          let action: { label: string; onClick: () => void } | undefined;
+          if (n.type === "match_high") {
+            title = `⚡ Match ${n.payload.score ?? ""}%${n.payload.city ? ` em ${n.payload.city}` : ""}`;
+            action = { label: "Ver", onClick: () => nav({ to: "/near" }) };
+          } else if (n.type === "trade_request") {
+            title = "📨 Novo pedido de troca";
+            if (n.payload.trade_id) action = { label: "Abrir", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
+          } else if (n.type === "trade_accepted") title = "✅ Sua troca foi aceita";
+          else if (n.type === "trade_declined") title = "❌ Sua troca foi recusada";
+          else if (n.type === "trade_completed") title = "🎉 Troca concluída";
+          else if (n.type === "trade_cancelled") title = "Troca cancelada";
+          else if (n.type === "trade_message") title = n.payload.preview ? `💬 ${n.payload.preview}` : "Nova mensagem";
+
+          toast(title, action ? { action } : undefined);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, profile?.notification_prefs, nav]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
