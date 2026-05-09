@@ -1,88 +1,95 @@
-import { useEffect, useState, useCallback } from "react";
-import { generateStickers, type Sticker, TOTAL_STICKERS } from "./mock-data";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useStickerCatalog, TOTAL_STICKERS, type StickerCatalogItem } from "@/lib/stickers";
 
-const KEY = "trocacopa.album.v1";
+export type Sticker = StickerCatalogItem & {
+  owned: boolean;
+  duplicates: number;
+};
 
-type Overrides = Record<number, { owned: boolean; duplicates: number }>;
-
-function loadOverrides(): Overrides {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
+type Row = { sticker_number: number; duplicates: number };
 
 export function useAlbum() {
-  const [overrides, setOverrides] = useState<Overrides>({});
-  const [base] = useState<Sticker[]>(() => generateStickers());
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const uid = user?.id;
 
-  useEffect(() => {
-    setOverrides(loadOverrides());
-  }, []);
+  const catalog = useStickerCatalog();
 
-  const persist = (next: Overrides) => {
-    setOverrides(next);
-    try {
-      localStorage.setItem(KEY, JSON.stringify(next));
-    } catch {}
-  };
-
-  const stickers: Sticker[] = base.map((s) => {
-    const o = overrides[s.number];
-    if (!o) return s;
-    return { ...s, owned: o.owned, duplicates: o.duplicates };
+  const ownership = useQuery({
+    queryKey: ["user_stickers", uid],
+    enabled: !!uid,
+    queryFn: async (): Promise<Row[]> => {
+      const { data, error } = await supabase
+        .from("user_stickers")
+        .select("sticker_number,duplicates")
+        .eq("user_id", uid!);
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 
-  const setSticker = useCallback(
-    (num: number, owned: boolean, duplicates: number) => {
-      const next = {
-        ...overrides,
-        [num]: { owned, duplicates: Math.max(0, duplicates) },
-      };
-      persist(next);
-    },
-    [overrides]
-  );
+  const ownedMap = new Map<number, number>();
+  (ownership.data ?? []).forEach((r) => ownedMap.set(r.sticker_number, r.duplicates));
 
-  const toggleOwned = useCallback(
-    (num: number) => {
-      const cur = stickers.find((s) => s.number === num);
-      if (!cur) return;
-      setSticker(num, !cur.owned, cur.owned ? 0 : 1);
-    },
-    [stickers, setSticker]
-  );
+  const stickers: Sticker[] = (catalog.data ?? []).map((s) => {
+    const dup = ownedMap.get(s.number) ?? 0;
+    return { ...s, owned: dup > 0, duplicates: dup };
+  });
 
-  const addDuplicate = useCallback(
-    (num: number) => {
-      const cur = stickers.find((s) => s.number === num);
-      if (!cur) return;
-      setSticker(num, true, (cur.duplicates || 1) + 1);
+  const setMutation = useMutation({
+    mutationFn: async ({ number, duplicates }: { number: number; duplicates: number }) => {
+      if (!uid) throw new Error("not authed");
+      if (duplicates <= 0) {
+        const { error } = await supabase
+          .from("user_stickers")
+          .delete()
+          .eq("user_id", uid)
+          .eq("sticker_number", number);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("user_stickers")
+          .upsert({ user_id: uid, sticker_number: number, duplicates }, { onConflict: "user_id,sticker_number" });
+        if (error) throw error;
+      }
     },
-    [stickers, setSticker]
-  );
-
-  const removeDuplicate = useCallback(
-    (num: number) => {
-      const cur = stickers.find((s) => s.number === num);
-      if (!cur) return;
-      const d = (cur.duplicates || 1) - 1;
-      setSticker(num, d > 0, Math.max(0, d));
+    onMutate: async ({ number, duplicates }) => {
+      await qc.cancelQueries({ queryKey: ["user_stickers", uid] });
+      const prev = qc.getQueryData<Row[]>(["user_stickers", uid]) ?? [];
+      const next = duplicates <= 0
+        ? prev.filter((r) => r.sticker_number !== number)
+        : prev.some((r) => r.sticker_number === number)
+          ? prev.map((r) => (r.sticker_number === number ? { ...r, duplicates } : r))
+          : [...prev, { sticker_number: number, duplicates }];
+      qc.setQueryData(["user_stickers", uid], next);
+      return { prev };
     },
-    [stickers, setSticker]
-  );
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["user_stickers", uid], ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["user_stickers", uid] });
+      qc.invalidateQueries({ queryKey: ["profile", uid] });
+    },
+  });
 
-  const reset = useCallback(() => persist({}), []);
+  const get = (n: number) => ownedMap.get(n) ?? 0;
 
   return {
     stickers,
     total: TOTAL_STICKERS,
-    setSticker,
-    toggleOwned,
-    addDuplicate,
-    removeDuplicate,
-    reset,
+    isLoading: catalog.isLoading || ownership.isLoading,
+    toggleOwned: (n: number) => setMutation.mutate({ number: n, duplicates: get(n) > 0 ? 0 : 1 }),
+    addDuplicate: (n: number) => setMutation.mutate({ number: n, duplicates: get(n) + 1 }),
+    removeDuplicate: (n: number) => setMutation.mutate({ number: n, duplicates: Math.max(0, get(n) - 1) }),
+    setSticker: (n: number, _owned: boolean, dup: number) => setMutation.mutate({ number: n, duplicates: dup }),
+    reset: async () => {
+      if (!uid) return;
+      await supabase.from("user_stickers").delete().eq("user_id", uid);
+      qc.invalidateQueries({ queryKey: ["user_stickers", uid] });
+      qc.invalidateQueries({ queryKey: ["profile", uid] });
+    },
   };
 }

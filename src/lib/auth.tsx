@@ -7,9 +7,14 @@ type Profile = {
   full_name: string | null;
   city: string | null;
   avatar_url: string | null;
+  bio: string | null;
   plan: string;
   album_progress: number;
   trades_count: number;
+  lat: number | null;
+  lng: number | null;
+  location_updated_at: string | null;
+  notification_prefs: { trades?: boolean; messages?: boolean; matches?: boolean } | null;
 };
 
 type AuthCtx = {
