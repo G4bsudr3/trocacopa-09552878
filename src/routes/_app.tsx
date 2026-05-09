@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, Link, useLocation, Navigate, useNavigate } from "@tanstack/react-router";
-import { Home, BookOpen, ScanLine, MapPin, User } from "lucide-react";
+import { Home, BookOpen, ScanLine, MapPin, User, Bell } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadNotifications } from "@/lib/use-unread-notifications";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -62,11 +63,38 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <NotificationBell />
       <main className="flex-1 pb-24">
         <Outlet />
       </main>
       <BottomNav />
     </div>
+  );
+}
+
+function NotificationBell() {
+  const loc = useLocation();
+  const { total, top } = useUnreadNotifications();
+  if (loc.pathname.startsWith("/notifications")) return null;
+  const ringColor =
+    top === "matches" ? "bg-gold text-gold-foreground"
+    : top === "messages" ? "bg-accent text-accent-foreground"
+    : "bg-primary text-primary-foreground";
+  return (
+    <Link
+      to="/notifications"
+      aria-label={`Notificações${total > 0 ? ` (${total} não lidas)` : ""}`}
+      className="fixed top-3 right-3 z-50 w-11 h-11 rounded-full glass-strong flex items-center justify-center active:scale-95 transition shadow-card"
+    >
+      <Bell size={18} />
+      {total > 0 && (
+        <span
+          className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${ringColor} ring-2 ring-background`}
+        >
+          {total > 99 ? "99+" : total}
+        </span>
+      )}
+    </Link>
   );
 }
 
