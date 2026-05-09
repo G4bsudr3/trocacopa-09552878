@@ -101,18 +101,22 @@ function Album() {
 
       {/* Grid */}
       <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mt-4">
-        {filtered.map((s) => (
-          <StickerCell
-            key={s.number}
-            s={s}
-            onTap={() => {
-              toggleOwned(s.number);
-              toast.success(s.owned ? `#${s.number} desmarcada` : `#${s.number} adicionada!`);
-            }}
-            onLong={() => setSelected(s)}
-          />
-        ))}
-        {filtered.length === 0 && (
+        {isLoading
+          ? Array.from({ length: 24 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-xl bg-surface animate-pulse" />
+            ))
+          : filtered.map((s) => (
+              <StickerCell
+                key={s.number}
+                s={s}
+                onTap={() => {
+                  toggleOwned(s.number);
+                  toast.success(s.owned ? `#${s.number} desmarcada` : `#${s.number} adicionada!`);
+                }}
+                onLong={() => setSelected(s)}
+              />
+            ))}
+        {!isLoading && filtered.length === 0 && (
           <p className="col-span-full text-center text-sm text-muted-foreground py-10">
             Nenhuma figurinha encontrada
           </p>
