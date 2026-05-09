@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { Bell, Repeat, MessageCircle, CheckCircle2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -18,6 +18,8 @@ type Notif = {
   read: boolean;
   created_at: string;
 };
+
+type Filter = "all" | "trades" | "messages";
 
 function iconFor(type: string) {
   if (type.startsWith("trade_message")) return <MessageCircle size={20} className="text-primary" />;
@@ -52,6 +54,7 @@ function timeAgo(iso: string) {
 function Notifs() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [filter, setFilter] = useState<Filter>("all");
 
   const notifs = useQuery({
     queryKey: ["notifications", user?.id],
@@ -62,41 +65,80 @@ function Notifs() {
         .select("*")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(100);
       if (error) throw error;
       return (data ?? []) as Notif[];
     },
   });
 
-  // realtime
   useEffect(() => {
     if (!user) return;
     const ch = supabase
       .channel(`notifs-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         () => qc.invalidateQueries({ queryKey: ["notifications", user.id] })
       )
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, qc]);
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["notifications", user!.id] });
+    qc.invalidateQueries({ queryKey: ["unread-count", user!.id] });
+  };
+
   const markAllRead = async () => {
     if (!user) return;
     await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
-    qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+    invalidate();
   };
 
-  const items = notifs.data ?? [];
+  const markRead = async (id: string) => {
+    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    invalidate();
+  };
+
+  const removeOne = async (id: string) => {
+    await supabase.from("notifications").delete().eq("id", id);
+    invalidate();
+  };
+
+  const removeAll = async () => {
+    if (!user) return;
+    if (!confirm("Apagar todas as notificações?")) return;
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+    invalidate();
+  };
+
+  const all = notifs.data ?? [];
+  const items = all.filter((n) =>
+    filter === "all" ? true : filter === "messages" ? n.type === "trade_message" : n.type.startsWith("trade_") && n.type !== "trade_message"
+  );
 
   return (
-    <div className="px-5 pt-4 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="px-5 pt-4 max-w-2xl mx-auto pb-10">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-3xl tracking-wide">Notificações</h1>
-        <button onClick={markAllRead} className="text-xs text-primary font-semibold">
-          Marcar como lidas
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={markAllRead} className="text-xs text-primary font-semibold">Marcar lidas</button>
+          {all.length > 0 && (
+            <button onClick={removeAll} className="text-xs text-destructive font-semibold flex items-center gap-1">
+              <Trash2 size={12} /> Limpar
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-4">
+        {([["all","Todas"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
+          <button
+            key={k}
+            onClick={() => setFilter(k)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
+          >{l}</button>
+        ))}
       </div>
 
       {notifs.isLoading ? (
@@ -106,30 +148,46 @@ function Notifs() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-10 mt-5 glass rounded-2xl">
-          Nenhuma notificação ainda.
-        </p>
+        <div className="text-center py-10 mt-5 glass rounded-2xl px-5">
+          <Bell size={28} className="mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground">Nada por aqui ainda.</p>
+          <Link to="/near" className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-primary">
+            <MapPin size={12} /> Encontrar colecionadores perto
+          </Link>
+        </div>
       ) : (
         <div className="space-y-2 mt-5">
           {items.map((n) => {
             const inner = (
               <div className={`glass rounded-2xl p-4 flex items-center gap-3 ${!n.read ? "border border-primary/30" : ""}`}>
-                <span className="w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+                <span className="w-10 h-10 rounded-full bg-surface flex items-center justify-center shrink-0">
                   {iconFor(n.type)}
                 </span>
-                <div className="flex-1">
-                  <p className="text-sm">{labelFor(n)}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm truncate">{labelFor(n)}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.created_at)}</p>
                 </div>
                 {!n.read && <span className="w-2 h-2 rounded-full bg-primary" />}
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeOne(n.id); }}
+                  className="w-8 h-8 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive flex items-center justify-center shrink-0"
+                  aria-label="Apagar"
+                >
+                  <X size={14} />
+                </button>
               </div>
             );
             return n.payload.trade_id ? (
-              <Link key={n.id} to="/trade/$id" params={{ id: n.payload.trade_id }}>
+              <Link
+                key={n.id}
+                to="/trade/$id"
+                params={{ id: n.payload.trade_id }}
+                onClick={() => !n.read && markRead(n.id)}
+              >
                 {inner}
               </Link>
             ) : (
-              <div key={n.id}>{inner}</div>
+              <button key={n.id} onClick={() => !n.read && markRead(n.id)} className="w-full text-left">{inner}</button>
             );
           })}
         </div>
