@@ -15,6 +15,7 @@ type Profile = {
   lng: number | null;
   location_updated_at: string | null;
   notification_prefs: { trades?: boolean; messages?: boolean; matches?: boolean } | null;
+  discoverable?: boolean;
 };
 
 type AuthCtx = {
