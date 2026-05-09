@@ -186,8 +186,11 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
   const save = async () => {
     setBusy(true);
     const sourceChanged = (player_name || null) !== (row.player_name ?? null);
-    const patch: Record<string, unknown> = { country_name, country_code, flag_emoji, kind, position, player_name: player_name || null };
-    if (sourceChanged) patch.player_name_source = "manual";
+    const patch = {
+      country_name, country_code, flag_emoji, kind, position,
+      player_name: player_name || null,
+      ...(sourceChanged ? { player_name_source: "manual" } : {}),
+    };
     const { error } = await supabase.from("stickers").update(patch).eq("code", row.code);
     setBusy(false);
     if (error) return toast.error(error.message);
