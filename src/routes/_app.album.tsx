@@ -154,7 +154,7 @@ function Album() {
                 </div>
                 <div>
                   <p className="font-display text-2xl">{current.name}</p>
-                  <p className="text-sm text-muted-foreground">{current.team} · Grupo {current.group}</p>
+                  <p className="text-sm text-muted-foreground">{current.team} · Grupo {current.group_letter}</p>
                   <p className="text-xs mt-1">
                     {current.owned ? (
                       <span className="text-primary font-bold">
