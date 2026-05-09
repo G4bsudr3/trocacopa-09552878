@@ -155,6 +155,7 @@ export type Database = {
           country_name: string
           flag_emoji: string
           group_letter: string
+          image_url: string | null
           kind: string
           position: number
         }
@@ -164,6 +165,7 @@ export type Database = {
           country_name: string
           flag_emoji?: string
           group_letter: string
+          image_url?: string | null
           kind: string
           position: number
         }
@@ -173,6 +175,7 @@ export type Database = {
           country_name?: string
           flag_emoji?: string
           group_letter?: string
+          image_url?: string | null
           kind?: string
           position?: number
         }
