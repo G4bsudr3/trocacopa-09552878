@@ -14,14 +14,46 @@ export type Database = {
   }
   public: {
     Tables: {
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          read: boolean
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          read?: boolean
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          read?: boolean
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           album_progress: number
           avatar_url: string | null
+          bio: string | null
           city: string | null
           created_at: string
           full_name: string | null
           id: string
+          lat: number | null
+          lng: number | null
+          location_updated_at: string | null
+          notification_prefs: Json
           plan: string
           trades_count: number
           updated_at: string
@@ -29,10 +61,15 @@ export type Database = {
         Insert: {
           album_progress?: number
           avatar_url?: string | null
+          bio?: string | null
           city?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          lat?: number | null
+          lng?: number | null
+          location_updated_at?: string | null
+          notification_prefs?: Json
           plan?: string
           trades_count?: number
           updated_at?: string
@@ -40,25 +77,205 @@ export type Database = {
         Update: {
           album_progress?: number
           avatar_url?: string | null
+          bio?: string | null
           city?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
+          location_updated_at?: string | null
+          notification_prefs?: Json
           plan?: string
           trades_count?: number
           updated_at?: string
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          reviewed_id: string
+          reviewer_id: string
+          stars: number
+          trade_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          reviewed_id: string
+          reviewer_id: string
+          stars: number
+          trade_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          reviewed_id?: string
+          reviewer_id?: string
+          stars?: number
+          trade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stickers: {
+        Row: {
+          group_letter: string
+          name: string
+          number: number
+          team: string
+        }
+        Insert: {
+          group_letter: string
+          name: string
+          number: number
+          team: string
+        }
+        Update: {
+          group_letter?: string
+          name?: string
+          number?: number
+          team?: string
+        }
+        Relationships: []
+      }
+      trade_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sender_id: string
+          trade_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          trade_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          trade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_messages_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trades: {
+        Row: {
+          created_at: string
+          id: string
+          offered_stickers: number[]
+          receiver_id: string
+          requested_stickers: number[]
+          requester_id: string
+          status: Database["public"]["Enums"]["trade_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offered_stickers?: number[]
+          receiver_id: string
+          requested_stickers?: number[]
+          requester_id: string
+          status?: Database["public"]["Enums"]["trade_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offered_stickers?: number[]
+          receiver_id?: string
+          requested_stickers?: number[]
+          requester_id?: string
+          status?: Database["public"]["Enums"]["trade_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_stickers: {
+        Row: {
+          created_at: string
+          duplicates: number
+          sticker_number: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duplicates?: number
+          sticker_number: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duplicates?: number
+          sticker_number?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stickers_sticker_number_fkey"
+            columns: ["sticker_number"]
+            isOneToOne: false
+            referencedRelation: "stickers"
+            referencedColumns: ["number"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_trade_participant: {
+        Args: { _trade: string; _user: string }
+        Returns: boolean
+      }
+      nearby_collectors: {
+        Args: { _radius_km?: number }
+        Returns: {
+          album_progress: number
+          avatar_url: string
+          city: string
+          distance_km: number
+          full_name: string
+          id: string
+          match_count: number
+          plan: string
+          trades_count: number
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      trade_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -185,6 +402,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      trade_status: [
+        "pending",
+        "accepted",
+        "declined",
+        "completed",
+        "cancelled",
+      ],
+    },
   },
 } as const
