@@ -19,6 +19,8 @@ type Row = {
   kind: string;
   position: number;
   image_url: string | null;
+  player_name: string | null;
+  player_name_source: string | null;
 };
 
 function AdminStickers() {
