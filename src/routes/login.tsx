@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Mail, Lock, User as UserIcon } from "lucide-react";
+import { Mail, Lock, User as UserIcon, MapPin } from "lucide-react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +18,32 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+const signinSchema = z.object({
+  email: z.string().trim().email("E-mail inválido").max(255),
+  password: z.string().min(1, "Informe sua senha").max(72),
+});
+
+const signupSchema = z.object({
+  name: z.string().trim().min(2, "Nome muito curto").max(80),
+  city: z.string().trim().min(2, "Informe sua cidade").max(80),
+  email: z.string().trim().email("E-mail inválido").max(255),
+  password: z.string().min(8, "Senha precisa ter pelo menos 8 caracteres").max(72),
+});
+
+const resetSchema = z.object({
+  email: z.string().trim().email("E-mail inválido").max(255),
+});
+
+function translateAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) return "E-mail ou senha incorretos";
+  if (m.includes("user already registered")) return "Este e-mail já tem cadastro — faça login";
+  if (m.includes("email not confirmed")) return "Confirme seu e-mail antes de entrar";
+  if (m.includes("rate limit")) return "Muitas tentativas, aguarde um instante";
+  if (m.includes("password")) return "Senha não atende aos requisitos mínimos";
+  return message;
+}
+
 function LoginPage() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
@@ -26,40 +53,97 @@ function LoginPage() {
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showReset, setShowReset] = useState(false);
 
   if (!loading && session) return <Navigate to="/home" />;
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    try {
-      if (mode === "signup") {
+    setErrors({});
+
+    if (mode === "signup") {
+      const parsed = signupSchema.safeParse({ name, city, email, password });
+      if (!parsed.success) {
+        const errs: Record<string, string> = {};
+        parsed.error.issues.forEach((i) => (errs[i.path[0] as string] = i.message));
+        setErrors(errs);
+        return;
+      }
+      setBusy(true);
+      try {
         const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: parsed.data.email,
+          password: parsed.data.password,
           options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: name },
+            emailRedirectTo: `${window.location.origin}/home`,
+            data: { full_name: parsed.data.name, city: parsed.data.city },
           },
         });
         if (error) throw error;
-        if (data.user) {
-          await supabase.from("profiles").upsert({
-            id: data.user.id,
-            full_name: name,
-            city,
+
+        if (data.session) {
+          // Auto-confirm está ligado: já temos sessão; complementa cidade caso o trigger não tenha pego
+          await supabase
+            .from("profiles")
+            .update({ full_name: parsed.data.name, city: parsed.data.city })
+            .eq("id", data.session.user.id);
+          toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
+          navigate({ to: "/home" });
+        } else {
+          toast.success(`Enviamos um e-mail de confirmação para ${parsed.data.email}. Confirme para entrar.`, {
+            duration: 8000,
           });
+          setPassword("");
+          setMode("signin");
         }
-        toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
-        navigate({ to: "/home" });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Bem-vindo de volta!");
-        navigate({ to: "/home" });
+      } catch (err: any) {
+        toast.error(translateAuthError(err.message || "Algo deu errado"));
+      } finally {
+        setBusy(false);
       }
+      return;
+    }
+
+    const parsed = signinSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      parsed.error.issues.forEach((i) => (errs[i.path[0] as string] = i.message));
+      setErrors(errs);
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
+      if (error) throw error;
+      toast.success("Bem-vindo de volta!");
+      navigate({ to: "/home" });
     } catch (err: any) {
-      toast.error(err.message || "Algo deu errado");
+      toast.error(translateAuthError(err.message || "Algo deu errado"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleReset = async () => {
+    const parsed = resetSchema.safeParse({ email });
+    if (!parsed.success) {
+      setErrors({ email: parsed.error.issues[0].message });
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um link de recuperação para seu e-mail.", { duration: 7000 });
+      setShowReset(false);
+    } catch (err: any) {
+      toast.error(translateAuthError(err.message || "Não foi possível enviar"));
     } finally {
       setBusy(false);
     }
@@ -68,7 +152,7 @@ function LoginPage() {
   const handleGoogle = async () => {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/home`,
     });
     if (result.error) {
       toast.error("Erro ao entrar com Google");
@@ -111,7 +195,7 @@ function LoginPage() {
           {(["signin", "signup"] as const).map((m) => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => { setMode(m); setErrors({}); setShowReset(false); }}
               className={`flex-1 py-2 rounded-full text-sm font-semibold transition ${
                 mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground"
               }`}
@@ -121,57 +205,100 @@ function LoginPage() {
           ))}
         </div>
 
-        <form onSubmit={handleEmail} className="space-y-3">
-          {mode === "signup" && (
-            <>
-              <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} />
-              <Field icon={<UserIcon size={18} />} placeholder="Cidade / região" value={city} onChange={setCity} />
-            </>
-          )}
-          <Field icon={<Mail size={18} />} placeholder="E-mail" value={email} onChange={setEmail} type="email" />
-          <Field icon={<Lock size={18} />} placeholder="Senha" value={password} onChange={setPassword} type="password" />
+        {showReset ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Digite seu e-mail e enviaremos um link para redefinir sua senha.
+            </p>
+            <Field
+              icon={<Mail size={18} />}
+              placeholder="E-mail"
+              value={email}
+              onChange={setEmail}
+              type="email"
+              error={errors.email}
+            />
+            <button
+              onClick={handleReset}
+              disabled={busy}
+              className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-full glow-primary disabled:opacity-60 transition active:scale-95"
+            >
+              {busy ? "..." : "Enviar link de recuperação"}
+            </button>
+            <button
+              onClick={() => { setShowReset(false); setErrors({}); }}
+              className="w-full text-xs text-muted-foreground hover:text-foreground transition"
+            >
+              ← Voltar para login
+            </button>
+          </div>
+        ) : (
+          <>
+            <form onSubmit={handleEmail} className="space-y-3">
+              {mode === "signup" && (
+                <>
+                  <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} error={errors.name} />
+                  <Field icon={<MapPin size={18} />} placeholder="Cidade / região" value={city} onChange={setCity} error={errors.city} />
+                </>
+              )}
+              <Field icon={<Mail size={18} />} placeholder="E-mail" value={email} onChange={setEmail} type="email" error={errors.email} />
+              <Field icon={<Lock size={18} />} placeholder="Senha" value={password} onChange={setPassword} type="password" error={errors.password} />
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-full glow-primary disabled:opacity-60 transition active:scale-95"
-          >
-            {busy ? "..." : mode === "signin" ? "Entrar" : "Criar conta"}
-          </button>
-        </form>
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={() => { setShowReset(true); setErrors({}); }}
+                  className="text-xs text-primary hover:underline w-full text-right"
+                >
+                  Esqueci minha senha
+                </button>
+              )}
 
-        <div className="flex items-center gap-3 my-5">
-          <div className="h-px bg-border flex-1" />
-          <span className="text-xs text-muted-foreground">ou</span>
-          <div className="h-px bg-border flex-1" />
-        </div>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-full glow-primary disabled:opacity-60 transition active:scale-95"
+              >
+                {busy ? "..." : mode === "signin" ? "Entrar" : "Criar conta"}
+              </button>
+            </form>
 
-        <button
-          onClick={handleGoogle}
-          disabled={busy}
-          className="w-full glass border border-border rounded-full py-3.5 font-semibold text-sm flex items-center justify-center gap-3 hover:bg-surface-elevated transition active:scale-95"
-        >
-          <GoogleIcon /> Entrar com Google
-        </button>
+            <div className="flex items-center gap-3 my-5">
+              <div className="h-px bg-border flex-1" />
+              <span className="text-xs text-muted-foreground">ou</span>
+              <div className="h-px bg-border flex-1" />
+            </div>
+
+            <button
+              onClick={handleGoogle}
+              disabled={busy}
+              className="w-full glass border border-border rounded-full py-3.5 font-semibold text-sm flex items-center justify-center gap-3 hover:bg-surface-elevated transition active:scale-95"
+            >
+              <GoogleIcon /> Entrar com Google
+            </button>
+          </>
+        )}
       </motion.div>
     </div>
   );
 }
 
 function Field({
-  icon, placeholder, value, onChange, type = "text",
-}: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string }) {
+  icon, placeholder, value, onChange, type = "text", error,
+}: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string; error?: string }) {
   return (
-    <div className="flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border border-transparent focus-within:border-primary transition">
-      <span className="text-muted-foreground">{icon}</span>
-      <input
-        type={type}
-        required
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
-      />
+    <div>
+      <div className={`flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border transition ${error ? "border-destructive" : "border-transparent focus-within:border-primary"}`}>
+        <span className="text-muted-foreground">{icon}</span>
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+        />
+      </div>
+      {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
     </div>
   );
 }

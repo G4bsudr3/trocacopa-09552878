@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +27,11 @@ import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
 import { Route as AppAdminStickersRouteImport } from './routes/_app.admin.stickers'
 import { Route as ApiPublicHooksScanMatchAlertsRouteImport } from './routes/api/public/hooks/scan-match-alerts'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -110,6 +116,7 @@ const ApiPublicHooksScanMatchAlertsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/album': typeof AppAlbumRoute
   '/home': typeof AppHomeRoute
   '/near': typeof AppNearRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/album': typeof AppAlbumRoute
   '/home': typeof AppHomeRoute
   '/near': typeof AppNearRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_app/album': typeof AppAlbumRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/near': typeof AppNearRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/reset-password'
     | '/album'
     | '/home'
     | '/near'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/reset-password'
     | '/album'
     | '/home'
     | '/near'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/login'
+    | '/reset-password'
     | '/_app/album'
     | '/_app/home'
     | '/_app/near'
@@ -219,11 +231,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicHooksScanMatchAlertsRoute: typeof ApiPublicHooksScanMatchAlertsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -385,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicHooksScanMatchAlertsRoute: ApiPublicHooksScanMatchAlertsRoute,
 }
 export const routeTree = rootRouteImport
