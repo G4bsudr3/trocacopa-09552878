@@ -180,14 +180,15 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
   const [flag_emoji, setFlag] = useState(row.flag_emoji);
   const [kind, setKind] = useState(row.kind);
   const [position, setPosition] = useState(row.position);
+  const [player_name, setPlayer] = useState(row.player_name ?? "");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const save = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("stickers")
-      .update({ country_name, country_code, flag_emoji, kind, position })
-      .eq("code", row.code);
+    const sourceChanged = (player_name || null) !== (row.player_name ?? null);
+    const patch: Record<string, unknown> = { country_name, country_code, flag_emoji, kind, position, player_name: player_name || null };
+    if (sourceChanged) patch.player_name_source = "manual";
+    const { error } = await supabase.from("stickers").update(patch).eq("code", row.code);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Salvo");
