@@ -89,33 +89,78 @@ function Scan() {
     <div className="px-5 pt-4 max-w-2xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Escanear Figurinha</h1>
 
-      <div className="mt-5 relative aspect-[3/4] rounded-3xl overflow-hidden glass-strong">
-        <div className="absolute inset-0 bg-gradient-to-br from-surface to-background" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-[70%] h-[80%]">
-            {[
-              "top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl",
-              "top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl",
-              "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl",
-              "bottom-0 right-0 border-b-4 border-r-4 rounded-br-2xl",
-            ].map((cls) => (
-              <div key={cls} className={`absolute w-12 h-12 border-primary ${cls}`} />
-            ))}
-            <motion.div
-              className="absolute left-0 right-0 h-0.5 bg-primary glow-primary"
-              animate={{ top: ["0%", "100%", "0%"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            />
-            <Camera className="absolute inset-0 m-auto text-primary/40" size={64} />
-          </div>
-        </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
 
-        <div className="absolute bottom-5 inset-x-0 text-center px-6">
-          <p className="text-sm text-muted-foreground mb-3">
-            Digite o código (BRA10, FWC7, CC3) ou país para registrar no álbum
-          </p>
-        </div>
+      <div className="mt-5 relative aspect-[3/4] rounded-3xl overflow-hidden glass-strong">
+        {preview ? (
+          <>
+            <img src={preview} alt="figurinha" className="absolute inset-0 w-full h-full object-cover" />
+            <button
+              onClick={() => setPreview(null)}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
+              aria-label="Fechar"
+            >
+              <X size={16} />
+            </button>
+            {scanning && (
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                <Loader2 size={32} className="animate-spin text-primary" />
+                <p className="text-sm font-semibold flex items-center gap-1">
+                  <Sparkles size={14} className="text-gold" /> Identificando figurinha...
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-surface to-background" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-[70%] h-[80%]">
+                {[
+                  "top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl",
+                  "top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl",
+                  "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl",
+                  "bottom-0 right-0 border-b-4 border-r-4 rounded-br-2xl",
+                ].map((cls) => (
+                  <div key={cls} className={`absolute w-12 h-12 border-primary ${cls}`} />
+                ))}
+                <motion.div
+                  className="absolute left-0 right-0 h-0.5 bg-primary glow-primary"
+                  animate={{ top: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                />
+                <Camera className="absolute inset-0 m-auto text-primary/40" size={64} />
+              </div>
+            </div>
+
+            <div className="absolute bottom-5 inset-x-0 text-center px-6">
+              <p className="text-xs text-muted-foreground">
+                Tire uma foto da figurinha — a IA identifica automaticamente
+              </p>
+            </div>
+          </>
+        )}
       </div>
+
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={scanning}
+        className="w-full mt-3 gradient-primary text-primary-foreground rounded-full py-3.5 font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60"
+      >
+        {scanning ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
+        {scanning ? "Analisando..." : "Tirar foto / Enviar imagem"}
+      </button>
 
       <div className="flex items-center gap-3 bg-input rounded-full px-4 py-3 mt-4 border border-transparent focus-within:border-primary">
         <Search size={18} className="text-muted-foreground" />
