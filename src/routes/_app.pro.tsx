@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Crown, Check, X } from "lucide-react";
+import { Crown, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/pro")({
   head: () => ({ meta: [{ title: "TrocaCopa Pro" }] }),
@@ -18,6 +21,26 @@ const features = [
 ];
 
 function Pro() {
+  const { user } = useAuth();
+  const [joined, setJoined] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("pro_waitlist").select("user_id").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => setJoined(!!data));
+  }, [user]);
+
+  const join = async () => {
+    if (!user) return;
+    setBusy(true);
+    const { error } = await supabase.from("pro_waitlist").insert({ user_id: user.id } as any);
+    setBusy(false);
+    if (error && !error.message.includes("duplicate")) return toast.error(error.message);
+    setJoined(true);
+    toast.success("Você está na lista! Avisaremos quando lançarmos. 💎");
+  };
+
   return (
     <div className="px-5 pt-4 max-w-2xl mx-auto">
       <div className="text-center mt-4">
@@ -52,12 +75,16 @@ function Pro() {
       </div>
 
       <button
-        onClick={() => toast.success("Em breve! 💎")}
-        className="w-full mt-5 gradient-gold text-gold-foreground rounded-full py-4 font-bold glow-gold active:scale-95 transition"
+        onClick={join}
+        disabled={busy || joined}
+        className="w-full mt-5 gradient-gold text-gold-foreground rounded-full py-4 font-bold glow-gold active:scale-95 transition disabled:opacity-70 flex items-center justify-center gap-2"
       >
-        Assinar TrocaCopa Pro — R$ 9,90/mês
+        {busy ? <Loader2 size={18} className="animate-spin" /> : null}
+        {joined ? "✓ Você está na lista" : "Quero ser avisado quando lançar"}
       </button>
-      <p className="text-center text-xs text-muted-foreground mt-3">Cancele quando quiser</p>
+      <p className="text-center text-xs text-muted-foreground mt-3">
+        TrocaCopa Pro está em desenvolvimento. Sem cobranças por enquanto.
+      </p>
     </div>
   );
 }
