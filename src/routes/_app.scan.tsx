@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Check, Repeat, Search } from "lucide-react";
+import { Camera, Check, Repeat, Search, Loader2, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
 import { useStickerCatalog } from "@/lib/stickers";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/scan")({
   head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
@@ -17,6 +18,9 @@ function Scan() {
   const { stickers, addDuplicate, toggleOwned } = useAlbum();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const matches = !query
     ? []
@@ -45,39 +49,118 @@ function Scan() {
     }
     setRecent((r) => [code, ...r.filter((n) => n !== code)].slice(0, 6));
     setQuery("");
+    setPreview(null);
+  };
+
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem");
+    const dataUrl = await fileToDataUrl(file);
+    setPreview(dataUrl);
+    setScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
+      if (error) throw error;
+      if (data?.error === "credits_exhausted") return toast.error("Créditos de IA esgotados");
+      if (data?.error === "rate_limited") return toast.error("Muitas requisições, aguarde um instante");
+      if (data?.error) return toast.error("Falha ao analisar: " + data.error);
+
+      const code: string | null = data?.code;
+      const country: string | null = data?.country_name;
+      const conf: number = data?.confidence ?? 0;
+
+      if (code && (catalog.data ?? []).some((s) => s.code.toLowerCase() === code.toLowerCase())) {
+        const real = (catalog.data ?? []).find((s) => s.code.toLowerCase() === code.toLowerCase())!;
+        setQuery(real.code);
+        toast.success(`Identificada: ${real.code} ${real.flag_emoji} (${Math.round(conf * 100)}%)`);
+      } else if (country) {
+        setQuery(country);
+        toast.message(`País reconhecido: ${country} — escolha o número`);
+      } else {
+        toast.error("Não consegui ler o código. Tente uma foto mais nítida ou digite manualmente.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao escanear");
+    } finally {
+      setScanning(false);
+    }
   };
 
   return (
     <div className="px-5 pt-4 max-w-2xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Escanear Figurinha</h1>
 
-      <div className="mt-5 relative aspect-[3/4] rounded-3xl overflow-hidden glass-strong">
-        <div className="absolute inset-0 bg-gradient-to-br from-surface to-background" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-[70%] h-[80%]">
-            {[
-              "top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl",
-              "top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl",
-              "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl",
-              "bottom-0 right-0 border-b-4 border-r-4 rounded-br-2xl",
-            ].map((cls) => (
-              <div key={cls} className={`absolute w-12 h-12 border-primary ${cls}`} />
-            ))}
-            <motion.div
-              className="absolute left-0 right-0 h-0.5 bg-primary glow-primary"
-              animate={{ top: ["0%", "100%", "0%"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            />
-            <Camera className="absolute inset-0 m-auto text-primary/40" size={64} />
-          </div>
-        </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
 
-        <div className="absolute bottom-5 inset-x-0 text-center px-6">
-          <p className="text-sm text-muted-foreground mb-3">
-            Digite o código (BRA10, FWC7, CC3) ou país para registrar no álbum
-          </p>
-        </div>
+      <div className="mt-5 relative aspect-[3/4] rounded-3xl overflow-hidden glass-strong">
+        {preview ? (
+          <>
+            <img src={preview} alt="figurinha" className="absolute inset-0 w-full h-full object-cover" />
+            <button
+              onClick={() => setPreview(null)}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
+              aria-label="Fechar"
+            >
+              <X size={16} />
+            </button>
+            {scanning && (
+              <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                <Loader2 size={32} className="animate-spin text-primary" />
+                <p className="text-sm font-semibold flex items-center gap-1">
+                  <Sparkles size={14} className="text-gold" /> Identificando figurinha...
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-surface to-background" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-[70%] h-[80%]">
+                {[
+                  "top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl",
+                  "top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl",
+                  "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl",
+                  "bottom-0 right-0 border-b-4 border-r-4 rounded-br-2xl",
+                ].map((cls) => (
+                  <div key={cls} className={`absolute w-12 h-12 border-primary ${cls}`} />
+                ))}
+                <motion.div
+                  className="absolute left-0 right-0 h-0.5 bg-primary glow-primary"
+                  animate={{ top: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                />
+                <Camera className="absolute inset-0 m-auto text-primary/40" size={64} />
+              </div>
+            </div>
+
+            <div className="absolute bottom-5 inset-x-0 text-center px-6">
+              <p className="text-xs text-muted-foreground">
+                Tire uma foto da figurinha — a IA identifica automaticamente
+              </p>
+            </div>
+          </>
+        )}
       </div>
+
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={scanning}
+        className="w-full mt-3 gradient-primary text-primary-foreground rounded-full py-3.5 font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60"
+      >
+        {scanning ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
+        {scanning ? "Analisando..." : "Tirar foto / Enviar imagem"}
+      </button>
 
       <div className="flex items-center gap-3 bg-input rounded-full px-4 py-3 mt-4 border border-transparent focus-within:border-primary">
         <Search size={18} className="text-muted-foreground" />
@@ -164,4 +247,13 @@ function Scan() {
       )}
     </div>
   );
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
 }
