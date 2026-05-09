@@ -1,6 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { Edit3, LogOut, Crown, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { TOTAL_STICKERS } from "@/lib/stickers";
+import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -12,23 +15,64 @@ export const Route = createFileRoute("/_app/profile")({
 function Profile() {
   const { profile, user, signOut } = useAuth();
   const nav = useNavigate();
-  const trades = 24;
-  const scanned = 187;
-  const pct = 47;
 
-  const badge = trades < 10 ? { icon: "🥉", name: "Iniciante" } : trades < 30 ? { icon: "🥈", name: "Colecionador" } : { icon: "🥇", name: "Mestre das Trocas" };
+  const stats = useQuery({
+    queryKey: ["profile-stats", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const [{ count: tradesCount }, { data: reviews }] = await Promise.all([
+        supabase
+          .from("trades")
+          .select("id", { count: "exact", head: true })
+          .or(`requester_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
+          .eq("status", "completed"),
+        supabase
+          .from("reviews")
+          .select("stars,comment,reviewer_id,created_at")
+          .eq("reviewed_id", user!.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+      return { tradesCount: tradesCount ?? 0, reviews: reviews ?? [] };
+    },
+  });
+
+  const trades = stats.data?.tradesCount ?? profile?.trades_count ?? 0;
+  const owned = profile?.album_progress ?? 0;
+  const pct = Math.round((owned / TOTAL_STICKERS) * 100);
+
+  const badge =
+    trades < 10
+      ? { icon: "🥉", name: "Iniciante" }
+      : trades < 30
+        ? { icon: "🥈", name: "Colecionador" }
+        : { icon: "🥇", name: "Mestre das Trocas" };
 
   return (
     <div className="px-5 pt-4 max-w-2xl mx-auto">
-      <h1 className="font-display text-3xl tracking-wide">Perfil</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-3xl tracking-wide">Perfil</h1>
+        <Link to="/settings" className="w-10 h-10 rounded-full glass flex items-center justify-center">
+          <SettingsIcon size={18} />
+        </Link>
+      </div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-strong rounded-3xl p-6 mt-4 text-center relative overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-strong rounded-3xl p-6 mt-4 text-center relative overflow-hidden"
+      >
         <div className="absolute -top-10 inset-x-0 h-32 gradient-hero opacity-20 blur-3xl" />
-        <div className="w-24 h-24 mx-auto rounded-full gradient-primary flex items-center justify-center font-display text-4xl text-primary-foreground glow-primary relative">
-          {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+        <div className="w-24 h-24 mx-auto rounded-full overflow-hidden gradient-primary flex items-center justify-center font-display text-4xl text-primary-foreground glow-primary relative">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+          ) : (
+            profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"
+          )}
         </div>
         <h2 className="font-display text-2xl mt-3">{profile?.full_name || "Colecionador"}</h2>
-        <p className="text-sm text-muted-foreground">{profile?.city || "—"}</p>
+        <p className="text-sm text-muted-foreground">{profile?.city || "Defina sua cidade"}</p>
+        {profile?.bio && <p className="text-sm mt-2">{profile.bio}</p>}
         {profile?.plan === "pro" && (
           <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full gradient-gold text-gold-foreground text-xs font-bold glow-gold">
             <Crown size={12} /> PRO
@@ -37,7 +81,7 @@ function Profile() {
 
         <div className="grid grid-cols-3 gap-2 mt-5">
           <Stat n={trades} label="Trocas" />
-          <Stat n={scanned} label="Escaneadas" />
+          <Stat n={owned} label="Figurinhas" />
           <Stat n={`${pct}%`} label="Álbum" />
         </div>
 
@@ -62,33 +106,45 @@ function Profile() {
 
       <section className="mt-6">
         <h3 className="font-display text-xl mb-3">Avaliações</h3>
-        <div className="space-y-2">
-          {[
-            { name: "Maria S.", stars: 5, text: "Troca super tranquila e rápida!" },
-            { name: "João L.", stars: 5, text: "Pessoa de confiança 🔥" },
-            { name: "Pedro R.", stars: 4, text: "Boa, recomendo!" },
-          ].map((r, i) => (
-            <div key={i} className="glass rounded-2xl p-3">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-sm">{r.name}</p>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: r.stars }).map((_, s) => (
-                    <Star key={s} size={12} className="fill-gold text-gold" />
-                  ))}
+        {stats.isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="h-16 bg-surface rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : stats.data && stats.data.reviews.length > 0 ? (
+          <div className="space-y-2">
+            {stats.data.reviews.map((r, i) => (
+              <div key={i} className="glass rounded-2xl p-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-sm">{new Date(r.created_at).toLocaleDateString("pt-BR")}</p>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: r.stars }).map((_, s) => (
+                      <Star key={s} size={12} className="fill-gold text-gold" />
+                    ))}
+                  </div>
                 </div>
+                {r.comment && <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{r.text}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-6 glass rounded-2xl">
+            Nenhuma avaliação ainda. Faça sua primeira troca!
+          </p>
+        )}
       </section>
 
-      <div className="grid grid-cols-2 gap-2 mt-6">
-        <button className="glass rounded-full py-3 text-sm font-semibold flex items-center justify-center gap-2">
+      <div className="grid grid-cols-2 gap-2 mt-6 mb-4">
+        <Link to="/profile/edit" className="glass rounded-full py-3 text-sm font-semibold flex items-center justify-center gap-2">
           <Edit3 size={14} /> Editar Perfil
-        </button>
+        </Link>
         <button
-          onClick={async () => { await signOut(); toast.success("Até logo!"); nav({ to: "/login" }); }}
+          onClick={async () => {
+            await signOut();
+            toast.success("Até logo!");
+            nav({ to: "/login" });
+          }}
           className="glass rounded-full py-3 text-sm font-semibold flex items-center justify-center gap-2 text-destructive"
         >
           <LogOut size={14} /> Sair
