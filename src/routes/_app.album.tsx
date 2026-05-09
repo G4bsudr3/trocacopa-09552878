@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum, type Sticker } from "@/lib/use-album";
-import { GROUP_LETTERS, groupByCountry } from "@/lib/stickers";
+import { groupByCountry } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/album")({
   head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
   component: Album,
 });
 
-type Tab = "selecoes" | "history" | "coca";
+type Tab = "selecoes" | "especiais";
 type Filter = "all" | "owned" | "missing" | "dup";
 
 function Album() {
@@ -20,7 +20,7 @@ function Album() {
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Sticker | null>(null);
-  const [openGroup, setOpenGroup] = useState<string | null>("A");
+  const [openCountry, setOpenCountry] = useState<string | null>(null);
 
   const owned = stickers.filter((s) => s.owned).length;
   const dups = stickers.filter((s) => s.duplicates > 1).length;
@@ -34,18 +34,12 @@ function Album() {
     return true;
   };
 
-  const cover = useMemo(() => stickers.find((s) => s.kind === "cover") ?? null, [stickers]);
-  const countries = useMemo(
-    () => stickers.filter((s) => s.kind === "country" && passFilter(s)),
+  const countryStickers = useMemo(
+    () => stickers.filter((s) => s.kind !== "special" && passFilter(s)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [stickers, filter, q],
   );
-  const fwc = useMemo(
-    () => stickers.filter((s) => s.kind === "history" && passFilter(s)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stickers, filter, q],
-  );
-  const coca = useMemo(
+  const specials = useMemo(
     () => stickers.filter((s) => s.kind === "special" && passFilter(s)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [stickers, filter, q],
@@ -62,8 +56,7 @@ function Album() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "selecoes", label: "Seleções" },
-    { key: "history", label: "História FWC" },
-    { key: "coca", label: "Coca-Cola" },
+    { key: "especiais", label: "Especiais" },
   ];
 
   const onCellTap = (s: Sticker) => {
@@ -155,47 +148,30 @@ function Album() {
       )}
 
       {!isLoading && tab === "selecoes" && (
-        <div className="mt-4 space-y-4">
-          {cover && passFilter(cover) && (
-            <section>
-              <h2 className="font-display text-sm tracking-wider text-muted-foreground uppercase mb-2">
-                Capa do álbum
-              </h2>
-              <div className="grid grid-cols-5 md:grid-cols-8 gap-2">
-                <StickerCell s={cover} onTap={() => onCellTap(cover)} onLong={() => setSelected(cover)} />
-              </div>
-            </section>
-          )}
-
-          {GROUP_LETTERS.map((g) => {
-            const groupCountries = groupByCountry(countries.filter((s) => s.group_letter === g));
-            if (groupCountries.length === 0) return null;
-            const isOpen = openGroup === g;
-            const totalInGroup = groupCountries.reduce((acc, c) => acc + c.stickers.length, 0);
-            const ownedInGroup = groupCountries.reduce(
-              (acc, c) => acc + c.stickers.filter((s) => (s as Sticker).owned).length,
-              0,
-            );
+        <div className="mt-4 space-y-3">
+          {groupByCountry(countryStickers).map((c) => {
+            const isOpen = openCountry === c.country_code;
+            const countryOwned = c.stickers.filter((s) => (s as Sticker).owned).length;
             return (
-              <section key={g}>
+              <section key={c.country_code}>
                 <button
-                  onClick={() => setOpenGroup(isOpen ? null : g)}
+                  onClick={() => setOpenCountry(isOpen ? null : c.country_code)}
                   className="w-full glass rounded-2xl px-4 py-3 flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="w-9 h-9 rounded-xl gradient-primary text-primary-foreground font-display text-lg flex items-center justify-center glow-primary">
-                      {g}
-                    </span>
-                    <div className="text-left">
-                      <p className="font-display text-base tracking-wide">Grupo {g}</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-2xl shrink-0">{c.flag_emoji}</span>
+                    <div className="text-left min-w-0">
+                      <p className="font-display text-base tracking-wide truncate">
+                        {c.country_name}
+                      </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {ownedInGroup}/{totalInGroup} figurinhas
+                        {c.country_code} · {countryOwned}/{c.stickers.length} figurinhas
                       </p>
                     </div>
                   </div>
                   <ChevronDown
                     size={18}
-                    className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`transition-transform shrink-0 ${isOpen ? "rotate-180" : ""}`}
                   />
                 </button>
 
@@ -208,38 +184,15 @@ function Album() {
                       transition={{ duration: 0.25 }}
                       className="overflow-hidden"
                     >
-                      <div className="space-y-3 pt-3">
-                        {groupCountries.map((c) => {
-                          const countryOwned = c.stickers.filter((s) => (s as Sticker).owned).length;
-                          return (
-                            <div key={c.country_code} className="glass rounded-2xl p-3">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="text-xl shrink-0">{c.flag_emoji}</span>
-                                  <p className="font-semibold text-sm truncate">
-                                    {c.country_name}{" "}
-                                    <span className="text-muted-foreground font-normal">
-                                      · {c.country_code}
-                                    </span>
-                                  </p>
-                                </div>
-                                <span className="text-[11px] font-bold text-muted-foreground shrink-0">
-                                  {countryOwned}/{c.stickers.length}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-5 md:grid-cols-10 gap-1.5">
-                                {c.stickers.map((s) => (
-                                  <StickerCell
-                                    key={s.code}
-                                    s={s as Sticker}
-                                    onTap={() => onCellTap(s as Sticker)}
-                                    onLong={() => setSelected(s as Sticker)}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="grid grid-cols-4 md:grid-cols-8 gap-2 pt-3">
+                        {c.stickers.map((s) => (
+                          <StickerCell
+                            key={s.code}
+                            s={s as Sticker}
+                            onTap={() => onCellTap(s as Sticker)}
+                            onLong={() => setSelected(s as Sticker)}
+                          />
+                        ))}
                       </div>
                     </motion.div>
                   )}
@@ -248,7 +201,7 @@ function Album() {
             );
           })}
 
-          {countries.length === 0 && !cover && (
+          {countryStickers.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-10">
               Nenhuma figurinha encontrada
             </p>
@@ -256,39 +209,20 @@ function Album() {
         </div>
       )}
 
-      {!isLoading && tab === "history" && (
+      {!isLoading && tab === "especiais" && (
         <section className="mt-4 glass rounded-2xl p-4">
           <p className="font-display text-base tracking-wide flex items-center gap-2 mb-3">
-            🏆 FIFA World Cup History
+            ✨ Especiais
             <span className="text-xs text-muted-foreground font-normal">
-              {fwc.filter((s) => s.owned).length}/19
+              {specials.filter((s) => s.owned).length}/{specials.length}
             </span>
           </p>
-          <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
-            {fwc.map((s) => (
+          <div className="grid grid-cols-5 md:grid-cols-8 gap-2">
+            {specials.map((s) => (
               <StickerCell key={s.code} s={s} onTap={() => onCellTap(s)} onLong={() => setSelected(s)} />
             ))}
           </div>
-          {fwc.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground py-6">Nada por aqui</p>
-          )}
-        </section>
-      )}
-
-      {!isLoading && tab === "coca" && (
-        <section className="mt-4 rounded-2xl p-4 border border-[#dc2626]/40 bg-[#dc2626]/10">
-          <p className="font-display text-base tracking-wide flex items-center gap-2 mb-3 text-[#fca5a5]">
-            🥤 Coca-Cola
-            <span className="text-xs text-muted-foreground font-normal">
-              {coca.filter((s) => s.owned).length}/14
-            </span>
-          </p>
-          <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
-            {coca.map((s) => (
-              <StickerCell key={s.code} s={s} onTap={() => onCellTap(s)} onLong={() => setSelected(s)} />
-            ))}
-          </div>
-          {coca.length === 0 && (
+          {specials.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-6">Nada por aqui</p>
           )}
         </section>
@@ -341,13 +275,13 @@ function Album() {
                 <div>
                   <p className="font-display text-2xl">{current.country_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {current.kind === "country"
-                      ? `Grupo ${current.group_letter}`
-                      : current.kind === "history"
-                        ? "FIFA World Cup History"
+                    {current.kind === "crest"
+                      ? "Brasão"
+                      : current.kind === "team"
+                        ? "Foto do time"
                         : current.kind === "special"
-                          ? "Coca-Cola"
-                          : "Capa do álbum"}
+                          ? "Especial"
+                          : `Jogador #${current.position}`}
                   </p>
                   <p className="text-xs mt-1">
                     {current.owned ? (
