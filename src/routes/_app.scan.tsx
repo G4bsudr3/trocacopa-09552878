@@ -279,25 +279,32 @@ function Scan() {
         <div className="mt-3 glass-strong rounded-2xl p-3">
           <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">Você quis dizer?</p>
           <div className="space-y-2">
-            {suggestions.map((s) => (
-              <button
-                key={s.code}
-                onClick={() => { register(s.code, false); setSuggestions([]); }}
-                className="w-full glass rounded-xl p-2.5 flex items-center gap-3 text-left active:scale-[0.98] transition"
-              >
-                <div className="w-10 h-14 rounded-lg gradient-primary text-primary-foreground flex flex-col items-center justify-center font-display">
-                  <span className="text-base leading-none">{s.flag_emoji ?? "·"}</span>
-                  <span className="text-[10px] mt-0.5">{s.code}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{s.player_name ?? s.code}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {s.country_name} · {Math.round(s.score * 100)}% match
-                  </p>
-                </div>
-                <Check size={16} className="text-primary" />
-              </button>
-            ))}
+            {suggestions.map((s) => {
+              const cat = (catalog.data ?? []).find((c) => c.code.toLowerCase() === s.code.toLowerCase());
+              return (
+                <button
+                  key={s.code}
+                  onClick={() => { register(s.code, false); setSuggestions([]); }}
+                  className="w-full glass rounded-xl p-2.5 flex items-center gap-3 text-left active:scale-[0.98] transition"
+                >
+                  {cat?.image_url ? (
+                    <img src={cat.image_url} alt={s.code} className="w-10 h-14 rounded-lg object-cover ring-1 ring-primary/30 shrink-0" />
+                  ) : (
+                    <div className="w-10 h-14 rounded-lg gradient-primary text-primary-foreground flex flex-col items-center justify-center font-display shrink-0">
+                      <span className="text-base leading-none">{s.flag_emoji ?? "·"}</span>
+                      <span className="text-[10px] mt-0.5">{s.code}</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{s.player_name ?? s.code}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {s.country_name} · {Math.round(s.score * 100)}% match
+                    </p>
+                  </div>
+                  <Check size={16} className="text-primary" />
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
