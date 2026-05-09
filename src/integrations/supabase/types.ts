@@ -343,14 +343,18 @@ export type Database = {
           album_progress: number
           avatar_url: string
           city: string
+          compat_album: boolean
           distance_km: number
           full_name: string
           give_count: number
           id: string
           mutual_count: number
+          nationwide: boolean
+          out_of_radius: boolean
           plan: string
           proximity_score: number
           receive_count: number
+          recent_active: boolean
           region_bonus: number
           same_city: boolean
           score_pct: number
