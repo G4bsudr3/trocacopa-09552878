@@ -116,7 +116,13 @@ function Notifs() {
 
   const all = notifs.data ?? [];
   const items = all.filter((n) =>
-    filter === "all" ? true : filter === "messages" ? n.type === "trade_message" : n.type.startsWith("trade_") && n.type !== "trade_message"
+    filter === "all"
+      ? true
+      : filter === "messages"
+      ? n.type === "trade_message"
+      : filter === "matches"
+      ? n.type === "match_high"
+      : n.type.startsWith("trade_") && n.type !== "trade_message"
   );
 
   return (
@@ -133,12 +139,12 @@ function Notifs() {
         </div>
       </div>
 
-      <div className="flex gap-2 mt-4">
-        {([["all","Todas"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
+      <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-none">
+        {([["all","Todas"],["matches","Matches"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
           <button
             key={k}
             onClick={() => setFilter(k)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
           >{l}</button>
         ))}
       </div>
