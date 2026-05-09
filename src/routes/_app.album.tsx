@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum, type Sticker } from "@/lib/use-album";
-import { GROUP_LETTERS, groupByCountry } from "@/lib/stickers";
+import { groupByCountry } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/album")({
   head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
