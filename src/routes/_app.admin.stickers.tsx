@@ -3,7 +3,7 @@ import { useState, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
-import { ChevronLeft, Loader2, Upload, Search } from "lucide-react";
+import { ChevronLeft, Loader2, Upload, Search, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/admin/stickers")({
