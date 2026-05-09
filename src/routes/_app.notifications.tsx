@@ -1,12 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useUnreadNotifications } from "@/lib/use-unread-notifications";
+
+const FILTERS = ["all", "trades", "messages", "matches"] as const;
+type Filter = (typeof FILTERS)[number];
 
 export const Route = createFileRoute("/_app/notifications")({
   head: () => ({ meta: [{ title: "Notificações — TrocaCopa" }] }),
+  validateSearch: (s: Record<string, unknown>): { filter: Filter } => {
+    const f = s.filter;
+    return { filter: FILTERS.includes(f as Filter) ? (f as Filter) : "all" };
+  },
   component: Notifs,
 });
 
