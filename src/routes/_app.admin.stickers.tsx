@@ -57,11 +57,33 @@ function AdminStickers() {
       if (onlyMissing && r.image_url) return false;
       if (q) {
         const t = q.toLowerCase();
-        if (!r.code.toLowerCase().includes(t) && !r.country_name.toLowerCase().includes(t)) return false;
+        const hay = `${r.code} ${r.country_name} ${r.player_name ?? ""}`.toLowerCase();
+        if (!hay.includes(t)) return false;
       }
       return true;
     });
   }, [rows, q, country, onlyMissing]);
+
+  const [importing, setImporting] = useState(false);
+  const runImport = async (skip_images: boolean, only_missing_names: boolean) => {
+    if (!confirm(skip_images ? "Importar só nomes faltantes do Central da Copa?" : "Importar TODAS as 980 figurinhas (nomes + imagens) do Central da Copa? Pode levar alguns minutos.")) return;
+    setImporting(true);
+    const t = toast.loading("Importando do Central da Copa...");
+    try {
+      const { data, error } = await supabase.functions.invoke("import-checklist", {
+        body: { skip_images, only_missing_names },
+      });
+      if (error) throw error;
+      toast.dismiss(t);
+      toast.success(`OK · ${data.inserted} criados, ${data.updated} atualizados, ${data.image_ok} imagens (${data.image_failed} falhas)`);
+      qc.invalidateQueries({ queryKey: ["admin-stickers"] });
+    } catch (e: any) {
+      toast.dismiss(t);
+      toast.error(e?.message ?? "Falha ao importar");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
