@@ -20,6 +20,7 @@ function Scan() {
   const [recent, setRecent] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ code: string; player_name: string | null; country_name: string | null; flag_emoji: string | null; score: number }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const matches = !query
@@ -57,6 +58,7 @@ function Scan() {
     const dataUrl = await fileToDataUrl(file);
     setPreview(dataUrl);
     setScanning(true);
+    setSuggestions([]);
     try {
       const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
       if (error) throw error;
@@ -65,18 +67,25 @@ function Scan() {
       if (data?.error) return toast.error("Falha ao analisar: " + data.error);
 
       const code: string | null = data?.code;
+      const player: string | null = data?.player_name;
       const country: string | null = data?.country_name;
+      const flag: string | null = data?.flag_emoji;
       const conf: number = data?.confidence ?? 0;
+      const sugg = Array.isArray(data?.suggestions) ? data.suggestions : [];
 
       if (code && (catalog.data ?? []).some((s) => s.code.toLowerCase() === code.toLowerCase())) {
         const real = (catalog.data ?? []).find((s) => s.code.toLowerCase() === code.toLowerCase())!;
         setQuery(real.code);
-        toast.success(`Identificada: ${real.code} ${real.flag_emoji} (${Math.round(conf * 100)}%)`);
-      } else if (country) {
-        setQuery(country);
-        toast.message(`País reconhecido: ${country} — escolha o número`);
+        const label = player ? `${real.code} — ${player} ${flag ?? real.flag_emoji}` : `${real.code} ${real.flag_emoji}`;
+        toast.success(`Identificada: ${label} (${Math.round(conf * 100)}%)`);
+      } else if (sugg.length) {
+        setSuggestions(sugg);
+        toast.message(`Não tenho certeza — ${sugg.length} sugestão${sugg.length > 1 ? "ões" : ""} abaixo`);
+      } else if (player || country) {
+        setQuery(player || country || "");
+        toast.message(player ? `Jogador: ${player}${country ? ` (${country})` : ""}` : `País: ${country}`);
       } else {
-        toast.error("Não consegui ler o código. Tente uma foto mais nítida ou digite manualmente.");
+        toast.error("Não consegui ler. Tente uma foto mais nítida ou digite manualmente.");
       }
     } catch (e: any) {
       toast.error(e?.message || "Erro ao escanear");
@@ -171,6 +180,33 @@ function Scan() {
           className="flex-1 bg-transparent outline-none text-sm"
         />
       </div>
+
+      {suggestions.length > 0 && (
+        <div className="mt-3 glass-strong rounded-2xl p-3">
+          <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">Você quis dizer?</p>
+          <div className="space-y-2">
+            {suggestions.map((s) => (
+              <button
+                key={s.code}
+                onClick={() => { register(s.code, false); setSuggestions([]); }}
+                className="w-full glass rounded-xl p-2.5 flex items-center gap-3 text-left active:scale-[0.98] transition"
+              >
+                <div className="w-10 h-14 rounded-lg gradient-primary text-primary-foreground flex flex-col items-center justify-center font-display">
+                  <span className="text-base leading-none">{s.flag_emoji ?? "·"}</span>
+                  <span className="text-[10px] mt-0.5">{s.code}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{s.player_name ?? s.code}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {s.country_name} · {Math.round(s.score * 100)}% match
+                  </p>
+                </div>
+                <Check size={16} className="text-primary" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {matches.length > 0 && (
         <div className="space-y-2 mt-3">
