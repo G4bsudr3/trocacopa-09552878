@@ -442,29 +442,47 @@ function StickerCell({
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileTap={{ scale: 0.94 }}
-      className={`aspect-[3/4] rounded-lg flex flex-col items-center justify-center text-center p-1 relative overflow-hidden select-none ${
+      className={`aspect-[3/4] rounded-lg flex flex-col items-center justify-center text-center relative overflow-hidden select-none ${
         s.owned
-          ? "glass border border-primary/40 glow-primary"
-          : "bg-surface border border-border/50 opacity-60"
+          ? "border border-primary/40 glow-primary"
+          : "bg-surface border border-border/50"
       }`}
     >
+      {s.image_url ? (
+        <img
+          src={s.image_url}
+          alt={s.code}
+          loading="lazy"
+          className={`absolute inset-0 w-full h-full object-cover ${
+            s.owned ? "" : "blur-[6px] grayscale opacity-60 scale-110"
+          }`}
+        />
+      ) : (
+        <>
+          <span className="text-base leading-none">{s.flag_emoji}</span>
+          <span className={`font-display text-[10px] leading-none mt-1 ${s.owned ? "text-primary" : "text-muted-foreground"}`}>{s.code}</span>
+        </>
+      )}
+      {!s.owned && (
+        <span className="absolute inset-0 bg-background/30 flex items-end justify-center pb-1">
+          <Lock size={12} className="text-foreground/80" />
+        </span>
+      )}
       {s.duplicates > 1 && (
         <span className="absolute top-0.5 right-0.5 z-10 bg-gold text-gold-foreground text-[8px] font-bold px-1 py-0.5 rounded-full">
           {s.duplicates}x
         </span>
       )}
-      {!s.owned && <Lock size={10} className="absolute top-0.5 right-0.5 text-muted-foreground" />}
       {s.owned && s.duplicates < 2 && (
-        <Check size={10} className="absolute top-0.5 right-0.5 text-primary" />
+        <span className="absolute top-0.5 right-0.5 z-10 bg-primary text-primary-foreground rounded-full p-0.5">
+          <Check size={8} />
+        </span>
       )}
-      <span className="text-base leading-none">{s.flag_emoji}</span>
-      <span
-        className={`font-display text-[10px] leading-none mt-1 ${
-          s.owned ? "text-primary" : "text-muted-foreground"
-        }`}
-      >
-        {s.code}
-      </span>
+      {s.image_url && (
+        <span className="absolute bottom-0 left-0 right-0 bg-background/70 text-[8px] font-display py-0.5 text-center">
+          {s.code}
+        </span>
+      )}
     </motion.button>
   );
 }
