@@ -48,7 +48,7 @@ function BottomNav() {
               return (
                 <Link
                   key={to}
-                  to={to}
+                  to={to as any}
                   className="flex flex-col items-center -mt-8"
                 >
                   <span
@@ -63,7 +63,7 @@ function BottomNav() {
             return (
               <Link
                 key={to}
-                to={to}
+                to={to as any}
                 className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
