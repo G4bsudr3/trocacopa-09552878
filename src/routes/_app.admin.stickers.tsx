@@ -3,7 +3,7 @@ import { useState, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
-import { ChevronLeft, Loader2, Upload, Search } from "lucide-react";
+import { ChevronLeft, Loader2, Upload, Search, Download } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/admin/stickers")({
@@ -19,6 +19,8 @@ type Row = {
   kind: string;
   position: number;
   image_url: string | null;
+  player_name: string | null;
+  player_name_source: string | null;
 };
 
 function AdminStickers() {
@@ -35,7 +37,7 @@ function AdminStickers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stickers")
-        .select("code,country_code,country_name,flag_emoji,kind,position,image_url")
+        .select("code,country_code,country_name,flag_emoji,kind,position,image_url,player_name,player_name_source")
         .order("country_code")
         .order("position");
       if (error) throw error;
@@ -55,11 +57,33 @@ function AdminStickers() {
       if (onlyMissing && r.image_url) return false;
       if (q) {
         const t = q.toLowerCase();
-        if (!r.code.toLowerCase().includes(t) && !r.country_name.toLowerCase().includes(t)) return false;
+        const hay = `${r.code} ${r.country_name} ${r.player_name ?? ""}`.toLowerCase();
+        if (!hay.includes(t)) return false;
       }
       return true;
     });
   }, [rows, q, country, onlyMissing]);
+
+  const [importing, setImporting] = useState(false);
+  const runImport = async (skip_images: boolean, only_missing_names: boolean) => {
+    if (!confirm(skip_images ? "Importar só nomes faltantes do Central da Copa?" : "Importar TODAS as 980 figurinhas (nomes + imagens) do Central da Copa? Pode levar alguns minutos.")) return;
+    setImporting(true);
+    const t = toast.loading("Importando do Central da Copa...");
+    try {
+      const { data, error } = await supabase.functions.invoke("import-checklist", {
+        body: { skip_images, only_missing_names },
+      });
+      if (error) throw error;
+      toast.dismiss(t);
+      toast.success(`OK · ${data.inserted} criados, ${data.updated} atualizados, ${data.image_ok} imagens (${data.image_failed} falhas)`);
+      qc.invalidateQueries({ queryKey: ["admin-stickers"] });
+    } catch (e: any) {
+      toast.dismiss(t);
+      toast.error(e?.message ?? "Falha ao importar");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -68,10 +92,28 @@ function AdminStickers() {
 
   return (
     <div className="px-5 pt-4 max-w-5xl mx-auto pb-10">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Link to="/settings" className="glass rounded-full p-2"><ChevronLeft size={18} /></Link>
         <h1 className="font-display text-2xl">Admin · Figurinhas</h1>
-        <span className="ml-auto text-xs text-muted-foreground">{filtered.length}/{rows.length}</span>
+        <span className="text-xs text-muted-foreground">{filtered.length}/{rows.length}</span>
+        <div className="ml-auto flex gap-2">
+          <button
+            onClick={() => runImport(true, true)}
+            disabled={importing}
+            className="px-3 py-2 rounded-full glass text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+            title="Importa só nomes nas figurinhas que ainda não têm"
+          >
+            <Download size={13} /> Só nomes
+          </button>
+          <button
+            onClick={() => runImport(false, false)}
+            disabled={importing}
+            className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
+          >
+            {importing ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+            Importar 980
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
@@ -80,7 +122,7 @@ function AdminStickers() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar (código ou país)"
+            placeholder="Buscar (código, país ou jogador)"
             className="bg-transparent flex-1 py-3 text-sm outline-none"
           />
         </div>
@@ -112,8 +154,9 @@ function AdminStickers() {
                 )}
               </div>
               <div className="text-[10px] font-mono">{r.code}</div>
+              <div className="text-[10px] truncate">{r.player_name ?? <span className="text-muted-foreground">—</span>}</div>
               <div className="text-[10px] text-muted-foreground truncate">{r.flag_emoji} {r.country_name}</div>
-              <div className="text-[9px] text-muted-foreground">#{r.position} · {r.kind}</div>
+              <div className="text-[9px] text-muted-foreground">#{r.position} · {r.kind}{r.player_name_source ? ` · ${r.player_name_source}` : ""}</div>
             </button>
           ))}
         </div>
@@ -137,14 +180,18 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
   const [flag_emoji, setFlag] = useState(row.flag_emoji);
   const [kind, setKind] = useState(row.kind);
   const [position, setPosition] = useState(row.position);
+  const [player_name, setPlayer] = useState(row.player_name ?? "");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const save = async () => {
     setBusy(true);
-    const { error } = await supabase
-      .from("stickers")
-      .update({ country_name, country_code, flag_emoji, kind, position })
-      .eq("code", row.code);
+    const sourceChanged = (player_name || null) !== (row.player_name ?? null);
+    const patch = {
+      country_name, country_code, flag_emoji, kind, position,
+      player_name: player_name || null,
+      ...(sourceChanged ? { player_name_source: "manual" } : {}),
+    };
+    const { error } = await supabase.from("stickers").update(patch).eq("code", row.code);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Salvo");
@@ -193,6 +240,7 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
         </div>
 
         <div className="space-y-2">
+          <Field label={`Jogador / Título${row.player_name_source ? ` (${row.player_name_source})` : ""}`}><input value={player_name} onChange={(e) => setPlayer(e.target.value)} className="input" /></Field>
           <Field label="País (nome)"><input value={country_name} onChange={(e) => setName(e.target.value)} className="input" /></Field>
           <Field label="País (código)"><input value={country_code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="input" /></Field>
           <Field label="Emoji"><input value={flag_emoji} onChange={(e) => setFlag(e.target.value)} className="input" /></Field>

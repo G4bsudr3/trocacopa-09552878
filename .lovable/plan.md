@@ -1,45 +1,63 @@
-## OCR para nome de jogador + edição admin
+## Importar TODAS as 980 figurinhas + imagens do Central da Copa
 
-### 1. Schema
-Adicionar colunas em `stickers`:
-- `player_name text` — nome do jogador extraído do OCR (editável)
-- `player_name_source text` — `'ocr' | 'manual' | null` para sabermos o que foi auto-preenchido vs corrigido à mão
-- `ocr_confidence numeric` — opcional, score retornado pelo modelo (0–1)
-- `ocr_processed_at timestamptz` — última vez que o OCR rodou nesta figurinha
+Substitui o catálogo atual (864 incompleto) pelo oficial completo de 980 figurinhas (912 normais + 68 especiais), com nome do jogador, time, grupo, posição e imagem oficial.
 
-Índice `idx_stickers_player_name` (gin/trgm) para busca por nome.
+### Como o site expõe os dados (descoberto via scraping)
+- HTML SSR contém `code`, `player/title`, `team`, `group`, `position`, `rarity`.
+- Filtro `?team=<Nome>` retorna ~20 cards por país (~50 chamadas cobrem tudo).
+- Imagens: `https://firebasestorage.googleapis.com/v0/b/centralcopa-prod.firebasestorage.app/o/public%2Fstickers%2FWC2026_BR%2F{N}.jpg?alt=media` onde `N` = coluna `#` da tabela (1..980 base).
+- Códigos batem 1:1 com o nosso schema (`MEX10`, `BRA15`, `FWC9`, ...).
 
-### 2. OCR em lote (edge function `ocr-stickers`)
-- Aceita `{ codes?: string[], only_kind?: 'player', only_missing?: boolean, limit?: number }` (default: roda em todas com `kind='player'` que ainda não têm `player_name`).
+### 1. Edge function `import-checklist` (admin-only)
+`supabase/functions/import-checklist/index.ts`:
+- `verify_jwt = true` + check `has_role('admin')`.
+- Lista de times codificada (extraída do `<select>` do site, incluindo "FIFA World Cup 2026" e "Fifa World Cup History").
+- Para cada time, faz `fetch` em `centraldacopa.app/checklist/world-cup-2026?team=<name>`, parseia `<table>`, extrai `seq`, `code`, `player_name`, `team`, `group_letter`, `position`, `rarity`, `kind` (TEAM/SPECIAL/GK/DEF/MID/FWD).
 - Para cada figurinha:
-  - Baixa `image_url`, manda para **Lovable AI** (`google/gemini-3-flash-preview`, multimodal) com prompt curto pedindo apenas o nome do jogador como string JSON: `{ "player_name": "...", "confidence": 0..1 }`. Se não conseguir ler, retorna `null`.
-  - Atualiza `stickers.player_name`, `player_name_source='ocr'`, `ocr_confidence`, `ocr_processed_at`.
-- Processa em chunks (ex. 10 paralelos) com pequeno delay para não estourar rate limit. Retorna sumário `{ total, ok, failed, skipped }`.
-- `verify_jwt = true` + checagem `has_role(admin)` no início; só admin pode disparar.
+  - Baixa imagem do Firebase (`WC2026_BR/{seq}.jpg`).
+  - Re-upload no nosso bucket `sticker-images` em `{code}.jpg` (`upsert: true`).
+  - **Upsert** em `public.stickers` por `code` (cria se não existir, atualiza se existir):
+    - `player_name`, `player_name_source = 'checklist'`
+    - `image_url` (URL do nosso bucket + cache-bust)
+    - `country_code`, `country_name`, `group_letter`, `flag_emoji`, `position` (numérico = `seq`), `kind`
+- Chunks de 5 paralelos com 200ms entre chunks. Total estimado ~2-3min para 980 itens.
+- Retorna `{ total_scraped, inserted, updated, image_failed, errors[] }`.
 
-### 3. Admin UI (`/_app/admin/stickers`)
-- **Cabeçalho do card**: passa a mostrar `code · player_name` (ou "—" se vazio) acima de `flag + país`. Posição/tipo descem para a 2ª linha pequena.
-- **Filtros**: novo input "Buscar (código, país ou jogador)" — busca também em `player_name`. Filtros existentes (país, sem imagem) mantidos. Adiciono toggle "Só sem nome (OCR)".
-- **Botão "Rodar OCR"** no topo (só visível p/ admin): dropdown com 2 ações:
-  - "OCR nas faltantes" → chama edge fn com `only_missing: true`
-  - "OCR em todas (player)" → confirmação, roda em todas
-  Mostra progresso via toast com contador.
-- **Botão "OCR esta figurinha"** dentro do modal de edição: roda OCR só dessa.
-- **Modal de edição**: novo campo `Nome do jogador` (text input) — salva em `player_name` e marca `player_name_source='manual'` quando alterado manualmente. Badge mostra "OCR" ou "Manual".
-- Mantém troca de imagem e demais campos como hoje.
+Body opcional: `{ skip_images?: boolean, only_codes?: string[] }` para reruns rápidos.
 
-### 4. Atualização do tipo `Row` no admin
-Inclui `player_name`, `player_name_source`, `ocr_confidence` no `select`/tipo.
+### 2. Mapeamento `kind`
+- `SPECIAL` (FWC0..8) → `kind = 'special'`
+- `TEAM` em "Fifa World Cup History" (FWC9..19) → `kind = 'history'`
+- `TEAM` por país (escudo/foto oficial) → `kind = 'crest'`
+- `GK/DEF/MID/FWD` → `kind = 'player'` (com `position` interpretada via novo campo opcional ou ignorada)
 
-### Fora do escopo
-- Não altero a tabela `user_stickers` nem a UI do álbum/troca.
-- Não mudo o catálogo (capa, FWC, CC) — OCR roda só em `kind='player'` por padrão; admin pode rodar em códigos específicos se quiser.
-- Sem novas RLS além do que já existe (admin já tem update via política existente).
+### 3. Catálogo subirá para 980
+- Hoje: 864 (47 crest + 47 team + 658 player + 112 special).
+- Depois: 980 (48 escudos + 48 fotos oficiais + ~864 jogadores + 20 FWC).
+- Items que ficarem em `stickers` mas não vierem da fonte (nenhum esperado, mas se houver) **não são deletados** — só logados em `errors` para revisão manual.
+
+### 4. UI admin (`/_app/admin/stickers`)
+- Botão **"Importar do Central da Copa"** ao lado do "Rodar OCR" — dropdown:
+  - "Importar tudo (nome + imagem)" → roda completo
+  - "Só nomes faltantes" → reusa só onde `player_name is null`, `skip_images: true`
+- Toast com resumo (`X criados, Y atualizados, Z falhas de imagem`).
+- Badge no card mostra origem: `Checklist` / `OCR` / `Manual`.
+
+### 5. Fora do escopo
+- Não importo as 94 variantes extras (epic/legendary/rare alternativos) — só as 980 oficiais.
+- Não mexo em `user_stickers`, álbum ou trocas.
+- Sem migração de schema (`player_name_source` é text livre).
+
+### Detalhes técnicos
+- Edge function Deno, `fetch` direto (site é público, sem auth).
+- Parser: regex `<tr>...<td>...</td>...</tr>` com decode de entidades HTML (`&aacute;`, `&#x...`, etc).
+- Storage: bucket `sticker-images` já existe e é público.
+- Idempotente: roda quantas vezes precisar.
+- Falha individual em try/catch — não derruba o lote.
 
 ### Arquivos
-- `supabase/migrations/<novo>.sql` — colunas + índice
-- `supabase/functions/ocr-stickers/index.ts` (novo)
-- `supabase/config.toml` — bloco da função
-- `src/routes/_app.admin.stickers.tsx` — filtros, coluna nome, botões OCR, campo no modal
+- `supabase/functions/import-checklist/index.ts` (novo)
+- `supabase/config.toml` (registro da função se necessário)
+- `src/routes/_app.admin.stickers.tsx` (botão + handler + badge "Checklist")
 
-Aprovar?
+Aprovar pra eu implementar?
