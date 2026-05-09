@@ -16,8 +16,8 @@ type TradeRow = {
   id: string;
   requester_id: string;
   receiver_id: string;
-  offered_stickers: number[];
-  requested_stickers: number[];
+  offered_stickers: string[];
+  requested_stickers: string[];
   status: "pending" | "accepted" | "declined" | "completed" | "cancelled";
   created_at: string;
 };
