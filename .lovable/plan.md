@@ -1,71 +1,75 @@
-
 ## Objetivo
 
-Remover todos os dados mockados (`mock-data.ts`, `localStorage` do álbum, avaliações fake, notificações fake) e ligar tudo ao Supabase com autenticação real, geolocalização do navegador e fluxo completo de troca entre usuários.
+Trocar o catálogo genérico de 640 figurinhas numéricas por **994 figurinhas reais**, organizadas exatamente como o PDF do Ludopédio: 12 grupos (A–L) × 4 países × 20 cromos + capa "00" + 19 FWC (História) + 14 Coca-Cola.
 
-## Fases
+## 1. Migração de schema
 
-### Fase 1 — Schema do banco (migration única)
+Hoje `stickers.number` é `integer` e `user_stickers.sticker_number` também. Os códigos reais são alfanuméricos (`MEX1`, `FWC7`, `CC3`, `00`). Migração:
 
-Criar tabelas:
+- Adicionar colunas em `stickers`: `code text PK`, `country_code text`, `country_name text`, `position int`, `kind text` (`country` | `history` | `special` | `cover`), `flag_emoji text`.
+- Migrar `user_stickers.sticker_number int → sticker_code text` (FK para `stickers.code`). Limpar dados antigos (catálogo está sendo trocado de qualquer forma).
+- Mesma troca em `trades.offered_stickers` / `trades.requested_stickers` (array de `int` → array de `text`).
+- Reescrever `nearby_collectors()` para usar `sticker_code text`.
 
-- **`stickers`** — catálogo público das 640 figurinhas (number, name, team, group). Populada uma única vez via seed.
-- **`user_stickers`** — `(user_id, sticker_number, duplicates)` — substitui o localStorage. RLS: dono lê/escreve; outros usuários autenticados podem ler para cálculo de match.
-- **`profiles`** — adicionar colunas `lat`, `lng`, `location_updated_at`, `bio`.
-- **`trades`** — `(id, requester_id, receiver_id, status, offered_stickers[], requested_stickers[], created_at)`. Status: `pending`, `accepted`, `declined`, `completed`.
-- **`trade_messages`** — chat de cada troca `(trade_id, sender_id, content, created_at)`.
-- **`notifications`** — `(id, user_id, type, payload jsonb, read, created_at)`. Triggers criam notificação ao receber pedido de troca, mensagem ou match.
-- **`reviews`** — `(reviewer_id, reviewed_id, trade_id, stars, comment)`.
+## 2. Seed completo
 
-Storage:
-- bucket público **`avatars`** com policies (qualquer um lê, dono escreve no próprio folder).
+Inserir os 994 cromos respeitando a tabela do PDF:
 
-Função SQL `nearby_collectors(radius_km)` com fórmula Haversine, retornando usuários próximos + contagem de figurinhas que o solicitante precisa e que o vizinho tem em duplicata (= match score real).
+```text
+Capa: 00 (kind=cover)
+Grupo A: México MEX1–20, África do Sul RSA1–20, Coreia do Sul KOR1–20, Rep. Tcheca CZE1–20
+Grupo B: Canadá CAN, Bósnia BIH, Catar QAT, Suíça SUI
+Grupo C: Brasil BRA, Marrocos MAR, Haiti HAI, Escócia SCO
+Grupo D: EUA USA, Paraguai PAR, Austrália AUS, Turquia TUR
+Grupo E: Alemanha GER, Curaçao CUW, Costa do Marfim CIV, Equador ECU
+Grupo F: Holanda NED, Japão JPN, Suécia SWE, Tunísia TUN
+Grupo G: Bélgica BEL, Egito EGY, Irã IRN, Nova Zelândia NZL
+Grupo H: Espanha ESP, Cabo Verde CPV, Arábia Saudita KSA, Uruguai URU
+Grupo I: França FRA, Senegal SEN, Iraque IRQ, Noruega NOR
+Grupo J: Argentina ARG, Argélia ALG, Áustria AUT, Jordânia JOR
+Grupo K: Portugal POR, Congo COD, Uzbequistão UZB, Colômbia COL
+Grupo L: Inglaterra ENG, Croácia CRO, Gana GHA, Panamá PAN
+FIFA World Cup History: FWC1–FWC19 (kind=history)
+Coca-Cola: CC1–CC14 (kind=special)
+```
 
-### Fase 2 — Álbum real
+Total: 1 + 48×20 + 19 + 14 = **994**. Bandeiras como emoji por país para visual.
 
-- Novo hook `use-album.ts` lendo de `user_stickers` via TanStack Query.
-- `toggleOwned`, `addDuplicate`, `removeDuplicate` viram mutations no Supabase com optimistic update.
-- Remover `src/lib/mock-data.ts` (manter só types do catálogo, vindo do banco).
-- Atualizar `_app.album.tsx` para usar hook novo + skeleton loading.
-- `album_progress` no profile é atualizado via trigger SQL sempre que `user_stickers` muda.
+## 3. Refatorar `useAlbum` / catálogo
 
-### Fase 3 — Perfil real
+- `TOTAL_STICKERS = 994`.
+- Tipos: `Sticker.code: string` (em vez de `number`). Métodos `toggleOwned(code)`, `addDuplicate(code)` etc. recebem string.
+- Hook agrupa por `kind` e `country_code` para alimentar a tela.
 
-- Tela `/profile/edit` (nova rota) com formulário Zod: nome, cidade, bio, upload de avatar para bucket `avatars`.
-- Botão "Atualizar minha localização" pede `navigator.geolocation`, salva `lat`/`lng` no profile.
-- Substituir contagens fixas (`trades=24`, `scanned=187`) por queries reais.
-- Avaliações vêm da tabela `reviews`.
-- Logout já funciona — manter.
+## 4. Tela do Álbum no formato do PDF
 
-### Fase 4 — Trocas e Perto de Mim reais
+Substituir o grid linear único por uma navegação fiel ao PDF:
 
-- `_app.near.tsx`: chama `nearby_collectors(radius)` usando lat/lng do usuário; se sem GPS, mostra empty state pedindo para ativar localização no perfil.
-- `_app.trade.$id.tsx`: carrega troca real; chat usa `trade_messages` com Supabase Realtime.
-- Botão "Propor troca" em cada colecionador cria registro em `trades` (status pending) e dispara notificação.
-- `_app.trades.tsx`: lista trocas reais do usuário (recebidas + enviadas), com tabs.
+- **Topo**: progresso geral + abas `Seleções` / `História FWC` / `Coca-Cola`.
+- **Aba Seleções**: lista expansível por **Grupo** (A–L). Cada grupo abre os 4 países, e cada país mostra um mini-grid 5×4 com os 20 cromos rotulados pelo código (`MEX1`...`MEX20`). Cabeçalho do país com bandeira + nome + contador `x/20`.
+- **Aba História FWC**: grid único `FWC1…FWC19` com badge dourado.
+- **Aba Coca-Cola**: grid `CC1…CC14` em destaque vermelho.
+- Capa `00` aparece como item especial no topo da aba Seleções.
+- Mantém: filtros `Tenho / Faltam / Repetidas`, busca (agora por código `MEX12` ou nome do país), bottom sheet de detalhe com +/− repetidas.
 
-### Fase 5 — Notificações e configurações
+## 5. Scan / busca
 
-- `_app.notifications.tsx`: lê tabela `notifications` em realtime, marca como lida ao abrir.
-- Badge no bottom nav com contagem de não lidas.
-- Tela `/settings` (nova) ligada ao botão de menu: editar perfil, gerenciar localização, alternar notificações por tipo (campo `notification_prefs jsonb` no profile), excluir conta, sair.
+- Campo de busca aceita código exato (`mex12`, `fwc7`, `cc3`) ou nome do país. Resultados mostram código + país + grupo.
+- Botões "Tenho" / "Repetida" continuam funcionando, agora gravando `sticker_code`.
 
-### Fase 6 — Limpeza
+## 6. Trocas
 
-- Deletar `src/lib/mock-data.ts` e `mockNotifications`/`mockCollectors`.
-- Remover dados estáticos de `profile.tsx` (badges fake calculados a partir de `trades_count` real).
-- Tela Scan: manter UI mas, ao confirmar uma figurinha "escaneada", grava de verdade em `user_stickers`.
+- Componentes que listam figurinhas oferecidas/pedidas passam a exibir o código (`BRA10`) em vez de `#10`.
+- Função `nearby_collectors` continua calculando matches, mas usando `sticker_code`.
+
+## Fora do escopo
+
+- Imagens reais dos jogadores (sem dataset disponível) — usamos código + bandeira.
+- Nomes individuais dos jogadores em cada cromo (PDF não traz; só o código).
+- Reconhecimento por câmera no scanner (continua busca textual; pode virar próximo passo).
 
 ## Detalhes técnicos
 
-- Todas as leituras críticas via `createServerFn` + `requireSupabaseAuth`; mutations simples direto do client com RLS.
-- Realtime habilitado em `notifications`, `trade_messages`, `trades`.
-- Catálogo de stickers seedado pela migration (INSERT de 640 linhas geradas a partir dos arrays existentes em `mock-data.ts`).
-- Geolocalização: `navigator.geolocation.getCurrentPosition` com fallback para cidade-only se o usuário negar.
-
-## Fora de escopo
-
-- Sistema de pagamento Pro (deixar tela como está por enquanto).
-- Push notifications nativas (apenas in-app por agora).
-- Reconhecimento de imagem real no Scan (mantém seleção manual).
+- Migração SQL única: `DROP` das colunas antigas onde necessário, recriação com tipo `text`, novo seed via `INSERT … SELECT FROM (VALUES …)`.
+- `supabase/types.ts` será regenerado após a migração — código consumirá os novos tipos.
+- Reset visual do álbum no front: `user_stickers` é zerado pelo schema novo, então usuário recomeça do zero (esperado, pois o catálogo mudou).

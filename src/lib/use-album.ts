@@ -8,7 +8,7 @@ export type Sticker = StickerCatalogItem & {
   duplicates: number;
 };
 
-type Row = { sticker_number: number; duplicates: number };
+type Row = { sticker_code: string; duplicates: number };
 
 export function useAlbum() {
   const { user } = useAuth();
@@ -23,46 +23,50 @@ export function useAlbum() {
     queryFn: async (): Promise<Row[]> => {
       const { data, error } = await supabase
         .from("user_stickers")
-        .select("sticker_number,duplicates")
+        .select("sticker_code,duplicates")
         .eq("user_id", uid!);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Row[];
     },
   });
 
-  const ownedMap = new Map<number, number>();
-  (ownership.data ?? []).forEach((r) => ownedMap.set(r.sticker_number, r.duplicates));
+  const ownedMap = new Map<string, number>();
+  (ownership.data ?? []).forEach((r) => ownedMap.set(r.sticker_code, r.duplicates));
 
   const stickers: Sticker[] = (catalog.data ?? []).map((s) => {
-    const dup = ownedMap.get(s.number) ?? 0;
+    const dup = ownedMap.get(s.code) ?? 0;
     return { ...s, owned: dup > 0, duplicates: dup };
   });
 
   const setMutation = useMutation({
-    mutationFn: async ({ number, duplicates }: { number: number; duplicates: number }) => {
+    mutationFn: async ({ code, duplicates }: { code: string; duplicates: number }) => {
       if (!uid) throw new Error("not authed");
       if (duplicates <= 0) {
         const { error } = await supabase
           .from("user_stickers")
           .delete()
           .eq("user_id", uid)
-          .eq("sticker_number", number);
+          .eq("sticker_code", code);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("user_stickers")
-          .upsert({ user_id: uid, sticker_number: number, duplicates }, { onConflict: "user_id,sticker_number" });
+          .upsert(
+            { user_id: uid, sticker_code: code, duplicates },
+            { onConflict: "user_id,sticker_code" },
+          );
         if (error) throw error;
       }
     },
-    onMutate: async ({ number, duplicates }) => {
+    onMutate: async ({ code, duplicates }) => {
       await qc.cancelQueries({ queryKey: ["user_stickers", uid] });
       const prev = qc.getQueryData<Row[]>(["user_stickers", uid]) ?? [];
-      const next = duplicates <= 0
-        ? prev.filter((r) => r.sticker_number !== number)
-        : prev.some((r) => r.sticker_number === number)
-          ? prev.map((r) => (r.sticker_number === number ? { ...r, duplicates } : r))
-          : [...prev, { sticker_number: number, duplicates }];
+      const next =
+        duplicates <= 0
+          ? prev.filter((r) => r.sticker_code !== code)
+          : prev.some((r) => r.sticker_code === code)
+            ? prev.map((r) => (r.sticker_code === code ? { ...r, duplicates } : r))
+            : [...prev, { sticker_code: code, duplicates }];
       qc.setQueryData(["user_stickers", uid], next);
       return { prev };
     },
@@ -75,16 +79,16 @@ export function useAlbum() {
     },
   });
 
-  const get = (n: number) => ownedMap.get(n) ?? 0;
+  const get = (c: string) => ownedMap.get(c) ?? 0;
 
   return {
     stickers,
     total: TOTAL_STICKERS,
     isLoading: catalog.isLoading || ownership.isLoading,
-    toggleOwned: (n: number) => setMutation.mutate({ number: n, duplicates: get(n) > 0 ? 0 : 1 }),
-    addDuplicate: (n: number) => setMutation.mutate({ number: n, duplicates: get(n) + 1 }),
-    removeDuplicate: (n: number) => setMutation.mutate({ number: n, duplicates: Math.max(0, get(n) - 1) }),
-    setSticker: (n: number, _owned: boolean, dup: number) => setMutation.mutate({ number: n, duplicates: dup }),
+    toggleOwned: (c: string) => setMutation.mutate({ code: c, duplicates: get(c) > 0 ? 0 : 1 }),
+    addDuplicate: (c: string) => setMutation.mutate({ code: c, duplicates: get(c) + 1 }),
+    removeDuplicate: (c: string) => setMutation.mutate({ code: c, duplicates: Math.max(0, get(c) - 1) }),
+    setSticker: (c: string, _owned: boolean, dup: number) => setMutation.mutate({ code: c, duplicates: dup }),
     reset: async () => {
       if (!uid) return;
       await supabase.from("user_stickers").delete().eq("user_id", uid);

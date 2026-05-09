@@ -16,29 +16,34 @@ function Scan() {
   const catalog = useStickerCatalog();
   const { stickers, addDuplicate, toggleOwned } = useAlbum();
   const [query, setQuery] = useState("");
-  const [recent, setRecent] = useState<number[]>([]);
+  const [recent, setRecent] = useState<string[]>([]);
 
   const matches = !query
     ? []
     : (catalog.data ?? [])
-        .filter((s) =>
-          s.number.toString() === query ||
-          `${s.name} ${s.team}`.toLowerCase().includes(query.toLowerCase())
-        )
-        .slice(0, 6);
+        .filter((s) => {
+          const q = query.toLowerCase();
+          return (
+            s.code.toLowerCase() === q ||
+            s.code.toLowerCase().startsWith(q) ||
+            s.country_name.toLowerCase().includes(q) ||
+            s.country_code.toLowerCase() === q
+          );
+        })
+        .slice(0, 8);
 
-  const register = (number: number, asDup: boolean) => {
-    const cur = stickers.find((s) => s.number === number);
+  const register = (code: string, asDup: boolean) => {
+    const cur = stickers.find((s) => s.code === code);
     if (asDup) {
-      addDuplicate(number);
-      toast.success(`#${number} marcada como repetida 🔁`);
+      addDuplicate(code);
+      toast.success(`${code} marcada como repetida 🔁`);
     } else if (!cur?.owned) {
-      toggleOwned(number);
-      toast.success(`#${number} adicionada ✅`);
+      toggleOwned(code);
+      toast.success(`${code} adicionada ✅`);
     } else {
-      toast.message(`Você já tem a #${number}`);
+      toast.message(`Você já tem a ${code}`);
     }
-    setRecent((r) => [number, ...r.filter((n) => n !== number)].slice(0, 6));
+    setRecent((r) => [code, ...r.filter((n) => n !== code)].slice(0, 6));
     setQuery("");
   };
 
@@ -69,7 +74,7 @@ function Scan() {
 
         <div className="absolute bottom-5 inset-x-0 text-center px-6">
           <p className="text-sm text-muted-foreground mb-3">
-            Digite o número ou nome da figurinha para registrar no álbum
+            Digite o código (BRA10, FWC7, CC3) ou país para registrar no álbum
           </p>
         </div>
       </div>
@@ -79,7 +84,7 @@ function Scan() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ex: 47 ou Vinicius Jr."
+          placeholder="Ex: BRA10, FWC7 ou Brasil"
           className="flex-1 bg-transparent outline-none text-sm"
         />
       </div>
@@ -87,29 +92,40 @@ function Scan() {
       {matches.length > 0 && (
         <div className="space-y-2 mt-3">
           {matches.map((s) => {
-            const owned = stickers.find((x) => x.number === s.number)?.owned;
+            const owned = stickers.find((x) => x.code === s.code)?.owned;
             return (
-              <div key={s.number} className="glass rounded-2xl p-3 flex items-center gap-3">
+              <div key={s.code} className="glass rounded-2xl p-3 flex items-center gap-3">
                 <div
-                  className={`w-12 h-16 rounded-lg flex items-center justify-center font-display text-lg ${
-                    owned ? "gradient-primary text-primary-foreground" : "bg-surface text-muted-foreground"
+                  className={`w-12 h-16 rounded-lg flex flex-col items-center justify-center font-display ${
+                    owned
+                      ? "gradient-primary text-primary-foreground"
+                      : "bg-surface text-muted-foreground"
                   }`}
                 >
-                  #{s.number}
+                  <span className="text-base leading-none">{s.flag_emoji}</span>
+                  <span className="text-[10px] mt-0.5">{s.code}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">{s.team} · Grupo {s.group_letter}</p>
+                  <p className="font-semibold text-sm truncate">{s.country_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.kind === "country"
+                      ? `Grupo ${s.group_letter} · pos ${s.position}`
+                      : s.kind === "history"
+                        ? "FIFA World Cup History"
+                        : s.kind === "special"
+                          ? "Coca-Cola"
+                          : "Capa do álbum"}
+                  </p>
                 </div>
                 <div className="flex gap-1">
                   <button
-                    onClick={() => register(s.number, false)}
+                    onClick={() => register(s.code, false)}
                     className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-bold flex items-center gap-1"
                   >
                     <Check size={12} /> Tenho
                   </button>
                   <button
-                    onClick={() => register(s.number, true)}
+                    onClick={() => register(s.code, true)}
                     className="px-3 py-2 rounded-full bg-gold text-gold-foreground text-xs font-bold flex items-center gap-1"
                   >
                     <Repeat size={12} /> Rep.
@@ -125,12 +141,15 @@ function Scan() {
         <section className="mt-6">
           <h2 className="font-display text-xl tracking-wide mb-3">Recentes</h2>
           <div className="grid grid-cols-3 gap-2">
-            {recent.map((n) => {
-              const s = (catalog.data ?? []).find((x) => x.number === n);
+            {recent.map((code) => {
+              const s = (catalog.data ?? []).find((x) => x.code === code);
               return (
-                <div key={n} className="glass rounded-xl p-2 text-center">
-                  <p className="font-display text-xl text-primary">#{n}</p>
-                  {s && <p className="text-[10px] text-muted-foreground truncate">{s.name}</p>}
+                <div key={code} className="glass rounded-xl p-2 text-center">
+                  <p className="text-lg leading-none">{s?.flag_emoji ?? "·"}</p>
+                  <p className="font-display text-sm text-primary mt-1">{code}</p>
+                  {s && (
+                    <p className="text-[10px] text-muted-foreground truncate">{s.country_name}</p>
+                  )}
                 </div>
               );
             })}

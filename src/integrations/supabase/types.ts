@@ -132,22 +132,31 @@ export type Database = {
       }
       stickers: {
         Row: {
+          code: string
+          country_code: string
+          country_name: string
+          flag_emoji: string
           group_letter: string
-          name: string
-          number: number
-          team: string
+          kind: string
+          position: number
         }
         Insert: {
+          code: string
+          country_code: string
+          country_name: string
+          flag_emoji?: string
           group_letter: string
-          name: string
-          number: number
-          team: string
+          kind: string
+          position: number
         }
         Update: {
+          code?: string
+          country_code?: string
+          country_name?: string
+          flag_emoji?: string
           group_letter?: string
-          name?: string
-          number?: number
-          team?: string
+          kind?: string
+          position?: number
         }
         Relationships: []
       }
@@ -187,9 +196,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          offered_stickers: number[]
+          offered_stickers: string[]
           receiver_id: string
-          requested_stickers: number[]
+          requested_stickers: string[]
           requester_id: string
           status: Database["public"]["Enums"]["trade_status"]
           updated_at: string
@@ -197,9 +206,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          offered_stickers?: number[]
+          offered_stickers?: string[]
           receiver_id: string
-          requested_stickers?: number[]
+          requested_stickers?: string[]
           requester_id: string
           status?: Database["public"]["Enums"]["trade_status"]
           updated_at?: string
@@ -207,9 +216,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          offered_stickers?: number[]
+          offered_stickers?: string[]
           receiver_id?: string
-          requested_stickers?: number[]
+          requested_stickers?: string[]
           requester_id?: string
           status?: Database["public"]["Enums"]["trade_status"]
           updated_at?: string
@@ -220,30 +229,22 @@ export type Database = {
         Row: {
           created_at: string
           duplicates: number
-          sticker_number: number
+          sticker_code: string
           user_id: string
         }
         Insert: {
           created_at?: string
           duplicates?: number
-          sticker_number: number
+          sticker_code: string
           user_id: string
         }
         Update: {
           created_at?: string
           duplicates?: number
-          sticker_number?: number
+          sticker_code?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_stickers_sticker_number_fkey"
-            columns: ["sticker_number"]
-            isOneToOne: false
-            referencedRelation: "stickers"
-            referencedColumns: ["number"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
