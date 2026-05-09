@@ -1,0 +1,2 @@
+ALTER TABLE public.stickers DROP CONSTRAINT IF EXISTS stickers_kind_check;
+ALTER TABLE public.stickers ADD CONSTRAINT stickers_kind_check CHECK (kind = ANY (ARRAY['crest','team','player','special','cover','country','history']));
