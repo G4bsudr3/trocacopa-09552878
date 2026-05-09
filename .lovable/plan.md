@@ -1,84 +1,56 @@
 ## Objetivo
 
-Quando o usuário escaneia uma figurinha em `/scan`, o OCR deve extrair **nome do jogador**, **país** e (quando legível) **código**, e então **resolver automaticamente para o código correto** consultando o catálogo `stickers` (que já contém `player_name`, `country_name`, `country_code`, `position`, `kind`).
+Polir o visual do "Meu Álbum" (cadeado central + overlay elegante) **e** garantir que TODAS as 980 figurinhas tenham imagem — incluindo as 104 jogadores que ainda caem no fallback de emoji.
 
-Hoje o `scan-sticker` só pede `code` e `country_name` — se o código está borrado ou cortado, falha. O catálogo já tem `player_name` populado pelo `ocr-stickers` em massa, então podemos fazer match reverso pelo nome.
+## Parte 1 — Polir visual (`src/routes/_app.album.tsx`)
 
-## Mudanças
+Hoje (linhas 391-410) a célula renderiza:
+- imagem com `blur-[6px] grayscale opacity-60` quando não-owned
+- ícone de cadeado pequeno na base
 
-### 1. `supabase/functions/scan-sticker/index.ts` — prompt + resolução
+**Melhorias:**
 
-**Novo prompt** (Gemini 2.5 Flash, multimodal) extrai 4 campos:
+- **Overlay escuro mais elegante:** trocar `bg-background/30` por `bg-gradient-to-t from-background/85 via-background/40 to-background/10`, dando profundidade.
+- **Cadeado centralizado dentro de um círculo glass:** posicionar `Lock` em um círculo `w-9 h-9 rounded-full glass-strong` no centro vertical da célula, em vez de pequeno na base.
+- **Blur mais sutil:** `blur-[4px] grayscale-[80%] opacity-70 scale-105` (continua "preview", mas dá pra reconhecer cores/forma).
+- **Animação revelação:** quando o usuário marca como owned, a imagem desfaz o blur com `transition-all duration-500`.
+- **Faixa do código no rodapé:** já existe (linha 421-425); manter, mas trocar para `bg-gradient-to-t from-background/95 to-transparent` e mostrar **código + emoji** (ex: "BRA10 🇧🇷").
+- **Hover/long-press dica:** badge `?` no canto sup-esq quando não-owned, em `bg-muted text-muted-foreground`.
+- **Mesmo tratamento na modal de detalhe** (linha 266) — manter blur só se não-owned, com transição.
 
-```json
-{
-  "code": "BRA10 | FWC5 | CC3 | null",
-  "country_name": "Brasil | null",
-  "player_name": "Vinícius Júnior | null",
-  "jersey_number": 10 | null,
-  "kind_hint": "player | history | sponsor | cover | null",
-  "confidence": 0..1
-}
-```
+## Parte 2 — Backfill das 104 figurinhas sem imagem
 
-Prompt enfatiza:
-- Código fica no canto inferior (3 letras + 1-20, ou `FWC`/`CC` + número, ou `00`).
-- Nome do jogador é o texto grande sob a foto.
-- Bandeira/escudo indica país.
-- Se for capa, FWC ou CC, `player_name` deve ser `null`.
+São jogadores de seleções não-cobertas pelo scrape original. Scrape externo é frágil; em vez disso, **gerar uma carta-placeholder polida** que se parece com a figurinha oficial e funciona como preview legítimo.
 
-**Resolução server-side** (nova função `resolveCode`) na ordem:
+**Nova edge function `generate-sticker-images` (admin-only):**
 
-1. Se `code` veio e existe em `stickers` → usa.
-2. Se `country_name` + `jersey_number` → busca `stickers` por `country_name ILIKE` (ou via `unaccent`) + `position = number` + `kind = 'player'`.
-3. Se `player_name` → busca `stickers` por similaridade (`pg_trgm` `similarity()` >= 0.45) ordenado por score, opcionalmente filtrando por `country_name` se também veio.
-4. Se nada bate, devolve `code: null` mas inclui `suggestions: [{code, player_name, country_name, score}]` (top 3) para a UI mostrar.
+1. Lê `stickers WHERE kind='player' AND image_url IS NULL`.
+2. Para cada uma, monta um **SVG 600×800** com:
+   - Fundo gradiente nas cores aproximadas da bandeira (paleta hard-coded por `country_code`).
+   - Silhueta de jogador (path SVG simples, mesma para todos).
+   - Bandeira emoji grande no canto sup-dir.
+   - Nome do país no topo.
+   - Número da camisa (`position % 20` ou índice dentro do país) grande no centro.
+   - Código no rodapé (ex: "ALG10").
+3. Converte SVG → PNG via `https://deno.land/x/resvg_wasm` (ou simplesmente faz upload do SVG, que o `<img>` renderiza nativamente).
+4. Faz upload em `sticker-images/players/{code}.svg` no bucket público.
+5. `UPDATE stickers SET image_url = '<public-url>' WHERE code = ...`.
 
-A função usa `SUPABASE_SERVICE_ROLE_KEY` para consultar `stickers` (já é leitura, mas evita bater em RLS de auth).
+Decisão pragmática: **fazer upload como SVG mesmo** — bucket já é público, navegadores renderizam SVG em `<img>` sem problema, e elimina a dependência de WASM. Tamanho ~3KB por figurinha.
 
-**Resposta nova:**
-```json
-{
-  "code": "BRA10",
-  "country_name": "Brasil",
-  "player_name": "Vinícius Júnior",
-  "confidence": 0.88,
-  "match_source": "code | country+number | player_name | suggestion",
-  "suggestions": [...]   // só quando code é null
-}
-```
+**Botão "Gerar imagens faltantes"** em `src/routes/_app.admin.stickers.tsx` que invoca a função e mostra resultado (ok/falhas).
 
-### 2. `src/routes/_app.scan.tsx` — usar nome + sugestões
+## Parte 3 — Cache de imagem no álbum
 
-- Mensagem de sucesso passa a mostrar `${code} — ${player_name} ${flag_emoji}` quando disponível.
-- Quando `code` é `null` mas `suggestions` tem itens, exibir um pequeno painel "Você quis dizer?" com até 3 cards clicáveis (jogador + país + código). Tocar adiciona via `confirmSelect(code)`.
-- Mantém fallback atual (digitar manualmente) quando nem isso resolve.
-
-### 3. Índice de busca por nome (migration leve)
-
-Adicionar índice GIN trigram para acelerar o match:
-
-```sql
-CREATE INDEX IF NOT EXISTS idx_stickers_player_name_trgm
-  ON public.stickers USING gin (lower(unaccent(coalesce(player_name,''))) gin_trgm_ops);
-
-CREATE INDEX IF NOT EXISTS idx_stickers_country_position
-  ON public.stickers (lower(unaccent(country_name)), position) WHERE kind = 'player';
-```
-
-`pg_trgm` e `unaccent` já estão habilitados (visíveis nas funções existentes).
-
-### 4. Garantir catálogo populado
-
-O match por nome só funciona se `stickers.player_name` estiver preenchido. O admin job `ocr-stickers` já faz isso em massa a partir de `image_url`. Vou verificar pela tela `/admin/stickers` se ainda há figurinhas com `player_name = null` e, se houver, sugerir rodar o batch — mas isso é operação, não código.
+- Adicionar `<img loading="lazy" decoding="async" />` (já tem lazy) e `fetchPriority="low"` para itens não-owned, para priorizar as figurinhas que o usuário tem.
 
 ## Arquivos
 
-- `supabase/functions/scan-sticker/index.ts` (reescrita do prompt + resolução)
-- `src/routes/_app.scan.tsx` (UI de sugestões + mensagem com nome)
-- nova migration com 2 índices
+- `src/routes/_app.album.tsx` — polish visual (célula + modal)
+- `supabase/functions/generate-sticker-images/index.ts` (nova)
+- `src/routes/_app.admin.stickers.tsx` — botão "Gerar imagens faltantes"
 
 ## Fora de escopo
 
-- Não mexo no `ocr-stickers` (batch admin) nem no fluxo `identify-page`.
-- Não altero schema da tabela `stickers`.
+- Não scrapear sites externos (frágil, varia por país).
+- Não trocar o emoji da bandeira no resto do app.
