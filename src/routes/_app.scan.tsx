@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Camera, Check, Repeat, Search, Loader2, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
-import { useStickerCatalog } from "@/lib/stickers";
+import { useStickerCatalog, type StickerCatalogItem } from "@/lib/stickers";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/scan")({
