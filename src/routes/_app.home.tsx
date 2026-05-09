@@ -5,6 +5,7 @@ import { Bell, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TOTAL_STICKERS } from "@/lib/stickers";
+import { useUnreadNotifications } from "@/lib/use-unread-notifications";
 
 export const Route = createFileRoute("/_app/home")({
   head: () => ({ meta: [{ title: "Início — TrocaCopa" }] }),
@@ -27,18 +28,7 @@ function Home() {
     },
   });
 
-  const unread = useQuery({
-    queryKey: ["unread-count", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user!.id)
-        .eq("read", false);
-      return count ?? 0;
-    },
-  });
+  const unread = useUnreadNotifications();
 
   const featured = useQuery({
     queryKey: ["featured-match", user?.id, profile?.lat, profile?.lng, profile?.city],
