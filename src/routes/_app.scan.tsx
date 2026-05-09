@@ -177,6 +177,94 @@ function Scan() {
         {scanning ? "Analisando..." : "Tirar foto / Enviar imagem"}
       </button>
 
+      {result && (() => {
+        const owned = stickers.find((x) => x.code === result.code)?.owned ?? false;
+        const dup = dupCount(result.code);
+        return (
+          <div className="mt-4 glass-strong rounded-3xl p-4">
+            <div className="flex gap-4">
+              <div className="relative shrink-0">
+                {result.image_url ? (
+                  <img
+                    src={result.image_url}
+                    alt={result.country_name}
+                    className="w-24 h-32 rounded-xl object-cover ring-2 ring-primary/40"
+                  />
+                ) : (
+                  <div className="w-24 h-32 rounded-xl gradient-primary text-primary-foreground flex flex-col items-center justify-center font-display">
+                    <span className="text-3xl leading-none">{result.flag_emoji}</span>
+                    <span className="text-xs mt-1">{result.code}</span>
+                  </div>
+                )}
+                {dup > 1 && (
+                  <span className="absolute -top-2 -right-2 bg-gold text-gold-foreground text-[10px] font-bold rounded-full px-2 py-0.5 shadow">
+                    x{dup}
+                  </span>
+                )}
+                {owned && (
+                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-2 py-0.5 flex items-center gap-1">
+                    <Check size={10} /> Possuída
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-xl text-primary">{result.code}</span>
+                  <span className="text-lg">{result.flag_emoji}</span>
+                </div>
+                <p className="font-semibold text-sm truncate mt-0.5">{result.country_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {result.kind === "country"
+                    ? `Grupo ${result.group_letter} · pos ${result.position}`
+                    : result.kind === "history"
+                      ? "FIFA World Cup History"
+                      : result.kind === "special"
+                        ? "Coca-Cola"
+                        : result.kind === "player"
+                          ? `Jogador · pos ${result.position}`
+                          : "Capa do álbum"}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button
+                onClick={() => register(result.code, false)}
+                disabled={owned}
+                className={`px-3 py-2.5 rounded-full text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition ${
+                  owned
+                    ? "bg-surface text-muted-foreground"
+                    : "gradient-primary text-primary-foreground"
+                }`}
+              >
+                <Check size={14} /> {owned ? "Já possuída" : "Tenho"}
+              </button>
+              <button
+                onClick={() => register(result.code, true)}
+                className="px-3 py-2.5 rounded-full bg-gold text-gold-foreground text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition"
+              >
+                <Repeat size={14} /> +1 Repetida{dup >= 1 ? ` (x${dup + 1})` : ""}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <button
+                onClick={() => setResult(null)}
+                className="px-3 py-2 rounded-full glass text-xs font-semibold"
+              >
+                Não é essa
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="px-3 py-2 rounded-full glass text-xs font-semibold"
+              >
+                Trocar foto
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="flex items-center gap-3 bg-input rounded-full px-4 py-3 mt-4 border border-transparent focus-within:border-primary">
         <Search size={18} className="text-muted-foreground" />
         <input
