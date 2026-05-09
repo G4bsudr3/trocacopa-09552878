@@ -240,6 +240,7 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
         </div>
 
         <div className="space-y-2">
+          <Field label={`Jogador / Título${row.player_name_source ? ` (${row.player_name_source})` : ""}`}><input value={player_name} onChange={(e) => setPlayer(e.target.value)} className="input" /></Field>
           <Field label="País (nome)"><input value={country_name} onChange={(e) => setName(e.target.value)} className="input" /></Field>
           <Field label="País (código)"><input value={country_code} onChange={(e) => setCode(e.target.value.toUpperCase())} className="input" /></Field>
           <Field label="Emoji"><input value={flag_emoji} onChange={(e) => setFlag(e.target.value)} className="input" /></Field>
