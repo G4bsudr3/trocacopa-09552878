@@ -27,7 +27,7 @@ type Notif = {
   created_at: string;
 };
 
-type Filter = "all" | "trades" | "messages" | "matches";
+
 
 function iconFor(type: string) {
   if (type === "match_high") return <Sparkles size={20} className="text-gold" />;
@@ -64,7 +64,11 @@ function timeAgo(iso: string) {
 function Notifs() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<Filter>("all");
+  const { filter } = Route.useSearch();
+  const navigate = useNavigate({ from: "/notifications" });
+  const unread = useUnreadNotifications();
+  const setFilter = (f: Filter) =>
+    navigate({ search: (prev) => ({ ...prev, filter: f }) });
 
   const notifs = useQuery({
     queryKey: ["notifications", user?.id],
