@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, MapPin, Compass, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -21,17 +22,23 @@ type NearbyRow = {
   trades_count: number;
   distance_km: number;
   match_count: number;
+  reverse_match_count: number;
+  proximity_score: number;
+  compat_score: number;
 };
+
+const RADII = [10, 25, 50, 100] as const;
 
 function Near() {
   const { user, profile } = useAuth();
   const nav = useNavigate();
+  const [radius, setRadius] = useState<(typeof RADII)[number]>(50);
 
   const nearby = useQuery({
-    queryKey: ["nearby", user?.id, profile?.lat, profile?.lng],
+    queryKey: ["nearby", user?.id, profile?.lat, profile?.lng, radius],
     enabled: !!user && profile?.lat != null && profile?.lng != null,
     queryFn: async (): Promise<NearbyRow[]> => {
-      const { data, error } = await supabase.rpc("nearby_collectors", { _radius_km: 25 });
+      const { data, error } = await supabase.rpc("nearby_collectors", { _radius_km: radius });
       if (error) throw error;
       return (data ?? []) as NearbyRow[];
     },
