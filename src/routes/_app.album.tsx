@@ -264,7 +264,16 @@ function Album() {
                   }`}
                 >
                   {current.image_url ? (
-                    <img src={current.image_url} alt={current.code} className={`absolute inset-0 w-full h-full object-cover ${current.owned ? "" : "blur-[6px] grayscale opacity-60"}`} />
+                    <>
+                      <img src={current.image_url} alt={current.code} className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${current.owned ? "" : "blur-[5px] grayscale-[80%] opacity-75 scale-110"}`} />
+                      {!current.owned && (
+                        <span className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/30 to-background/10 flex items-center justify-center">
+                          <span className="w-9 h-9 rounded-full glass-strong flex items-center justify-center">
+                            <Lock size={14} className="text-foreground" />
+                          </span>
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <>
                       <span className="text-3xl leading-none">{current.flag_emoji}</span>
@@ -393,8 +402,10 @@ function StickerCell({
           src={s.image_url}
           alt={s.code}
           loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover ${
-            s.owned ? "" : "blur-[6px] grayscale opacity-60 scale-110"
+          decoding="async"
+          {...(!s.owned ? { fetchpriority: "low" as any } : {})}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
+            s.owned ? "" : "blur-[4px] grayscale-[80%] opacity-75 scale-105"
           }`}
         />
       ) : (
@@ -404,8 +415,10 @@ function StickerCell({
         </>
       )}
       {!s.owned && (
-        <span className="absolute inset-0 bg-background/30 flex items-end justify-center pb-1">
-          <Lock size={12} className="text-foreground/80" />
+        <span className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/35 to-background/5 flex items-center justify-center">
+          <span className="w-7 h-7 rounded-full glass-strong flex items-center justify-center">
+            <Lock size={11} className="text-foreground" />
+          </span>
         </span>
       )}
       {s.duplicates > 1 && (
@@ -419,8 +432,9 @@ function StickerCell({
         </span>
       )}
       {s.image_url && (
-        <span className="absolute bottom-0 left-0 right-0 bg-background/70 text-[8px] font-display py-0.5 text-center">
-          {s.code}
+        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent text-[8px] font-display py-1 text-center flex items-center justify-center gap-0.5">
+          <span>{s.code}</span>
+          <span className="text-[9px] leading-none">{s.flag_emoji}</span>
         </span>
       )}
     </motion.button>
