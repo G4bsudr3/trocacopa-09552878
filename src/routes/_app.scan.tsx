@@ -312,18 +312,35 @@ function Scan() {
       {matches.length > 0 && (
         <div className="space-y-2 mt-3">
           {matches.map((s) => {
-            const owned = stickers.find((x) => x.code === s.code)?.owned;
+            const userS = stickers.find((x) => x.code === s.code);
+            const owned = userS?.owned;
+            const dup = userS?.duplicates ?? 0;
             return (
               <div key={s.code} className="glass rounded-2xl p-3 flex items-center gap-3">
-                <div
-                  className={`w-12 h-16 rounded-lg flex flex-col items-center justify-center font-display ${
-                    owned
-                      ? "gradient-primary text-primary-foreground"
-                      : "bg-surface text-muted-foreground"
-                  }`}
-                >
-                  <span className="text-base leading-none">{s.flag_emoji}</span>
-                  <span className="text-[10px] mt-0.5">{s.code}</span>
+                <div className="relative shrink-0">
+                  {s.image_url ? (
+                    <img
+                      src={s.image_url}
+                      alt={s.country_name}
+                      className={`w-12 h-16 rounded-lg object-cover ${owned ? "ring-2 ring-primary/40" : "opacity-90"}`}
+                    />
+                  ) : (
+                    <div
+                      className={`w-12 h-16 rounded-lg flex flex-col items-center justify-center font-display ${
+                        owned
+                          ? "gradient-primary text-primary-foreground"
+                          : "bg-surface text-muted-foreground"
+                      }`}
+                    >
+                      <span className="text-base leading-none">{s.flag_emoji}</span>
+                      <span className="text-[10px] mt-0.5">{s.code}</span>
+                    </div>
+                  )}
+                  {dup > 1 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-gold text-gold-foreground text-[9px] font-bold rounded-full px-1.5 py-0.5">
+                      x{dup}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{s.country_name}</p>
@@ -340,9 +357,12 @@ function Scan() {
                 <div className="flex gap-1">
                   <button
                     onClick={() => register(s.code, false)}
-                    className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-bold flex items-center gap-1"
+                    disabled={owned}
+                    className={`px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 ${
+                      owned ? "bg-surface text-muted-foreground" : "gradient-primary text-primary-foreground"
+                    }`}
                   >
-                    <Check size={12} /> Tenho
+                    <Check size={12} /> {owned ? "✓" : "Tenho"}
                   </button>
                   <button
                     onClick={() => register(s.code, true)}
