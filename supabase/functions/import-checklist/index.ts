@@ -124,9 +124,11 @@ Deno.serve(async (req) => {
   const skipImages: boolean = body.skip_images === true;
   const onlyMissingNames: boolean = body.only_missing_names === true;
   const onlyCodes: string[] | null = Array.isArray(body.only_codes) && body.only_codes.length ? body.only_codes : null;
+  const force: boolean = body.force === true;
+  const limit: number = Math.max(1, Math.min(500, Number(body.limit) || 200));
 
   // Preload existing flag/country data
-  const { data: existing } = await admin.from("stickers").select("code,country_code,flag_emoji,country_name,player_name");
+  const { data: existing } = await admin.from("stickers").select("code,country_code,flag_emoji,country_name,player_name,player_name_source,image_url");
   const existingMap = new Map<string, any>();
   const flagByCC = new Map<string, string>();
   const nameByCC = new Map<string, string>();
