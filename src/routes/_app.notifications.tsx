@@ -152,12 +152,24 @@ function Notifs() {
       </div>
 
       <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-none">
-        {([["all","Todas"],["matches","Matches"],["trades","Trocas"],["messages","Mensagens"]] as const).map(([k,l]) => (
+        {([
+          ["all", "Todas", unread.total],
+          ["matches", "Matches", unread.byCategory.matches],
+          ["trades", "Trocas", unread.byCategory.trades],
+          ["messages", "Mensagens", unread.byCategory.messages],
+        ] as const).map(([k, l, n]) => (
           <button
             key={k}
             onClick={() => setFilter(k)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
-          >{l}</button>
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${filter === k ? "bg-primary text-primary-foreground" : "glass"}`}
+          >
+            {l}
+            {n > 0 && (
+              <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${filter === k ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground"}`}>
+                {n > 99 ? "99+" : n}
+              </span>
+            )}
+          </button>
         ))}
       </div>
 
