@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       if (s?.user) {
         setTimeout(() => fetchProfile(s.user.id), 0);
+        setTimeout(() => consumePendingInvite(), 100);
       } else {
         setProfile(null);
       }
