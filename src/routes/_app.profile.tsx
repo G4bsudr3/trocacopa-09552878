@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TOTAL_STICKERS } from "@/lib/stickers";
-import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon } from "lucide-react";
+import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useAlbum } from "@/lib/use-album";
 
 export const Route = createFileRoute("/_app/profile")({
   head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
@@ -15,6 +16,9 @@ export const Route = createFileRoute("/_app/profile")({
 function Profile() {
   const { profile, user, signOut } = useAuth();
   const nav = useNavigate();
+  const { stickers } = useAlbum();
+  const dupUnique = stickers.filter((s) => s.duplicates > 1).length;
+  const dupExtras = stickers.reduce((a, s) => a + Math.max(0, s.duplicates - 1), 0);
 
   const stats = useQuery({
     queryKey: ["profile-stats", user?.id],
@@ -90,6 +94,23 @@ function Profile() {
           <span className="font-semibold text-sm">{badge.name}</span>
         </div>
       </motion.div>
+
+      <Link to="/duplicates" className="block mt-4">
+        <div className="glass-strong rounded-2xl p-4 flex items-center gap-3 border border-gold/30 active:scale-[0.99] transition">
+          <span className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center glow-gold shrink-0">
+            <Repeat2 className="text-gold-foreground" size={22} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-display text-lg leading-tight">Minhas Repetidas</p>
+            <p className="text-xs text-muted-foreground">
+              {dupUnique > 0
+                ? `${dupUnique} figurinhas · ${dupExtras} trocáveis`
+                : "Nenhuma repetida ainda — marque no álbum"}
+            </p>
+          </div>
+          <span className="text-gold font-display text-2xl">→</span>
+        </div>
+      </Link>
 
       {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-4">

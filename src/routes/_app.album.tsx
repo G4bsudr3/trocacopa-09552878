@@ -60,8 +60,16 @@ function Album() {
   ];
 
   const onCellTap = (s: Sticker) => {
-    toggleOwned(s.code);
-    toast.success(s.owned ? `${s.code} desmarcada` : `${s.code} adicionada!`);
+    if (!s.owned) {
+      toggleOwned(s.code);
+      toast.success(`${s.code} adicionada ao álbum ✅`);
+    } else {
+      addDuplicate(s.code);
+      const next = s.duplicates + 1;
+      toast.success(
+        next === 2 ? `${s.code} agora é repetida (2x) 🔁` : `${s.code} +1 repetida (${next}x)`,
+      );
+    }
   };
 
   return (
@@ -236,9 +244,22 @@ function Album() {
         </section>
       )}
 
-      <p className="text-[11px] text-muted-foreground mt-4 text-center">
-        Toque para marcar/desmarcar · Toque longo para ajustar repetidas
-      </p>
+      <div className="mt-4 glass rounded-2xl px-4 py-3 space-y-2">
+        <p className="text-[11px] text-muted-foreground text-center">
+          1 toque marca · toque de novo vira repetida · toque longo abre detalhes
+        </p>
+        <div className="flex items-center justify-center gap-3 text-[10px]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm bg-surface border border-border/60" /> Falta
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm border border-primary/60 bg-primary/15" /> Tenho
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm border border-gold bg-gold/25" /> Repetida
+          </span>
+        </div>
+      </div>
 
       {/* Detail sheet */}
       <AnimatePresence>
@@ -400,9 +421,11 @@ function StickerCell({
       animate={{ opacity: 1, scale: 1 }}
       whileTap={{ scale: 0.94 }}
       className={`aspect-[3/4] rounded-lg flex flex-col items-center justify-center text-center relative overflow-hidden select-none ${
-        s.owned
-          ? "border border-primary/40 glow-primary"
-          : "bg-surface border border-border/50"
+        s.duplicates > 1
+          ? "border-2 border-gold glow-gold"
+          : s.owned
+            ? "border-2 border-primary/60 glow-primary"
+            : "bg-surface border border-border/50"
       }`}
     >
       {s.image_url ? (
@@ -430,8 +453,9 @@ function StickerCell({
         </span>
       )}
       {s.duplicates > 1 && (
-        <span className="absolute top-0.5 right-0.5 z-10 bg-gold text-gold-foreground text-[8px] font-bold px-1 py-0.5 rounded-full">
-          {s.duplicates}x
+        <span className="absolute top-0.5 right-0.5 z-10 bg-gold text-gold-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+          <Repeat2 size={9} strokeWidth={3} />
+          {s.duplicates}
         </span>
       )}
       {s.owned && s.duplicates < 2 && (
