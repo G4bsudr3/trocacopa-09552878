@@ -75,11 +75,22 @@ function LoginPage() {
     setErrors({});
 
     if (mode === "signup") {
-      const parsed = signupSchema.safeParse({ name, city, email, password });
+      const parsed = signupSchema.safeParse({
+        name, city, email, password, birth_date: birthDate,
+        guardian_name: guardianName, guardian_email: guardianEmail,
+      });
       if (!parsed.success) {
         const errs: Record<string, string> = {};
         parsed.error.issues.forEach((i) => (errs[i.path[0] as string] = i.message));
         setErrors(errs);
+        return;
+      }
+      // Validate guardian fields if minor
+      if (willBeMinor && (!guardianEmail || !guardianName)) {
+        setErrors({
+          guardian_email: !guardianEmail ? "Informe o e-mail do responsável" : "",
+          guardian_name: !guardianName ? "Informe o nome do responsável" : "",
+        });
         return;
       }
       setBusy(true);
@@ -89,18 +100,37 @@ function LoginPage() {
           password: parsed.data.password,
           options: {
             emailRedirectTo: `${window.location.origin}/home`,
-            data: { full_name: parsed.data.name, city: parsed.data.city },
+            data: {
+              full_name: parsed.data.name,
+              city: parsed.data.city,
+              birth_date: parsed.data.birth_date,
+              ...(willBeMinor ? { guardian_name: guardianName, guardian_email: guardianEmail } : {}),
+            },
           },
         });
         if (error) throw error;
 
         if (data.session) {
-          // Auto-confirm está ligado: já temos sessão; complementa cidade caso o trigger não tenha pego
           await supabase
             .from("profiles")
-            .update({ full_name: parsed.data.name, city: parsed.data.city })
+            .update({
+              full_name: parsed.data.name,
+              city: parsed.data.city,
+              birth_date: parsed.data.birth_date,
+              ...(willBeMinor ? { guardian_email: guardianEmail, guardian_name: guardianName } : {}),
+            })
             .eq("id", data.session.user.id);
-          toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
+
+          if (willBeMinor) {
+            await supabase.from("guardian_consents").insert({
+              minor_user_id: data.session.user.id,
+              guardian_email: guardianEmail,
+              guardian_name: guardianName,
+            });
+            toast.success("Conta criada! 🛡️ Avisamos seu responsável por e-mail. Algumas funções ficam pausadas até a aprovação.", { duration: 9000 });
+          } else {
+            toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
+          }
           navigate({ to: "/home" });
         } else {
           toast.success(`Enviamos um e-mail de confirmação para ${parsed.data.email}. Confirme para entrar.`, {
