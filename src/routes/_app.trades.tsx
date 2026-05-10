@@ -31,7 +31,7 @@ function Trades() {
     queryFn: async (): Promise<TradeWithProfiles[]> => {
       const { data, error } = await supabase
         .from("trades")
-        .select("id,status,created_at,requester_id,receiver_id,requester:profiles!trades_requester_id_fkey(full_name,avatar_url),receiver:profiles!trades_receiver_id_fkey(full_name,avatar_url)")
+        .select("id,status,created_at,requester_id,receiver_id,requester:profiles!trades_requester_profile_fkey(full_name,avatar_url),receiver:profiles!trades_receiver_profile_fkey(full_name,avatar_url)")
         .or(`requester_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
         .order("created_at", { ascending: false });
       if (error) throw error;
