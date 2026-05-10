@@ -281,6 +281,16 @@ function LoginPage() {
                 <>
                   <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} error={errors.name} />
                   <Field icon={<MapPin size={18} />} placeholder="Cidade / região" value={city} onChange={setCity} error={errors.city} />
+                  <DateField icon={<Cake size={18} />} value={birthDate} onChange={setBirthDate} error={errors.birth_date} />
+                  {willBeMinor && (
+                    <div className="rounded-2xl bg-gold/10 border border-gold/30 p-3 space-y-2">
+                      <p className="text-[11px] text-gold font-bold flex items-center gap-1.5">
+                        <Shield size={12} /> Menor de 18 — autorização do responsável
+                      </p>
+                      <Field icon={<UserIcon size={18} />} placeholder="Nome do responsável" value={guardianName} onChange={setGuardianName} error={errors.guardian_name} />
+                      <Field icon={<Mail size={18} />} placeholder="E-mail do responsável" value={guardianEmail} onChange={setGuardianEmail} type="email" error={errors.guardian_email} />
+                    </div>
+                  )}
                 </>
               )}
               <Field icon={<Mail size={18} />} placeholder="E-mail" value={email} onChange={setEmail} type="email" error={errors.email} />
