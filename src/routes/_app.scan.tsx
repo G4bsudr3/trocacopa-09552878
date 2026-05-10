@@ -240,23 +240,20 @@ function Scan() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="mt-4">
               <button
-                onClick={() => register(result.code, false)}
-                disabled={owned}
-                className={`px-3 py-2.5 rounded-full text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition ${
-                  owned
-                    ? "bg-surface text-muted-foreground"
-                    : "gradient-primary text-primary-foreground"
+                onClick={() => registerProgressive(result.code)}
+                className={`w-full px-3 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition ${
+                  dup === 0
+                    ? "gradient-primary text-primary-foreground glow-primary"
+                    : "bg-gold text-gold-foreground"
                 }`}
               >
-                <Check size={14} /> {owned ? "Já possuída" : "Tenho"}
-              </button>
-              <button
-                onClick={() => register(result.code, true)}
-                className="px-3 py-2.5 rounded-full bg-gold text-gold-foreground text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition"
-              >
-                <Repeat size={14} /> +1 Repetida{dup >= 1 ? ` (x${dup + 1})` : ""}
+                {dup === 0 ? (
+                  <><Check size={16} /> Tenho</>
+                ) : (
+                  <><Repeat size={16} /> +1 Repetida (próx: {dup + 1}x)</>
+                )}
               </button>
             </div>
 
