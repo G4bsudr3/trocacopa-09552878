@@ -95,6 +95,23 @@ function Profile() {
         </div>
       </motion.div>
 
+      <Link to="/duplicates" className="block mt-4">
+        <div className="glass-strong rounded-2xl p-4 flex items-center gap-3 border border-gold/30 active:scale-[0.99] transition">
+          <span className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center glow-gold shrink-0">
+            <Repeat2 className="text-gold-foreground" size={22} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-display text-lg leading-tight">Minhas Repetidas</p>
+            <p className="text-xs text-muted-foreground">
+              {dupUnique > 0
+                ? `${dupUnique} figurinhas · ${dupExtras} trocáveis`
+                : "Nenhuma repetida ainda — marque no álbum"}
+            </p>
+          </div>
+          <span className="text-gold font-display text-2xl">→</span>
+        </div>
+      </Link>
+
       {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-4">
           <div className="rounded-2xl p-5 gradient-gold text-gold-foreground flex items-center gap-3 glow-gold">
