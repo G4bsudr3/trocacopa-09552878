@@ -15,11 +15,11 @@ const TEAMS = [
   "Austrália", "Áustria", "Bélgica", "Bósnia e Herzegovina", "Brasil",
   "Cabo Verde", "Canadá", "Catar", "Colômbia", "Congo DR", "Coreia do Sul",
   "Costa do Marfim", "Croácia", "Curaçao", "Egito", "Equador", "Escócia",
-  "Espanha", "Estados Unidos", "FIFA World Cup 2026", "Fifa World Cup History",
-  "França", "Gana", "Haiti", "Inglaterra", "Irã", "Iraque", "Japão",
-  "Jordânia", "Marrocos", "México", "Noruega", "Nova Zelândia",
-  "Países Baixos", "Panamá", "Paraguai", "Portugal", "República Tcheca",
-  "Senegal", "Suécia", "Suíça", "Tunísia", "Turquia", "Uruguai", "Uzbequistão",
+  "Espanha", "Estados Unidos", "França", "Gana", "Haiti", "Holanda",
+  "Inglaterra", "Irã", "Iraque", "Japão", "Jordânia", "Marrocos", "México",
+  "Noruega", "Nova Zelândia", "Panamá", "Paraguai", "Portugal",
+  "República Tcheca", "Senegal", "SPECIAL", "Suécia", "Suíça", "Tunísia",
+  "Turquia", "Uruguai", "Uzbequistão",
 ];
 
 // Fallbacks for new countries we may not have yet
