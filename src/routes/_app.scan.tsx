@@ -433,11 +433,23 @@ function Scan() {
             {recent.map((code) => {
               const s = (catalog.data ?? []).find((x) => x.code === code);
               return (
-                <div key={code} className="glass rounded-xl p-2 text-center">
-                  <p className="text-lg leading-none">{s?.flag_emoji ?? "·"}</p>
-                  <p className="font-display text-sm text-primary mt-1">{code}</p>
+                <div key={code} className="glass rounded-xl p-2 flex flex-col items-center">
+                  {s?.image_url ? (
+                    <img
+                      src={s.image_url}
+                      alt={s.country_name}
+                      loading="lazy"
+                      className="w-full aspect-[3/4] rounded-lg object-cover ring-1 ring-primary/30"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[3/4] rounded-lg gradient-primary text-primary-foreground flex flex-col items-center justify-center font-display">
+                      <span className="text-2xl leading-none">{s?.flag_emoji ?? "·"}</span>
+                      <span className="text-[10px] mt-1">{code}</span>
+                    </div>
+                  )}
+                  <p className="font-display text-sm text-primary mt-1.5">{code}</p>
                   {s && (
-                    <p className="text-[10px] text-muted-foreground truncate">{s.country_name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate w-full text-center">{s.country_name}</p>
                   )}
                 </div>
               );
