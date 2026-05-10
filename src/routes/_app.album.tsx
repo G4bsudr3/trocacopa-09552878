@@ -72,6 +72,16 @@ function Album() {
     }
   };
 
+  const onCellLong = (s: Sticker) => {
+    if (s.duplicates > 1) {
+      removeDuplicate(s.code);
+      const next = s.duplicates - 1;
+      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`);
+    } else {
+      setSelected(s);
+    }
+  };
+
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto pb-10">
       <div className="flex items-center justify-between gap-2 pr-14 md:pr-0">
@@ -206,7 +216,7 @@ function Album() {
                             key={s.code}
                             s={s as Sticker}
                             onTap={() => onCellTap(s as Sticker)}
-                            onLong={() => setSelected(s as Sticker)}
+                            onLong={() => onCellLong(s as Sticker)}
                           />
                         ))}
                       </div>
@@ -235,7 +245,7 @@ function Album() {
           </p>
           <div className="grid grid-cols-5 md:grid-cols-8 gap-2">
             {specials.map((s) => (
-              <StickerCell key={s.code} s={s} onTap={() => onCellTap(s)} onLong={() => setSelected(s)} />
+              <StickerCell key={s.code} s={s} onTap={() => onCellTap(s)} onLong={() => onCellLong(s)} />
             ))}
           </div>
           {specials.length === 0 && (
@@ -246,7 +256,7 @@ function Album() {
 
       <div className="mt-4 glass rounded-2xl px-4 py-3 space-y-2">
         <p className="text-[11px] text-muted-foreground text-center">
-          1 toque marca · toque de novo vira repetida · toque longo abre detalhes
+          Toque para marcar/somar repetida · toque longo remove uma repetida (ou abre detalhes)
         </p>
         <div className="flex items-center justify-center gap-3 text-[10px]">
           <span className="flex items-center gap-1.5">
@@ -265,7 +275,7 @@ function Album() {
       <AnimatePresence>
         {current && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-end justify-center"
+            className="fixed inset-0 z-[60] flex items-end justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -276,7 +286,7 @@ function Album() {
               animate={{ y: 0 }}
               exit={{ y: 300 }}
               transition={{ type: "spring", damping: 28 }}
-              className="relative glass-strong rounded-t-3xl w-full max-w-md p-6 pb-10 safe-bottom"
+              className="relative glass-strong rounded-t-3xl w-full max-w-md p-6 pb-32 md:pb-10 safe-bottom"
             >
               <button
                 onClick={() => setSelected(null)}
