@@ -281,7 +281,7 @@ function LoginPage() {
               {mode === "signup" && (
                 <>
                   <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} error={errors.name} />
-                  <Field icon={<MapPin size={18} />} placeholder="Cidade / região" value={city} onChange={setCity} error={errors.city} />
+                  <LocationSelect value={city} onChange={setCity} error={errors.city} />
                   <DateField icon={<Cake size={18} />} value={birthDate} onChange={setBirthDate} error={errors.birth_date} />
                   {willBeMinor && (
                     <div className="rounded-2xl bg-gold/10 border border-gold/30 p-3 space-y-2">
