@@ -44,7 +44,7 @@ function Home() {
       <header className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl text-primary text-glow tracking-wide">⚽ TROCACOPA</h1>
         <div className="flex items-center gap-3">
-          <Link to="/notifications" className="relative w-10 h-10 rounded-full glass flex items-center justify-center">
+          <Link to="/notifications" search={{ filter: "all" }} className="relative w-10 h-10 rounded-full glass flex items-center justify-center">
             <Bell size={18} />
             {unread.total > 0 && (
               <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">

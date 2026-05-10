@@ -60,7 +60,7 @@ export function AppSidebar() {
               ))}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive("/notifications")} tooltip="Notificações">
-                  <Link to="/notifications">
+                  <Link to="/notifications" search={{ filter: "all" }}>
                     <Bell />
                     <span>Notificações</span>
                     {total > 0 && (

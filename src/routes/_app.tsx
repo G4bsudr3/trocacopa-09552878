@@ -109,6 +109,7 @@ function NotificationBell({ inline = false }: { inline?: boolean }) {
   return (
     <Link
       to="/notifications"
+      search={{ filter: "all" }}
       aria-label={`Notificações${total > 0 ? ` (${total} não lidas)` : ""}`}
       className={base}
     >

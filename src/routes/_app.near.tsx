@@ -322,6 +322,12 @@ function Near() {
         </>
       )}
 
+      {nearby.isError && (
+        <div className="text-sm text-destructive text-center py-6 glass rounded-2xl mt-4">
+          Não foi possível carregar os matches. Verifique sua conexão e tente novamente.
+        </div>
+      )}
+
       {nearby.isFetching && nearby.data && (
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-3">
           <Loader2 size={12} className="animate-spin" /> Atualizando...

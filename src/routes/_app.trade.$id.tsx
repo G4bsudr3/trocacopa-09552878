@@ -125,6 +125,10 @@ function Trade() {
   };
 
   const updateStatus = async (status: TradeRow["status"]) => {
+    if (status === "completed") {
+      const ok = window.confirm("Confirmar que a troca foi realizada presencialmente?");
+      if (!ok) return;
+    }
     const { error } = await supabase.from("trades").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) return toast.error(error.message);
     if (status === "completed") {

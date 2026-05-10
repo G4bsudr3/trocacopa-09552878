@@ -165,8 +165,8 @@ function Profile() {
           </div>
         ) : stats.data && stats.data.reviews.length > 0 ? (
           <div className="space-y-2">
-            {stats.data.reviews.map((r, i) => (
-              <div key={i} className="glass rounded-2xl p-3">
+            {stats.data.reviews.map((r) => (
+              <div key={`${r.reviewer_id}-${r.created_at}`} className="glass rounded-2xl p-3">
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-sm">{new Date(r.created_at).toLocaleDateString("pt-BR")}</p>
                   <div className="flex gap-0.5">
