@@ -204,6 +204,10 @@ function Trade() {
         </button>
       )}
 
+      {(t.status === "accepted" || t.status === "pending") && (
+        <MeetBlock trade={t} meId={user?.id ?? ""} onChange={() => trade.refetch()} />
+      )}
+
       {/* Chat */}
       <div className="glass-strong rounded-3xl mt-5 p-4 flex flex-col">
         <p className="font-display text-lg mb-3">Combinem o encontro</p>
