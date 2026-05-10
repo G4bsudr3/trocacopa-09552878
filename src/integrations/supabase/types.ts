@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: Database["public"]["Enums"]["report_reason"]
+          reporter_id: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: Database["public"]["Enums"]["report_reason"]
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: Database["public"]["Enums"]["report_reason"]
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target"]
+        }
+        Relationships: []
+      }
+      guardian_consents: {
+        Row: {
+          approved_at: string | null
+          expires_at: string
+          guardian_email: string
+          guardian_name: string | null
+          id: string
+          minor_user_id: string
+          requested_at: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          approved_at?: string | null
+          expires_at?: string
+          guardian_email: string
+          guardian_name?: string | null
+          id?: string
+          minor_user_id: string
+          requested_at?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          approved_at?: string | null
+          expires_at?: string
+          guardian_email?: string
+          guardian_name?: string | null
+          id?: string
+          minor_user_id?: string
+          requested_at?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
       match_alerts_sent: {
         Row: {
           other_id: string
@@ -79,14 +154,20 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_group: Database["public"]["Enums"]["age_group"] | null
           album_progress: number
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
           city: string | null
           created_at: string
           discoverable: boolean
           full_name: string | null
+          guardian_consent_at: string | null
+          guardian_email: string | null
+          guardian_name: string | null
           id: string
+          kids_mode: boolean
           lat: number | null
           lng: number | null
           location_updated_at: string | null
@@ -96,14 +177,20 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          age_group?: Database["public"]["Enums"]["age_group"] | null
           album_progress?: number
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           city?: string | null
           created_at?: string
           discoverable?: boolean
           full_name?: string | null
+          guardian_consent_at?: string | null
+          guardian_email?: string | null
+          guardian_name?: string | null
           id: string
+          kids_mode?: boolean
           lat?: number | null
           lng?: number | null
           location_updated_at?: string | null
@@ -113,14 +200,20 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          age_group?: Database["public"]["Enums"]["age_group"] | null
           album_progress?: number
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           city?: string | null
           created_at?: string
           discoverable?: boolean
           full_name?: string | null
+          guardian_consent_at?: string | null
+          guardian_email?: string | null
+          guardian_name?: string | null
           id?: string
+          kids_mode?: boolean
           lat?: number | null
           lng?: number | null
           location_updated_at?: string | null
@@ -326,6 +419,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      guardian_consent_approve: { Args: { _token: string }; Returns: boolean }
+      guardian_consent_lookup: {
+        Args: { _token: string }
+        Returns: {
+          approved_at: string
+          expires_at: string
+          guardian_email: string
+          minor_birth_date: string
+          minor_name: string
+          minor_user_id: string
+          requested_at: string
+          revoked_at: string
+        }[]
+      }
+      guardian_consent_revoke: { Args: { _token: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -384,7 +492,16 @@ export type Database = {
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
+      age_group: "child" | "teen" | "adult"
       app_role: "admin" | "user"
+      report_reason:
+        | "improper_language"
+        | "strange_behavior"
+        | "asked_personal_info"
+        | "adult_content"
+        | "other"
+      report_status: "open" | "reviewed" | "actioned" | "dismissed"
+      report_target: "user" | "trade" | "message"
       trade_status:
         | "pending"
         | "accepted"
@@ -518,7 +635,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      age_group: ["child", "teen", "adult"],
       app_role: ["admin", "user"],
+      report_reason: [
+        "improper_language",
+        "strange_behavior",
+        "asked_personal_info",
+        "adult_content",
+        "other",
+      ],
+      report_status: ["open", "reviewed", "actioned", "dismissed"],
+      report_target: ["user", "trade", "message"],
       trade_status: [
         "pending",
         "accepted",
