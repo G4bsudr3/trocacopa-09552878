@@ -17,10 +17,11 @@ function AppLayout() {
   const { session, loading, user, profile } = useAuth();
   const nav = useNavigate();
   const lastToastRef = useRef(0);
+  const prefsRef = useRef(profile?.notification_prefs);
+  prefsRef.current = profile?.notification_prefs;
 
   useEffect(() => {
     if (!user) return;
-    const prefs = (profile?.notification_prefs as { trades?: boolean; messages?: boolean; matches?: boolean } | null) ?? {};
     const name = `notif-toast-${user.id}`;
     supabase.getChannels().forEach((c) => {
       if (c.topic === `realtime:${name}` || c.topic === name) supabase.removeChannel(c);
