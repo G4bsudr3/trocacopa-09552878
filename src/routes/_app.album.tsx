@@ -256,7 +256,7 @@ function Album() {
 
       <div className="mt-4 glass rounded-2xl px-4 py-3 space-y-2">
         <p className="text-[11px] text-muted-foreground text-center">
-          1 toque marca · toque de novo vira repetida · toque longo abre detalhes
+          Toque para marcar/somar repetida · toque longo remove uma repetida (ou abre detalhes)
         </p>
         <div className="flex items-center justify-center gap-3 text-[10px]">
           <span className="flex items-center gap-1.5">
