@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Mail, Lock, User as UserIcon, MapPin, Cake, Shield } from "lucide-react";
+import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -266,7 +266,7 @@ function LoginPage() {
               disabled={busy}
               className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-full glow-primary disabled:opacity-60 transition active:scale-95"
             >
-              {busy ? "..." : "Enviar link de recuperação"}
+              {busy ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Enviar link de recuperação"}
             </button>
             <button
               onClick={() => { setShowReset(false); setErrors({}); }}
@@ -280,7 +280,7 @@ function LoginPage() {
             <form onSubmit={handleEmail} className="space-y-3">
               {mode === "signup" && (
                 <>
-                  <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} error={errors.name} />
+                  <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} error={errors.name} autoComplete="name" />
                   <LocationSelect value={city} onChange={setCity} error={errors.city} />
                   <DateField icon={<Cake size={18} />} value={birthDate} onChange={setBirthDate} error={errors.birth_date} />
                   {willBeMinor && (
@@ -289,13 +289,18 @@ function LoginPage() {
                         <Shield size={12} /> Menor de 18 — autorização do responsável
                       </p>
                       <Field icon={<UserIcon size={18} />} placeholder="Nome do responsável" value={guardianName} onChange={setGuardianName} error={errors.guardian_name} />
-                      <Field icon={<Mail size={18} />} placeholder="E-mail do responsável" value={guardianEmail} onChange={setGuardianEmail} type="email" error={errors.guardian_email} />
+                      <Field icon={<Mail size={18} />} placeholder="E-mail do responsável" value={guardianEmail} onChange={setGuardianEmail} type="email" error={errors.guardian_email} autoComplete="email" />
                     </div>
                   )}
+                  <div className="flex items-center gap-3 pt-1">
+                    <div className="h-px bg-border flex-1" />
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Acesso</span>
+                    <div className="h-px bg-border flex-1" />
+                  </div>
                 </>
               )}
-              <Field icon={<Mail size={18} />} placeholder="E-mail" value={email} onChange={setEmail} type="email" error={errors.email} />
-              <Field icon={<Lock size={18} />} placeholder="Senha" value={password} onChange={setPassword} type="password" error={errors.password} />
+              <Field icon={<Mail size={18} />} placeholder="E-mail" value={email} onChange={setEmail} type="email" error={errors.email} autoComplete={mode === "signup" ? "email" : "username"} />
+              <Field icon={<Lock size={18} />} placeholder="Senha" value={password} onChange={setPassword} type="password" error={errors.password} autoComplete={mode === "signup" ? "new-password" : "current-password"} />
 
               {mode === "signin" && (
                 <button
@@ -312,7 +317,7 @@ function LoginPage() {
                 disabled={busy}
                 className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-full glow-primary disabled:opacity-60 transition active:scale-95"
               >
-                {busy ? "..." : mode === "signin" ? "Entrar" : "Criar conta"}
+                {busy ? <Loader2 size={16} className="animate-spin mx-auto" /> : mode === "signin" ? "Entrar" : "Criar conta"}
               </button>
             </form>
 
@@ -341,19 +346,27 @@ function LoginPage() {
 }
 
 function Field({
-  icon, placeholder, value, onChange, type = "text", error,
-}: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string; error?: string }) {
+  icon, placeholder, value, onChange, type = "text", error, autoComplete,
+}: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string; error?: string; autoComplete?: string }) {
+  const [showPwd, setShowPwd] = useState(false);
+  const isPassword = type === "password";
   return (
     <div>
       <div className={`flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border transition ${error ? "border-destructive" : "border-transparent focus-within:border-primary"}`}>
         <span className="text-muted-foreground">{icon}</span>
         <input
-          type={type}
+          type={isPassword && showPwd ? "text" : type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
         />
+        {isPassword && (
+          <button type="button" onClick={() => setShowPwd((v) => !v)} className="text-muted-foreground hover:text-foreground transition shrink-0">
+            {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        )}
       </div>
       {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
     </div>
@@ -365,6 +378,7 @@ function DateField({
 }: { icon: React.ReactNode; value: string; onChange: (v: string) => void; error?: string }) {
   return (
     <div>
+      <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Data de nascimento</label>
       <div className={`flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border transition ${error ? "border-destructive" : "border-transparent focus-within:border-primary"}`}>
         <span className="text-muted-foreground">{icon}</span>
         <input
@@ -375,7 +389,7 @@ function DateField({
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
         />
       </div>
-      {!error && !value && <p className="text-[10px] text-muted-foreground mt-1 ml-2">Data de nascimento (Lei nº 15.211/2025)</p>}
+      {!error && <p className="text-[10px] text-muted-foreground mt-1 ml-2">Exigido pela Lei nº 15.211/2025</p>}
       {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
     </div>
   );

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Lock, Loader2 } from "lucide-react";
+import { Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -99,6 +99,7 @@ function ResetPasswordPage() {
               onChange={setPassword}
               type="password"
               error={errors.password}
+              autoComplete="new-password"
             />
             <Field
               icon={<Lock size={18} />}
@@ -107,13 +108,14 @@ function ResetPasswordPage() {
               onChange={setConfirm}
               type="password"
               error={errors.confirm}
+              autoComplete="new-password"
             />
             <button
               type="submit"
               disabled={busy}
               className="w-full gradient-primary text-primary-foreground font-bold py-3.5 rounded-full glow-primary disabled:opacity-60 transition active:scale-95"
             >
-              {busy ? "..." : "Atualizar senha"}
+              {busy ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Atualizar senha"}
             </button>
           </form>
         )}
@@ -123,19 +125,27 @@ function ResetPasswordPage() {
 }
 
 function Field({
-  icon, placeholder, value, onChange, type = "text", error,
-}: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string; error?: string }) {
+  icon, placeholder, value, onChange, type = "text", error, autoComplete,
+}: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string; error?: string; autoComplete?: string }) {
+  const [showPwd, setShowPwd] = useState(false);
+  const isPassword = type === "password";
   return (
     <div>
       <div className={`flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border transition ${error ? "border-destructive" : "border-transparent focus-within:border-primary"}`}>
         <span className="text-muted-foreground">{icon}</span>
         <input
-          type={type}
+          type={isPassword && showPwd ? "text" : type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          autoComplete={autoComplete}
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
         />
+        {isPassword && (
+          <button type="button" onClick={() => setShowPwd((v) => !v)} className="text-muted-foreground hover:text-foreground transition shrink-0">
+            {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+          </button>
+        )}
       </div>
       {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
     </div>
