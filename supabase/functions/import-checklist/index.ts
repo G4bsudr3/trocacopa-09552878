@@ -180,6 +180,12 @@ Deno.serve(async (req) => {
 
   let targets = [...byCode.values()];
   if (onlyCodes) targets = targets.filter((r) => onlyCodes.includes(r.code));
+  if (onlyMissingImages || resume) {
+    targets = targets.filter((r) => {
+      const ex = existingMap.get(r.code);
+      return !ex || ex.image_url == null; // somente os ainda não tentados
+    });
+  }
   if (onlyMissingNames) {
     targets = targets.filter((r) => {
       const ex = existingMap.get(r.code);
