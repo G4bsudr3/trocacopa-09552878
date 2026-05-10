@@ -436,20 +436,31 @@ function StickerCell({
           decoding="async"
           {...(!s.owned ? { fetchpriority: "low" as any } : {})}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${
-            s.owned ? "" : "blur-[4px] grayscale-[80%] opacity-75 scale-105"
+            s.owned ? "" : "blur-[4px] grayscale-[80%] opacity-60 scale-105"
           }`}
         />
       ) : (
         <>
           <span className="text-base leading-none">{s.flag_emoji}</span>
-          <span className={`font-display text-[10px] leading-none mt-1 ${s.owned ? "text-primary" : "text-muted-foreground"}`}>{s.code}</span>
+          <span className={`font-display text-sm font-bold leading-none mt-1 ${s.owned ? "text-primary" : "text-foreground"}`}>{s.code}</span>
         </>
       )}
-      {!s.owned && (
-        <span className="absolute inset-0 bg-gradient-to-t from-background/85 via-background/35 to-background/5 flex items-center justify-center">
-          <span className="w-7 h-7 rounded-full glass-strong flex items-center justify-center">
-            <Lock size={11} className="text-foreground" />
+      {!s.owned && s.image_url && (
+        <span className="absolute inset-0 bg-gradient-to-t from-background/75 via-background/25 to-background/5 flex flex-col items-center justify-center gap-1 px-1">
+          <span
+            className="font-display text-base sm:text-lg font-bold tracking-wide text-foreground"
+            style={{ textShadow: "0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)" }}
+          >
+            {s.code}
           </span>
+          <span className="text-[10px] leading-none text-foreground/80 flex items-center gap-1">
+            <span>{s.flag_emoji}</span>
+          </span>
+        </span>
+      )}
+      {!s.owned && (
+        <span className="absolute bottom-1 right-1 z-10 w-5 h-5 rounded-full glass-strong flex items-center justify-center">
+          <Lock size={9} className="text-foreground" />
         </span>
       )}
       {s.duplicates > 1 && (
@@ -463,10 +474,10 @@ function StickerCell({
           <Check size={8} />
         </span>
       )}
-      {s.image_url && (
-        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent text-[8px] font-display py-1 text-center flex items-center justify-center gap-0.5">
+      {s.owned && s.image_url && (
+        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent text-[10px] font-display font-bold py-1 text-center flex items-center justify-center gap-1">
           <span>{s.code}</span>
-          <span className="text-[9px] leading-none">{s.flag_emoji}</span>
+          <span className="text-[10px] leading-none">{s.flag_emoji}</span>
         </span>
       )}
     </motion.button>
