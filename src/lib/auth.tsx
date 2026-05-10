@@ -16,6 +16,12 @@ type Profile = {
   location_updated_at: string | null;
   notification_prefs: { trades?: boolean; messages?: boolean; matches?: boolean } | null;
   discoverable?: boolean;
+  birth_date?: string | null;
+  age_group?: "child" | "teen" | "adult" | null;
+  guardian_email?: string | null;
+  guardian_name?: string | null;
+  guardian_consent_at?: string | null;
+  kids_mode?: boolean | null;
 };
 
 type AuthCtx = {
