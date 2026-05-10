@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { uploadContribution } from "@/lib/contributions";
+import { LocationSelect } from "@/components/location-select";
 
 export const Route = createFileRoute("/_app/profile/edit")({
   head: () => ({ meta: [{ title: "Editar Perfil — TrocaCopa" }] }),
