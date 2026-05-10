@@ -1,5 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
-import { MapPin, Loader2, ChevronDown } from "lucide-react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { MapPin, Loader2, ChevronDown, Search, X, Check } from "lucide-react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 type UF = { id: number; sigla: string; nome: string };
 type City = { id: number; nome: string };
@@ -48,13 +54,19 @@ export function LocationSelect({
   error?: string;
   compact?: boolean;
 }) {
-  const initial = useMemo(() => parseLocation(value), [value]);
+  const initial = useMemo(() => parseLocation(value), []);
   const [uf, setUf] = useState(initial.uf);
   const [city, setCity] = useState(initial.city);
   const [ufs, setUfs] = useState<UF[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loadingUF, setLoadingUF] = useState(false);
   const [loadingCity, setLoadingCity] = useState(false);
+  const [ufOpen, setUfOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [ufSearch, setUfSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const citySearchRef = useRef<HTMLInputElement>(null);
+  const ufSearchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setLoadingUF(true);
@@ -65,10 +77,7 @@ export function LocationSelect({
   }, []);
 
   useEffect(() => {
-    if (!uf) {
-      setCities([]);
-      return;
-    }
+    if (!uf) { setCities([]); return; }
     setLoadingCity(true);
     fetchCities(uf)
       .then((list) => setCities(list.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))))
@@ -76,67 +85,172 @@ export function LocationSelect({
       .finally(() => setLoadingCity(false));
   }, [uf]);
 
-  const update = (newCity: string, newUf: string) => {
-    setCity(newCity);
-    setUf(newUf);
-    onChange(formatLocation(newCity, newUf));
+  const filteredUfs = useMemo(() => {
+    const q = ufSearch.toLowerCase();
+    return ufs.filter((u) =>
+      u.sigla.toLowerCase().includes(q) || u.nome.toLowerCase().includes(q)
+    );
+  }, [ufs, ufSearch]);
+
+  const filteredCities = useMemo(() => {
+    const q = citySearch.toLowerCase();
+    return cities.filter((c) => c.nome.toLowerCase().includes(q));
+  }, [cities, citySearch]);
+
+  const selectUf = (sigla: string) => {
+    setUf(sigla);
+    setCity("");
+    onChange(formatLocation("", sigla));
+    setUfOpen(false);
+    setUfSearch("");
   };
 
-  const baseField = `flex items-center gap-2 bg-input rounded-2xl px-3 py-3 border transition ${
-    error ? "border-destructive" : "border-transparent focus-within:border-primary"
+  const selectCity = (nome: string) => {
+    setCity(nome);
+    onChange(formatLocation(nome, uf));
+    setCityOpen(false);
+    setCitySearch("");
+  };
+
+  const fieldCls = `flex items-center gap-2 bg-input rounded-2xl px-3 py-3 border transition cursor-pointer active:scale-[0.98] ${
+    error ? "border-destructive" : "border-transparent"
   }`;
 
   return (
     <div>
       <div className={compact ? "grid grid-cols-[110px_1fr] gap-2" : "grid grid-cols-[120px_1fr] gap-2"}>
-        <div className={baseField}>
+        {/* Estado */}
+        <button
+          type="button"
+          onClick={() => { setUfOpen(true); setTimeout(() => ufSearchRef.current?.focus(), 100); }}
+          className={fieldCls}
+        >
           <MapPin size={16} className="text-muted-foreground shrink-0" />
-          <div className="relative flex-1">
-            <select
-              value={uf}
-              onChange={(e) => update("", e.target.value)}
-              disabled={loadingUF}
-              className="w-full appearance-none bg-transparent outline-none text-sm pr-5 cursor-pointer"
-            >
-              <option value="">UF</option>
-              {ufs.map((u) => (
-                <option key={u.id} value={u.sigla}>
-                  {u.sigla}
-                </option>
-              ))}
-            </select>
-            {loadingUF ? (
-              <Loader2 size={12} className="animate-spin absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            ) : (
-              <ChevronDown size={12} className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            )}
-          </div>
-        </div>
+          <span className={`flex-1 text-sm text-left truncate ${uf ? "text-foreground" : "text-muted-foreground"}`}>
+            {loadingUF ? "" : uf || "Estado"}
+          </span>
+          {loadingUF
+            ? <Loader2 size={12} className="animate-spin text-muted-foreground shrink-0" />
+            : <ChevronDown size={12} className="text-muted-foreground shrink-0" />
+          }
+        </button>
 
-        <div className={baseField}>
-          <div className="relative flex-1">
-            <select
-              value={city}
-              onChange={(e) => update(e.target.value, uf)}
-              disabled={!uf || loadingCity}
-              className="w-full appearance-none bg-transparent outline-none text-sm pr-5 cursor-pointer disabled:opacity-50"
-            >
-              <option value="">{!uf ? "Selecione o estado" : loadingCity ? "Carregando..." : "Cidade"}</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.nome}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
-            {loadingCity ? (
-              <Loader2 size={12} className="animate-spin absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            ) : (
-              <ChevronDown size={12} className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            )}
-          </div>
-        </div>
+        {/* Cidade */}
+        <button
+          type="button"
+          onClick={() => {
+            if (!uf) return;
+            setCityOpen(true);
+            setTimeout(() => citySearchRef.current?.focus(), 100);
+          }}
+          disabled={!uf}
+          className={`${fieldCls} disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          <span className={`flex-1 text-sm text-left truncate ${city ? "text-foreground" : "text-muted-foreground"}`}>
+            {loadingCity ? "Carregando..." : city || (uf ? "Cidade" : "Selecione o estado")}
+          </span>
+          {loadingCity
+            ? <Loader2 size={12} className="animate-spin text-muted-foreground shrink-0" />
+            : <ChevronDown size={12} className="text-muted-foreground shrink-0" />
+          }
+        </button>
       </div>
+
       {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
+
+      {/* Drawer — Estado */}
+      <Drawer open={ufOpen} onOpenChange={setUfOpen}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="pb-0">
+            <DrawerTitle>Selecione o estado</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2 bg-input rounded-full px-4 py-2.5 border border-transparent focus-within:border-primary">
+              <Search size={16} className="text-muted-foreground shrink-0" />
+              <input
+                ref={ufSearchRef}
+                value={ufSearch}
+                onChange={(e) => setUfSearch(e.target.value)}
+                placeholder="Buscar estado..."
+                className="flex-1 bg-transparent outline-none text-sm"
+              />
+              {ufSearch && (
+                <button onClick={() => setUfSearch("")} className="text-muted-foreground">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="overflow-y-auto px-4 pb-8">
+            {filteredUfs.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">Nenhum estado encontrado</p>
+            )}
+            {filteredUfs.map((u) => (
+              <button
+                key={u.id}
+                type="button"
+                onClick={() => selectUf(u.sigla)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-surface active:bg-surface/80 transition text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-display font-bold text-sm shrink-0">
+                    {u.sigla}
+                  </span>
+                  <span className="text-sm">{u.nome}</span>
+                </div>
+                {uf === u.sigla && <Check size={16} className="text-primary shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Drawer — Cidade */}
+      <Drawer open={cityOpen} onOpenChange={setCityOpen}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="pb-0">
+            <DrawerTitle>Selecione a cidade — {uf}</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2 bg-input rounded-full px-4 py-2.5 border border-transparent focus-within:border-primary">
+              <Search size={16} className="text-muted-foreground shrink-0" />
+              <input
+                ref={citySearchRef}
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+                placeholder="Buscar cidade..."
+                className="flex-1 bg-transparent outline-none text-sm"
+              />
+              {citySearch && (
+                <button onClick={() => setCitySearch("")} className="text-muted-foreground">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="overflow-y-auto px-4 pb-8">
+            {loadingCity && (
+              <div className="flex justify-center py-10">
+                <Loader2 size={24} className="animate-spin text-primary" />
+              </div>
+            )}
+            {!loadingCity && filteredCities.length === 0 && (
+              <p className="text-center text-sm text-muted-foreground py-8">Nenhuma cidade encontrada</p>
+            )}
+            {!loadingCity && filteredCities.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => selectCity(c.nome)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-surface active:bg-surface/80 transition text-left"
+              >
+                <span className="text-sm">{c.nome}</span>
+                {city === c.nome && <Check size={16} className="text-primary shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
