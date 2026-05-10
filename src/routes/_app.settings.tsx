@@ -156,6 +156,26 @@ function Settings() {
         </button>
       </Section>
 
+      <Section title="Minhas contribuições">
+        <div className="glass rounded-2xl p-4 flex items-center gap-3">
+          <Gift size={18} className="text-primary" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">{contribCount} foto{contribCount === 1 ? "" : "s"} doada{contribCount === 1 ? "" : "s"}</p>
+            <p className="text-[10px] text-muted-foreground">Usadas só com sua autorização, depois de curadoria.</p>
+          </div>
+        </div>
+        {contribCount > 0 && (
+          <button
+            onClick={onDeleteContribs}
+            disabled={contribBusy}
+            className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left text-destructive border border-destructive/30"
+          >
+            {contribBusy ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+            <span className="flex-1 text-sm font-semibold">Apagar minhas contribuições</span>
+          </button>
+        )}
+      </Section>
+
       <Section title="Sobre">
         <div className="glass rounded-2xl p-4 flex items-center gap-3">
           <Info size={18} className="text-muted-foreground" />
