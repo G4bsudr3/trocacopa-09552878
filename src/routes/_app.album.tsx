@@ -244,9 +244,22 @@ function Album() {
         </section>
       )}
 
-      <p className="text-[11px] text-muted-foreground mt-4 text-center">
-        Toque para marcar/desmarcar · Toque longo para ajustar repetidas
-      </p>
+      <div className="mt-4 glass rounded-2xl px-4 py-3 space-y-2">
+        <p className="text-[11px] text-muted-foreground text-center">
+          1 toque marca · toque de novo vira repetida · toque longo abre detalhes
+        </p>
+        <div className="flex items-center justify-center gap-3 text-[10px]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm bg-surface border border-border/60" /> Falta
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm border border-primary/60 bg-primary/15" /> Tenho
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-sm border border-gold bg-gold/25" /> Repetida
+          </span>
+        </div>
+      </div>
 
       {/* Detail sheet */}
       <AnimatePresence>
