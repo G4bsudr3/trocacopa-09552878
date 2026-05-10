@@ -372,6 +372,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_contributions: {
+        Row: {
+          consent_at: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["contribution_kind"]
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["contribution_status"]
+          sticker_code: string | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          consent_at?: string
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["contribution_kind"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["contribution_status"]
+          sticker_code?: string | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          consent_at?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["contribution_kind"]
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["contribution_status"]
+          sticker_code?: string | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -520,6 +559,8 @@ export type Database = {
     Enums: {
       age_group: "child" | "teen" | "adult"
       app_role: "admin" | "user"
+      contribution_kind: "avatar" | "sticker"
+      contribution_status: "pending" | "approved" | "rejected" | "used"
       report_reason:
         | "improper_language"
         | "strange_behavior"
@@ -663,6 +704,8 @@ export const Constants = {
     Enums: {
       age_group: ["child", "teen", "adult"],
       app_role: ["admin", "user"],
+      contribution_kind: ["avatar", "sticker"],
+      contribution_status: ["pending", "approved", "rejected", "used"],
       report_reason: [
         "improper_language",
         "strange_behavior",

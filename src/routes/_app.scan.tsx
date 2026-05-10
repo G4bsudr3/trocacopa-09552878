@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Check, Repeat, Search, Loader2, Sparkles, X } from "lucide-react";
+import { Camera, Check, Repeat, Search, Loader2, Sparkles, X, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
 import { useStickerCatalog, type StickerCatalogItem } from "@/lib/stickers";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { uploadContribution } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/scan")({
   head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
@@ -14,6 +16,7 @@ export const Route = createFileRoute("/_app/scan")({
 
 function Scan() {
   const nav = useNavigate();
+  const { profile } = useAuth();
   const catalog = useStickerCatalog();
   const { stickers, addDuplicate, toggleOwned } = useAlbum();
   const [query, setQuery] = useState("");
@@ -22,7 +25,11 @@ function Scan() {
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<StickerCatalogItem | null>(null);
   const [suggestions, setSuggestions] = useState<Array<{ code: string; player_name: string | null; country_name: string | null; flag_emoji: string | null; score: number }>>([]);
+  const [lastFile, setLastFile] = useState<File | null>(null);
+  const [donated, setDonated] = useState(false);
+  const [donating, setDonating] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const canDonate = profile?.kids_mode === false;
 
   const matches = !query
     ? []
@@ -64,6 +71,8 @@ function Scan() {
     setScanning(true);
     setSuggestions([]);
     setResult(null);
+    setLastFile(file);
+    setDonated(false);
     try {
       const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
       if (error) throw error;
@@ -261,6 +270,46 @@ function Scan() {
                 Trocar foto
               </button>
             </div>
+
+            {canDonate && lastFile && !donated && (
+              <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+                <p className="text-xs font-semibold flex items-center gap-1.5">
+                  <Gift size={14} className="text-primary" /> Sua foto ficou boa?
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Doe como exemplo desta figurinha. Vai pra curadoria — só publicamos se ficar perfeita.
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button
+                    disabled={donating}
+                    onClick={async () => {
+                      if (!lastFile || !result) return;
+                      setDonating(true);
+                      const r = await uploadContribution(lastFile, "sticker", result.code);
+                      setDonating(false);
+                      if (r) {
+                        setDonated(true);
+                        toast.success("Obrigado pela doação 💙");
+                      } else {
+                        toast.error("Não consegui enviar. Tente de novo.");
+                      }
+                    }}
+                    className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {donating ? <Loader2 size={12} className="animate-spin" /> : <Gift size={12} />} Sim, doar
+                  </button>
+                  <button
+                    onClick={() => setDonated(true)}
+                    className="px-3 py-2 rounded-full glass text-xs font-semibold"
+                  >
+                    Não
+                  </button>
+                </div>
+              </div>
+            )}
+            {donated && lastFile && canDonate && (
+              <p className="mt-3 text-[11px] text-center text-primary">✨ Obrigado! Sua foto está na fila de curadoria.</p>
+            )}
           </div>
         );
       })()}

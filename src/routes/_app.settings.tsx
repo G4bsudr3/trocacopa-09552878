@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield } from "lucide-react";
-import { useState } from "react";
+import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield, Gift } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useIsAdmin } from "@/lib/use-admin";
+import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
@@ -22,8 +23,23 @@ function Settings() {
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [gpsBusy, setGpsBusy] = useState(false);
+  const [contribCount, setContribCount] = useState(0);
+  const [contribBusy, setContribBusy] = useState(false);
   const prefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
   const discoverable = (profile as any)?.discoverable !== false;
+
+  useEffect(() => {
+    countMyContributions().then(setContribCount).catch(() => {});
+  }, [user?.id]);
+
+  const onDeleteContribs = async () => {
+    if (!confirm("Apagar todas as fotos que você doou?")) return;
+    setContribBusy(true);
+    const n = await deleteAllMyContributions();
+    setContribBusy(false);
+    setContribCount(0);
+    toast.success(`${n} foto${n === 1 ? "" : "s"} apagada${n === 1 ? "" : "s"}`);
+  };
 
   const updatePref = async (k: keyof Prefs, v: boolean) => {
     if (!user) return;
@@ -138,6 +154,26 @@ function Settings() {
           {busy ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
           <span className="flex-1 text-sm font-semibold">Excluir conta</span>
         </button>
+      </Section>
+
+      <Section title="Minhas contribuições">
+        <div className="glass rounded-2xl p-4 flex items-center gap-3">
+          <Gift size={18} className="text-primary" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">{contribCount} foto{contribCount === 1 ? "" : "s"} doada{contribCount === 1 ? "" : "s"}</p>
+            <p className="text-[10px] text-muted-foreground">Usadas só com sua autorização, depois de curadoria.</p>
+          </div>
+        </div>
+        {contribCount > 0 && (
+          <button
+            onClick={onDeleteContribs}
+            disabled={contribBusy}
+            className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left text-destructive border border-destructive/30"
+          >
+            {contribBusy ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+            <span className="flex-1 text-sm font-semibold">Apagar minhas contribuições</span>
+          </button>
+        )}
       </Section>
 
       <Section title="Sobre">

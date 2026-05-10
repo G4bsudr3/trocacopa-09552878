@@ -1,53 +1,67 @@
-# Mapa responsivo no "Perto de Mim"
+# Guardar uploads de fotos para reuso como exemplo no álbum
 
-Adicionar um mapa interativo na rota `/_app/near` que mostra colecionadores próximos, com **clustering** para lidar com várias pessoas no mesmo ponto, mantendo o contato fácil (clique → iniciar troca) e respeitando a Lei Felca.
+Salvar todas as imagens enviadas pelos usuários (avatar e scan de figurinha) num bucket privado, com **opt-in claro** por upload. Sem painel de curadoria agora — você acessa o bucket depois para escolher quais virar exemplo oficial.
 
 ## O que muda na experiência
 
-- Toggle no topo da página: **Lista** (atual) | **Mapa** (novo). Mantém todos os filtros (raio, mesma cidade, 1-1).
-- Mapa ocupa altura responsiva: `h-[60vh]` no mobile, `h-[70vh]` no desktop, dentro do mesmo `max-w-3xl`.
-- Marcadores agrupados em **clusters** quando há muitos colecionadores no mesmo bairro/ponto. Número no cluster mostra quantas pessoas; clicar dá zoom até abrir os pinos individuais.
-- Clicar num pino abre um **popup card** com avatar, nome, cidade, distância, score, badges (mesma cidade, álbum parecido) e botão **"Iniciar Troca"** (mesma ação de hoje).
-- Quando dois ou mais colecionadores estão no mesmo `lat/lng` exato (mesmo prédio/escola), abre uma **lista paginada dentro do popup** ("3 colecionadores aqui") em vez de empilhar pinos invisíveis.
-- Marcador "você" centralizado, em destaque, com círculo do raio atual (10/25/50/100 km).
-- Sem geolocalização → mostra estado vazio com CTA para `/profile/edit` (igual lista).
+### No upload de avatar (`/profile/edit`)
+- Após escolher a foto, aparece um checkbox: **"Permitir que minha foto seja usada como inspiração no app (opcional)"**.
+- Se marcado: além de salvar como avatar, copiamos a foto para a galeria interna.
+- Texto pequeno: "Você pode revogar a qualquer momento nas configurações."
+- Bloqueado para menores (`kids_mode=true`) — checkbox nem aparece, foto nunca vai pra galeria.
 
-## Privacidade e Lei Felca
+### No scanner (`/scan`)
+- Depois que o scan reconhece uma figurinha, aparece um card discreto: **"📸 Sua foto ficou boa? Doe como exemplo desta figurinha"** + botão "Sim, doar" / "Não".
+- Se "Sim, doar": envia a imagem pro bucket marcando a `sticker_code` reconhecida.
+- Bloqueado para menores.
+- Sem check = foto nem é enviada (segue o comportamento atual: scan local/edge function, não persiste).
 
-- **Menores não aparecem no mapa** — o RPC já bloqueia GPS e `discoverable=false` para `kids_mode`. Para menores logados, a aba "Mapa" fica oculta (só lista, sem coordenadas), reforçando o Modo Kids.
-- Coordenadas dos outros usuários são **arredondadas com jitter de ~300m** no servidor antes de enviar (precisão suficiente para "perto", evita rastreio exato de residência).
-- Popup nunca mostra endereço, só cidade e distância aproximada.
+### Em Configurações
+- Nova seção **"Minhas contribuições"**: lista quantas fotos você doou + botão "Apagar todas as minhas contribuições" (LGPD).
 
-## Mudanças técnicas
+## Backend
 
-### Banco
-Nova RPC `match_collectors_geo(_radius_km)`:
-- Mesma lógica/colunas do `match_collectors` atual + `lat_approx`, `lng_approx` (arredondados a ~3 casas decimais com jitter determinístico por `id`).
-- Só retorna linhas onde o **outro** usuário tem `lat/lng` e é adulto (kids_mode=false). Continua aplicando regra peer-group (adulto-adulto, menor-menor — menores via lista apenas).
-- Mesmo SECURITY DEFINER, GRANT a `authenticated`.
+### Bucket
+- Novo bucket privado `user-contributions`. Não é público (só admin via service role lê/lista, usuário só insere o próprio).
+- Estrutura: `user-contributions/{user_id}/{kind}/{timestamp}-{uuid}.jpg`
+  - `kind` ∈ `avatar` | `sticker`
+- RLS via storage policies:
+  - INSERT: usuário autenticado pode inserir só dentro de `auth.uid()/...` E onde a profile dele tenha `kids_mode=false`.
+  - SELECT/DELETE: dono pode ver/apagar os seus; admin (`has_role`) lê todos.
 
-### Dependências
-- `bun add leaflet react-leaflet supercluster` + `@types/leaflet @types/supercluster`.
-- CSS do Leaflet importado em `__root.tsx` ou no componente do mapa (dynamic import).
+### Tabela `user_contributions` (metadados)
+Colunas: `id`, `user_id`, `kind` (avatar/sticker), `storage_path`, `sticker_code` (nullable), `consent_at`, `status` (pending/approved/rejected/used), `reviewed_by`, `reviewed_at`, `created_at`.
+- RLS:
+  - INSERT: `auth.uid() = user_id` e perfil não kids_mode (checado via subquery).
+  - SELECT: dono OR admin.
+  - DELETE: dono OR admin.
+  - UPDATE: só admin (mudar `status`).
+- Default `status = 'pending'`.
 
-### Componentes
-- Novo `src/components/NearMap.tsx`: encapsula `MapContainer`, tile layer (OpenStreetMap, sem API key), `useSupercluster` para clustering, popups customizados com `glass`/design tokens, círculo de raio. SSR-safe via `lazy()` + `<ClientOnly>` (montar só no cliente — Leaflet usa `window`).
-- `src/components/NearPopupCard.tsx`: card reutilizável dentro do popup, recebe `NearbyRow` + `onStartTrade`. Lista múltiplos quando o cluster é "spiderfied" no mesmo ponto.
+### Função `mark_contribution_used` (admin)
+SECURITY DEFINER: dado `contribution_id`, copia o storage object para `sticker-images/{sticker_code}.jpg`, atualiza `stickers.image_url`, marca contribuição como `used`. (Para uso futuro pelo painel admin.)
 
-### Rota
-- `src/routes/_app.near.tsx`: adicionar estado `view: 'list' | 'map'`, toggle, render condicional. Reaproveita `nearby` query (chama nova RPC). `startTrade` permanece igual.
-- Esconder toggle "Mapa" se `profile.kids_mode === true`.
+## Frontend — arquivos
 
-### Tema
-- Estilos do Leaflet sobrescritos em `src/styles.css` para casar com o design (popup glass, controles de zoom com border radius, marcadores em SVG inline com cor `--primary`).
+- `src/routes/_app.profile.edit.tsx`: adicionar checkbox de consentimento, ao salvar avatar (se marcado) também enviar para `user-contributions/{uid}/avatar/...` e inserir linha em `user_contributions`. Esconder checkbox se `kids_mode`.
+- `src/routes/_app.scan.tsx`: depois de `setResult(...)`, mostrar bloco "Doar foto como exemplo". Botão chama um helper `donateScanPhoto(file, sticker_code)`.
+- `src/lib/contributions.ts`: helpers `uploadContribution(file, kind, sticker_code?)` (upload + insert metadata) e `deleteMyContributions()`.
+- `src/routes/_app.settings.tsx`: nova seção com count + botão apagar.
+- `src/routes/seguranca.tsx`: parágrafo curto explicando que doações são opt-in, podem ser apagadas, e menores nunca doam.
+
+## Privacidade / Lei Felca
+
+- Trigger `enforce_age_and_kids_mode` já garante `kids_mode=true` para <18. A política de INSERT do bucket e da tabela vai checar isso, então mesmo que o front falhe em esconder o botão, o servidor recusa.
+- Foto guardada nunca é exibida publicamente sem o admin marcar `status='used'`.
+- "Apagar todas as minhas contribuições" remove os arquivos do storage e as linhas da tabela.
 
 ## Fora do escopo
 
-- Geocoding reverso (mostrar bairro).
-- Heatmap.
-- Filtro por desenho de área no mapa.
-- Tiles offline / dark map customizado (usaremos OSM padrão; podemos trocar depois).
+- Painel admin de curadoria (próxima fase — você lê o bucket direto por enquanto).
+- Detecção automática de qualidade da foto.
+- Watermark/atribuição.
+- Notificação ao usuário quando a foto dele virar exemplo oficial.
 
 ## Verificação
 
-Após implementar: abrir `/near`, alternar para Mapa, conferir clusters expandindo no zoom, popup abrindo com botão "Iniciar Troca" funcionando, comportamento responsivo em mobile/desktop, e que conta de menor não vê a aba Mapa.
+Subir avatar com checkbox marcado → conferir que apareceu no bucket `user-contributions/{uid}/avatar/`. Escanear figurinha e clicar "Doar" → conferir registro com `sticker_code` correto. Tentar doar logado como menor → deve falhar pelo RLS.

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { uploadContribution } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/profile/edit")({
   head: () => ({ meta: [{ title: "Editar Perfil — TrocaCopa" }] }),
@@ -29,6 +30,8 @@ function EditProfile() {
   const [uploading, setUploading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [donateAvatar, setDonateAvatar] = useState(false);
+  const canDonate = profile?.kids_mode === false;
 
   useEffect(() => {
     if (profile) {
@@ -57,8 +60,14 @@ function EditProfile() {
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     setAvatarUrl(data.publicUrl);
+    if (donateAvatar && canDonate) {
+      const r = await uploadContribution(file, "avatar");
+      if (r) toast.success("Avatar enviado · obrigado pela doação 💙");
+      else toast.success("Avatar enviado");
+    } else {
+      toast.success("Avatar enviado");
+    }
     setUploading(false);
-    toast.success("Avatar enviado");
   };
 
   const useGps = () => {
@@ -140,6 +149,19 @@ function EditProfile() {
           <input type="file" accept="image/*" onChange={onAvatar} className="hidden" />
         </label>
         <p className="text-xs text-muted-foreground mt-2">Toque para trocar a foto</p>
+        {canDonate && (
+          <label className="mt-3 flex items-start gap-2 max-w-xs text-[11px] text-muted-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={donateAvatar}
+              onChange={(e) => setDonateAvatar(e.target.checked)}
+              className="mt-0.5 accent-primary"
+            />
+            <span>
+              Permitir que minha foto seja usada como inspiração no app (opcional). Você pode revogar nas configurações.
+            </span>
+          </label>
+        )}
       </motion.div>
 
       <div className="space-y-4 mt-6">
