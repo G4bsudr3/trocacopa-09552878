@@ -232,6 +232,8 @@ Deno.serve(async (req) => {
             }
           } else {
             imageFailed++;
+            // Mark as attempted-but-unavailable so we don't retry forever
+            image_url = "";
           }
         }
 
