@@ -29,8 +29,67 @@ function Scan() {
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [donated, setDonated] = useState(false);
   const [donating, setDonating] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const canDonate = profile?.kids_mode === false;
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOpen(false);
+  };
+
+  const openCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      fileRef.current?.click();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraOpen(true);
+      setPreview(null);
+      setResult(null);
+      setSuggestions([]);
+      // attach in next tick after element mounts
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 50);
+    } catch (e: any) {
+      toast.error(
+        e?.name === "NotAllowedError"
+          ? "Permissão da câmera negada"
+          : e?.name === "NotFoundError"
+            ? "Nenhuma câmera encontrada"
+            : "Não consegui abrir a câmera — usando upload",
+      );
+      fileRef.current?.click();
+    }
+  };
+
+  const capturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
+    if (!blob) return toast.error("Falha ao capturar imagem");
+    const file = new File([blob], `scan-${Date.now()}.jpg`, { type: "image/jpeg" });
+    stopCamera();
+    handleFile(file);
+  };
 
   const matches = !query
     ? []
