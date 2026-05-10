@@ -201,6 +201,8 @@ function Profile() {
           <LogOut size={14} /> Sair
         </button>
       </div>
+
+      <InviteFriendSheet open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 }
