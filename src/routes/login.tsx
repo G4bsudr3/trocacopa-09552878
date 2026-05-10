@@ -207,32 +207,24 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 relative overflow-hidden">
-      {/* bg glow */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/20 blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-gold/10 blur-[100px]" />
-      </div>
-
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-10"
+        className="text-center mb-8"
       >
-        <h1 className="font-display text-6xl md:text-7xl text-primary text-glow tracking-wide">
-          ⚽ TROCACOPA
-        </h1>
-        <p className="text-gold font-display text-xl tracking-widest mt-1">COPA DO MUNDO 2026</p>
-        <p className="text-muted-foreground mt-4 text-sm md:text-base max-w-xs">
-          Troque figurinhas com quem está perto de você
-        </p>
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="text-3xl">⚽</span>
+          <span className="font-display text-5xl md:text-6xl text-foreground tracking-widest">TROCACOPA</span>
+        </div>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Copa do Mundo 2026</p>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="w-full max-w-sm glass-strong rounded-3xl p-6 shadow-card"
+        transition={{ delay: 0.08 }}
+        className="w-full max-w-sm glass-strong rounded-2xl p-6 shadow-card"
       >
         <div className="flex gap-2 p-1 bg-surface rounded-full mb-6">
           {(["signin", "signup"] as const).map((m) => (

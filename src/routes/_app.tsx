@@ -138,8 +138,8 @@ function BottomNav() {
   const loc = useLocation();
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 safe-bottom">
-      <div className="mx-auto max-w-2xl px-3 pb-2">
-        <div className="glass-strong rounded-3xl flex items-end justify-around px-2 py-2 shadow-card">
+      <div className="mx-auto max-w-2xl px-4 pb-3">
+        <div className="card rounded-2xl flex items-center justify-around px-2 py-2 shadow-card">
           {tabs.map(({ to, icon: Icon, label, center }) => {
             const active = loc.pathname.startsWith(to);
             if (center) {
@@ -147,14 +147,14 @@ function BottomNav() {
                 <Link
                   key={to}
                   to={to as any}
-                  className="flex flex-col items-center -mt-8"
+                  className="flex flex-col items-center -mt-5"
                 >
                   <span
-                    className={`w-14 h-14 rounded-full flex items-center justify-center gradient-primary glow-primary border-4 border-background transition active:scale-95 ${active ? "animate-pulse-glow" : ""}`}
+                    className={`w-11 h-11 rounded-xl gradient-primary flex items-center justify-center transition active:scale-95${active ? " glow-primary" : ""}`}
                   >
-                    <Icon className="text-primary-foreground" size={26} strokeWidth={2.5} />
+                    <Icon className="text-primary-foreground" size={20} strokeWidth={2.2} />
                   </span>
-                  <span className="text-[10px] mt-1 font-semibold text-primary">{label}</span>
+                  <span className={`text-[10px] mt-1 font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>{label}</span>
                 </Link>
               );
             }
@@ -162,12 +162,13 @@ function BottomNav() {
               <Link
                 key={to}
                 to={to as any}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition ${
+                className={`relative flex flex-col items-center gap-0.5 px-3 py-2 transition ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon size={22} />
-                <span className="text-[10px] font-semibold">{label}</span>
+                <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
+                <span className="text-[10px] font-bold">{label}</span>
+                {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full bg-primary" />}
               </Link>
             );
           })}
