@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, MapPin, Compass, Loader2, Globe2 } from "lucide-react";
+import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+
+const NearMap = lazy(() => import("@/components/NearMap"));
 
 export const Route = createFileRoute("/_app/near")({
   head: () => ({ meta: [{ title: "Perto de mim — TrocaCopa" }] }),
