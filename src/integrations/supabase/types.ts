@@ -53,6 +53,30 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          created_at: string
+          id: string
+          source: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          source?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          source?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: []
+      }
       guardian_consents: {
         Row: {
           approved_at: string | null
@@ -86,6 +110,33 @@ export type Database = {
           requested_at?: string
           revoked_at?: string | null
           token?: string
+        }
+        Relationships: []
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          code: string
+          created_at: string
+          id: string
+          inviter_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          inviter_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          inviter_id?: string
         }
         Relationships: []
       }
@@ -343,6 +394,10 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          meet_at: string | null
+          meet_place: string | null
+          meet_proposed_by: string | null
+          meet_status: string | null
           offered_stickers: string[]
           receiver_id: string
           requested_stickers: string[]
@@ -353,6 +408,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          meet_at?: string | null
+          meet_place?: string | null
+          meet_proposed_by?: string | null
+          meet_status?: string | null
           offered_stickers?: string[]
           receiver_id: string
           requested_stickers?: string[]
@@ -363,6 +422,10 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          meet_at?: string | null
+          meet_place?: string | null
+          meet_proposed_by?: string | null
+          meet_status?: string | null
           offered_stickers?: string[]
           receiver_id?: string
           requested_stickers?: string[]
@@ -458,6 +521,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { _code: string }; Returns: Json }
       guardian_consent_approve: { Args: { _token: string }; Returns: boolean }
       guardian_consent_lookup: {
         Args: { _token: string }
