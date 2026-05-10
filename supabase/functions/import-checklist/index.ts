@@ -80,10 +80,11 @@ function deriveCountryCode(code: string): string {
 }
 
 function deriveKind(row: Row): string {
-  if (row.team === "FIFA World Cup 2026") return "special";
-  if (row.team === "Fifa World Cup History") return "history";
+  if (row.team === "SPECIAL" || row.code.startsWith("FWC")) {
+    if (row.position === "TEAM" || /^FWC\s/i.test(row.player)) return "history";
+    return "special";
+  }
   if (row.position === "TEAM") {
-    // crest = "Escudo X"; team photo = "Foto Oficial X"
     if (/^Foto Oficial/i.test(row.player)) return "team";
     return "crest";
   }
