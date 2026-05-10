@@ -270,6 +270,46 @@ function Scan() {
                 Trocar foto
               </button>
             </div>
+
+            {canDonate && lastFile && !donated && (
+              <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+                <p className="text-xs font-semibold flex items-center gap-1.5">
+                  <Gift size={14} className="text-primary" /> Sua foto ficou boa?
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Doe como exemplo desta figurinha. Vai pra curadoria — só publicamos se ficar perfeita.
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button
+                    disabled={donating}
+                    onClick={async () => {
+                      if (!lastFile || !result) return;
+                      setDonating(true);
+                      const r = await uploadContribution(lastFile, "sticker", result.code);
+                      setDonating(false);
+                      if (r) {
+                        setDonated(true);
+                        toast.success("Obrigado pela doação 💙");
+                      } else {
+                        toast.error("Não consegui enviar. Tente de novo.");
+                      }
+                    }}
+                    className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {donating ? <Loader2 size={12} className="animate-spin" /> : <Gift size={12} />} Sim, doar
+                  </button>
+                  <button
+                    onClick={() => setDonated(true)}
+                    className="px-3 py-2 rounded-full glass text-xs font-semibold"
+                  >
+                    Não
+                  </button>
+                </div>
+              </div>
+            )}
+            {donated && lastFile && canDonate && (
+              <p className="mt-3 text-[11px] text-center text-primary">✨ Obrigado! Sua foto está na fila de curadoria.</p>
+            )}
           </div>
         );
       })()}
