@@ -169,6 +169,42 @@ function Near() {
         </div>
       </div>
 
+      {canShowMap && (
+        <div className="mt-4 flex gap-1 glass rounded-full p-1 w-fit">
+          <button
+            onClick={() => setView("list")}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 ${view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            <List size={12} /> Lista
+          </button>
+          <button
+            onClick={() => setView("map")}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 ${view === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            <MapIcon size={12} /> Mapa
+          </button>
+        </div>
+      )}
+
+      {view === "map" && canShowMap ? (
+        <div className="mt-4">
+          <Suspense fallback={<div className="w-full h-[60vh] md:h-[70vh] rounded-2xl bg-surface animate-pulse" />}>
+            <NearMap
+              rows={(filtered as any[]).filter((r) => r.lat_approx != null && r.lng_approx != null) as any}
+              myLat={profile!.lat as number}
+              myLng={profile!.lng as number}
+              radiusKm={radius}
+              onStartTrade={startTrade}
+            />
+          </Suspense>
+          {filtered.filter((r: any) => r.lat_approx != null).length === 0 && (
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Ninguém com localização visível neste raio. Tente aumentar ou abrir a lista.
+            </p>
+          )}
+        </div>
+      ) : (
+        <>
       <h2 className="font-display text-xl tracking-wide mt-6 mb-3">Melhores matches</h2>
 
       {nearby.isLoading ? (
