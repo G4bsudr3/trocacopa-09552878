@@ -61,23 +61,19 @@ export function AlbumPageScanner() {
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem");
     if (!user) return toast.error("Faça login para escanear");
+    if (!catalog.data || catalog.data.length === 0) {
+      return toast.error("Catálogo ainda carregando, tente novamente em instantes");
+    }
     const dataUrl = await fileToDataUrl(file);
     setScanning(true);
     try {
-      const { data, error } = await supabase.functions.invoke("scan-album-page", {
-        body: { image: dataUrl },
-      });
-      if (error) throw error;
-      if (data?.error === "credits_exhausted") return toast.error("Créditos de IA esgotados");
-      if (data?.error === "rate_limited") return toast.error("Muitas requisições, aguarde um instante");
-      if (data?.error) return toast.error("Falha ao analisar: " + data.error);
-
-      const filled: string[] = Array.isArray(data?.filled) ? data.filled : [];
-      const empty: string[] = Array.isArray(data?.empty) ? data.empty : [];
-      const page_hint: string | null = typeof data?.page_hint === "string" ? data.page_hint : null;
+      const ocr = await ocrAlbumPage(dataUrl, catalog.data);
+      const filled: string[] = ocr.filled;
+      const empty: string[] = ocr.empty;
+      const page_hint: string | null = ocr.page_hint;
 
       if (filled.length === 0 && empty.length === 0) {
-        return toast.error("Não consegui identificar nenhuma figurinha. Tente uma foto mais nítida.");
+        return toast.error("OCR não encontrou códigos. Tente uma foto mais nítida e enquadrada.");
       }
 
       // Cross-reference with already-owned (across the entire collection + items already queued in session)
