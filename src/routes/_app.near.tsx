@@ -49,15 +49,20 @@ function Near() {
   const [onlyCity, setOnlyCity] = useState(false);
   const [onlyMutual, setOnlyMutual] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("match");
+  const [view, setView] = useState<ViewMode>("list");
 
   const hasGeo = profile?.lat != null && profile?.lng != null;
   const hasCity = !!profile?.city;
+  const isMinor = profile?.kids_mode === true || profile?.age_group === "child" || profile?.age_group === "teen";
+  const canShowMap = hasGeo && !isMinor;
 
   const nearby = useQuery({
-    queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius],
+    queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius, view, isMinor],
     enabled: !!user,
     queryFn: async (): Promise<NearbyRow[]> => {
-      const { data, error } = await supabase.rpc("match_collectors", { _radius_km: radius });
+      // Use geo variant when map is needed (also returns lat/lng for adults)
+      const rpc = view === "map" && !isMinor ? "match_collectors_geo" : "match_collectors";
+      const { data, error } = await supabase.rpc(rpc as any, { _radius_km: radius });
       if (error) throw error;
       return (data ?? []) as unknown as NearbyRow[];
     },
