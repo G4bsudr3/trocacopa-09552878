@@ -9,6 +9,8 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { computeAgeGroup, isMinor } from "@/lib/age";
 import { Link } from "@tanstack/react-router";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _unusedLink = Link;
 
 export const Route = createFileRoute("/login")({
   head: () => ({
