@@ -46,16 +46,17 @@ function Scan() {
         })
         .slice(0, 8);
 
-  const register = (code: string, asDup: boolean) => {
+  const registerProgressive = (code: string) => {
     const cur = stickers.find((s) => s.code === code);
-    if (asDup) {
-      addDuplicate(code);
-      toast.success(`${code} marcada como repetida 🔁`);
-    } else if (!cur?.owned) {
+    if (!cur || !cur.owned) {
       toggleOwned(code);
-      toast.success(`${code} adicionada ✅`);
+      toast.success(`${code} adicionada ao álbum ✅`);
     } else {
-      toast.message(`Você já tem a ${code}`);
+      addDuplicate(code);
+      const next = (cur.duplicates ?? 1) + 1;
+      toast.success(
+        next === 2 ? `${code} agora é repetida (2x) 🔁` : `${code} +1 repetida (${next}x)`,
+      );
     }
     setRecent((r) => [code, ...r.filter((n) => n !== code)].slice(0, 6));
     setQuery("");
@@ -239,23 +240,20 @@ function Scan() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mt-4">
+            <div className="mt-4">
               <button
-                onClick={() => register(result.code, false)}
-                disabled={owned}
-                className={`px-3 py-2.5 rounded-full text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition ${
-                  owned
-                    ? "bg-surface text-muted-foreground"
-                    : "gradient-primary text-primary-foreground"
+                onClick={() => registerProgressive(result.code)}
+                className={`w-full px-3 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition ${
+                  dup === 0
+                    ? "gradient-primary text-primary-foreground glow-primary"
+                    : "bg-gold text-gold-foreground"
                 }`}
               >
-                <Check size={14} /> {owned ? "Já possuída" : "Tenho"}
-              </button>
-              <button
-                onClick={() => register(result.code, true)}
-                className="px-3 py-2.5 rounded-full bg-gold text-gold-foreground text-sm font-bold flex items-center justify-center gap-1.5 active:scale-95 transition"
-              >
-                <Repeat size={14} /> +1 Repetida{dup >= 1 ? ` (x${dup + 1})` : ""}
+                {dup === 0 ? (
+                  <><Check size={16} /> Tenho</>
+                ) : (
+                  <><Repeat size={16} /> +1 Repetida (próx: {dup + 1}x)</>
+                )}
               </button>
             </div>
 
@@ -336,7 +334,7 @@ function Scan() {
               return (
                 <button
                   key={s.code}
-                  onClick={() => { register(s.code, false); setSuggestions([]); }}
+                  onClick={() => { registerProgressive(s.code); setSuggestions([]); }}
                   className="w-full glass rounded-xl p-2.5 flex items-center gap-3 text-left active:scale-[0.98] transition"
                 >
                   {cat?.image_url ? (
@@ -406,21 +404,20 @@ function Scan() {
                           : "Capa do álbum"}
                   </p>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex">
                   <button
-                    onClick={() => register(s.code, false)}
-                    disabled={owned}
-                    className={`px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 ${
-                      owned ? "bg-surface text-muted-foreground" : "gradient-primary text-primary-foreground"
+                    onClick={() => registerProgressive(s.code)}
+                    className={`px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 active:scale-95 transition ${
+                      dup === 0
+                        ? "gradient-primary text-primary-foreground"
+                        : "bg-gold text-gold-foreground"
                     }`}
                   >
-                    <Check size={12} /> {owned ? "✓" : "Tenho"}
-                  </button>
-                  <button
-                    onClick={() => register(s.code, true)}
-                    className="px-3 py-2 rounded-full bg-gold text-gold-foreground text-xs font-bold flex items-center gap-1"
-                  >
-                    <Repeat size={12} /> Rep.
+                    {dup === 0 ? (
+                      <><Check size={12} /> Tenho</>
+                    ) : (
+                      <><Repeat size={12} /> +1 ({dup + 1}x)</>
+                    )}
                   </button>
                 </div>
               </div>

@@ -1,24 +1,44 @@
-## Problema
+## Objetivo
 
-Nas figurinhas faltantes (com cadeado), o código fica minúsculo (8px) na barrinha inferior e quase ilegível por causa do overlay escuro + cadeado central grande. Difícil saber qual figurinha está sendo marcada.
+Replicar a lógica progressiva 0→1→2→+1 (mesma do álbum) na tela **Escanear**, que hoje exige escolher manualmente entre dois botões "Tenho" / "Repetida" — fora do padrão.
 
-## Solução
+## Onde já existe
 
-Reorganizar o `StickerCell` no estado **faltante** para que o **código seja o elemento principal** da célula:
+- `src/routes/_app.album.tsx` (linhas 62-73) — `onCellTap` faz: 1º toque marca, 2º vira repetida, 3º+ incrementa.
+- `src/routes/_app.duplicates.tsx` — botões +/- explícitos (faz sentido: tela dedicada a ajustar contagem).
 
-### Estado faltante (não-owned)
-- Imagem segue dim/blur (sem mudar a opacidade que já está 0.75 + blur), mas overlay escuro fica **mais sutil** (`from-background/70 via-background/30`) para não engolir o código.
-- **Código grande e nítido no centro**: `font-display text-lg md:text-xl text-foreground` com `drop-shadow` forte para destacar sobre a imagem.
-- Logo abaixo do código, bandeira pequena + nome do país abreviado em `text-[10px] text-muted-foreground`.
-- Cadeado pequeno (10px) movido para o **canto inferior direito** dentro de um chip glass mini, em vez de ocupar o centro.
-- Remover a barra inferior de código (que duplica e fica em 8px).
+## Tela a ajustar: `src/routes/_app.scan.tsx`
 
-### Estado owned / repetido
-- Mantém como está: imagem nítida + barra inferior com código (mas aumenta de `text-[8px]` para `text-[10px]` para ficar legível também).
+Substituir a função `register(code, asDup)` por uma única `registerProgressive(code)`:
 
-### Variante sem imagem (`!s.image_url`)
-- Aumentar o código de `text-[10px]` para `text-sm font-bold`.
+```ts
+const registerProgressive = (code: string) => {
+  const cur = stickers.find((s) => s.code === code);
+  if (!cur || !cur.owned) {
+    toggleOwned(code);
+    toast.success(`${code} adicionada ao álbum ✅`);
+  } else {
+    addDuplicate(code);
+    const next = cur.duplicates + 1;
+    toast.success(
+      next === 2 ? `${code} agora é repetida (2x) 🔁` : `${code} +1 repetida (${next}x)`,
+    );
+  }
+  setRecent(...); setQuery(""); setPreview(null); setResult(null);
+};
+```
+
+Atualizar os 3 lugares de UI:
+
+1. **Resultado do scan** (linhas 242-260): trocar os 2 botões por **um único botão CTA grande** que mostra o estado atual:
+   - 0 dups: "✅ Tenho" (gradient-primary)
+   - 1+ dups: "🔁 +1 Repetida (próx: Nx)" (gold)
+   - Texto dinâmico baseado em `dup`.
+
+2. **Suggestions list** (linha 339): já usa um único `register(s.code, false)` — trocar pelo `registerProgressive`. Sem mudança visual.
+
+3. **Recents list** (linhas 409-425): trocar os 2 botões pelo mesmo CTA único progressivo, com label dinâmico ("Tenho" ou "+1 Rep. (Nx)").
 
 ## Arquivo afetado
 
-- `src/routes/_app.album.tsx` — apenas o componente `StickerCell` (linhas ~409-473). Sem mudanças em lógica, dados ou outros componentes.
+- `src/routes/_app.scan.tsx` — apenas a função `register` e os 3 trechos de UI acima. Sem mudanças em dados, schema ou outros arquivos.
