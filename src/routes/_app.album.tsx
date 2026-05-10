@@ -62,12 +62,29 @@ function Album() {
   const onCellTap = (s: Sticker) => {
     if (!s.owned) {
       toggleOwned(s.code);
-      toast.success(`${s.code} adicionada ao álbum ✅`);
+      toast.success(`${s.code} adicionada ao álbum ✅`, {
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            toggleOwned(s.code);
+            toast(`${s.code} removida do álbum`);
+          },
+        },
+      });
     } else {
       addDuplicate(s.code);
       const next = s.duplicates + 1;
       toast.success(
         next === 2 ? `${s.code} agora é repetida (2x) 🔁` : `${s.code} +1 repetida (${next}x)`,
+        {
+          action: {
+            label: "Desfazer",
+            onClick: () => {
+              removeDuplicate(s.code);
+              toast(`${s.code}: repetida desfeita`);
+            },
+          },
+        },
       );
     }
   };
@@ -76,7 +93,21 @@ function Album() {
     if (s.duplicates > 1) {
       removeDuplicate(s.code);
       const next = s.duplicates - 1;
-      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`);
+      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`, {
+        action: {
+          label: "Desfazer",
+          onClick: () => addDuplicate(s.code),
+        },
+      });
+    } else if (s.owned) {
+      // Toque longo em figurinha sem repetidas: oferece remover do álbum
+      toggleOwned(s.code);
+      toast(`${s.code} removida do álbum`, {
+        action: {
+          label: "Desfazer",
+          onClick: () => toggleOwned(s.code),
+        },
+      });
     } else {
       setSelected(s);
     }
@@ -256,7 +287,7 @@ function Album() {
 
       <div className="mt-4 glass rounded-2xl px-4 py-3 space-y-2">
         <p className="text-[11px] text-muted-foreground text-center">
-          Toque para marcar/somar repetida · toque longo remove uma repetida (ou abre detalhes)
+          Toque para marcar/somar repetida · toque longo remove repetida ou tira do álbum · use "Desfazer" no aviso se errar
         </p>
         <div className="flex items-center justify-center gap-3 text-[10px]">
           <span className="flex items-center gap-1.5">
