@@ -30,6 +30,8 @@ function EditProfile() {
   const [uploading, setUploading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [donateAvatar, setDonateAvatar] = useState(false);
+  const canDonate = profile?.kids_mode === false;
 
   useEffect(() => {
     if (profile) {
