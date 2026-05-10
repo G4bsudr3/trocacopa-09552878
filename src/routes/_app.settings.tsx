@@ -26,7 +26,7 @@ function Settings() {
   const [contribCount, setContribCount] = useState(0);
   const [contribBusy, setContribBusy] = useState(false);
   const prefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
-  const discoverable = (profile as any)?.discoverable !== false;
+  const discoverable = profile?.discoverable !== false;
 
   useEffect(() => {
     countMyContributions().then(setContribCount).catch(() => {});
@@ -142,7 +142,7 @@ function Settings() {
         <Toggle label="Novos matches" checked={prefs.matches !== false} onChange={(v) => updatePref("matches", v)} />
       </Section>
 
-      <Section title="Conta">
+      <Section title="Sessão">
         <button onClick={handleLogout} className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left">
           <LogOut size={18} /> <span className="flex-1 text-sm font-semibold">Sair</span>
         </button>

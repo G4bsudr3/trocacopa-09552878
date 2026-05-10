@@ -48,7 +48,7 @@ export function AlbumPageScanner() {
     let add = 0, already = 0, missing = 0, dupMark = 0;
     for (const p of pages) {
       for (const it of p.items) {
-        if (it.status === "add") { already; missing; if (it.selected) add++; }
+        if (it.status === "add") { if (it.selected) add++; }
         else if (it.status === "already") already++;
         else if (it.status === "missing") { missing++; if (it.selected) dupMark++; }
       }

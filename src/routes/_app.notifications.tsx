@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -105,24 +106,28 @@ function Notifs() {
 
   const markAllRead = async () => {
     if (!user) return;
-    await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    if (error) return toast.error(error.message);
     invalidate();
   };
 
   const markRead = async (id: string) => {
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+    if (error) return toast.error(error.message);
     invalidate();
   };
 
   const removeOne = async (id: string) => {
-    await supabase.from("notifications").delete().eq("id", id);
+    const { error } = await supabase.from("notifications").delete().eq("id", id);
+    if (error) return toast.error(error.message);
     invalidate();
   };
 
   const removeAll = async () => {
     if (!user) return;
     if (!confirm("Apagar todas as notificações?")) return;
-    await supabase.from("notifications").delete().eq("user_id", user.id);
+    const { error } = await supabase.from("notifications").delete().eq("user_id", user.id);
+    if (error) return toast.error(error.message);
     invalidate();
   };
 

@@ -36,7 +36,7 @@ function Pro() {
     setBusy(true);
     const { error } = await supabase.from("pro_waitlist").insert({ user_id: user.id } as any);
     setBusy(false);
-    if (error && !error.message.includes("duplicate")) return toast.error(error.message);
+    if (error && error.code !== "23505") return toast.error(error.message);
     setJoined(true);
     toast.success("Você está na lista! Avisaremos quando lançarmos. 💎");
   };
