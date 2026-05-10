@@ -8,6 +8,7 @@ import { useStickerCatalog, type StickerCatalogItem } from "@/lib/stickers";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { uploadContribution } from "@/lib/contributions";
+import { AlbumPageScanner } from "@/components/album-page-scanner";
 
 export const Route = createFileRoute("/_app/scan")({
   head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
