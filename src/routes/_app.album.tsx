@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown } from "lucide-react";
+import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown, Repeat2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
@@ -66,19 +66,27 @@ function Album() {
 
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-3xl tracking-wide">Meu Álbum</h1>
-        <button
-          onClick={() => {
-            if (confirm("Tem certeza que deseja resetar todo o álbum?")) {
-              reset();
-              toast.success("Álbum reiniciado");
-            }
-          }}
-          className="text-xs text-muted-foreground flex items-center gap-1 px-3 py-1.5 rounded-full glass"
-        >
-          <RotateCcw size={12} /> Resetar
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/duplicates"
+            className="text-xs flex items-center gap-1 px-3 py-1.5 rounded-full glass-strong text-gold font-bold"
+          >
+            <Repeat2 size={12} /> Repetidas
+          </Link>
+          <button
+            onClick={() => {
+              if (confirm("Tem certeza que deseja resetar todo o álbum?")) {
+                reset();
+                toast.success("Álbum reiniciado");
+              }
+            }}
+            className="text-xs text-muted-foreground flex items-center gap-1 px-3 py-1.5 rounded-full glass"
+          >
+            <RotateCcw size={12} /> Resetar
+          </button>
+        </div>
       </div>
 
       {/* Hero */}
