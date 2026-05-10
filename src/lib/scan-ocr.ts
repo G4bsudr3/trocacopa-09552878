@@ -3,7 +3,9 @@
 // Filled slots have a sticker glued on top, so their printed code is hidden.
 // Therefore: detected codes => empty; complement within the page's country => filled.
 
-import type { CatalogSticker } from "@/lib/stickers";
+import type { StickerCatalogItem } from "@/lib/stickers";
+
+type CatalogSticker = StickerCatalogItem;
 
 export type OcrPageResult = {
   filled: string[];
