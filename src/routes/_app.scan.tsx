@@ -46,16 +46,17 @@ function Scan() {
         })
         .slice(0, 8);
 
-  const register = (code: string, asDup: boolean) => {
+  const registerProgressive = (code: string) => {
     const cur = stickers.find((s) => s.code === code);
-    if (asDup) {
-      addDuplicate(code);
-      toast.success(`${code} marcada como repetida 🔁`);
-    } else if (!cur?.owned) {
+    if (!cur || !cur.owned) {
       toggleOwned(code);
-      toast.success(`${code} adicionada ✅`);
+      toast.success(`${code} adicionada ao álbum ✅`);
     } else {
-      toast.message(`Você já tem a ${code}`);
+      addDuplicate(code);
+      const next = (cur.duplicates ?? 1) + 1;
+      toast.success(
+        next === 2 ? `${code} agora é repetida (2x) 🔁` : `${code} +1 repetida (${next}x)`,
+      );
     }
     setRecent((r) => [code, ...r.filter((n) => n !== code)].slice(0, 6));
     setQuery("");
