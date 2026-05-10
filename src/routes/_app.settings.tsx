@@ -23,8 +23,23 @@ function Settings() {
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [gpsBusy, setGpsBusy] = useState(false);
+  const [contribCount, setContribCount] = useState(0);
+  const [contribBusy, setContribBusy] = useState(false);
   const prefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
   const discoverable = (profile as any)?.discoverable !== false;
+
+  useEffect(() => {
+    countMyContributions().then(setContribCount).catch(() => {});
+  }, [user?.id]);
+
+  const onDeleteContribs = async () => {
+    if (!confirm("Apagar todas as fotos que você doou?")) return;
+    setContribBusy(true);
+    const n = await deleteAllMyContributions();
+    setContribBusy(false);
+    setContribCount(0);
+    toast.success(`${n} foto${n === 1 ? "" : "s"} apagada${n === 1 ? "" : "s"}`);
+  };
 
   const updatePref = async (k: keyof Prefs, v: boolean) => {
     if (!user) return;
