@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TOTAL_STICKERS } from "@/lib/stickers";
-import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2 } from "lucide-react";
+import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
+import { InviteFriendSheet } from "@/components/invite-friend-sheet";
 
 export const Route = createFileRoute("/_app/profile")({
   head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
@@ -17,8 +19,21 @@ function Profile() {
   const { profile, user, signOut } = useAuth();
   const nav = useNavigate();
   const { stickers } = useAlbum();
+  const [inviteOpen, setInviteOpen] = useState(false);
   const dupUnique = stickers.filter((s) => s.duplicates > 1).length;
   const dupExtras = stickers.reduce((a, s) => a + Math.max(0, s.duplicates - 1), 0);
+
+  const friendsCount = useQuery({
+    queryKey: ["friends-count", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("friendships")
+        .select("id", { count: "exact", head: true })
+        .or(`user_a.eq.${user!.id},user_b.eq.${user!.id}`);
+      return count ?? 0;
+    },
+  });
 
   const stats = useQuery({
     queryKey: ["profile-stats", user?.id],
@@ -112,6 +127,21 @@ function Profile() {
         </div>
       </Link>
 
+      <button onClick={() => setInviteOpen(true)} className="block w-full mt-3 text-left">
+        <div className="glass-strong rounded-2xl p-4 flex items-center gap-3 border border-primary/30 active:scale-[0.99] transition">
+          <span className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center glow-primary shrink-0">
+            <UserPlus className="text-primary-foreground" size={22} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-display text-lg leading-tight">Convidar amigo (QR)</p>
+            <p className="text-xs text-muted-foreground">
+              {friendsCount.data ? `${friendsCount.data} amigo${friendsCount.data === 1 ? "" : "s"} no app · vire match automático` : "Quem entrar pelo seu QR já vira amigo"}
+            </p>
+          </div>
+          <span className="text-primary font-display text-2xl">→</span>
+        </div>
+      </button>
+
       {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-4">
           <div className="rounded-2xl p-5 gradient-gold text-gold-foreground flex items-center gap-3 glow-gold">
@@ -171,6 +201,8 @@ function Profile() {
           <LogOut size={14} /> Sair
         </button>
       </div>
+
+      <InviteFriendSheet open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   );
 }
