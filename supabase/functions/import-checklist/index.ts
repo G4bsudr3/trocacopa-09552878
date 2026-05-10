@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
     skipped_done: skippedDone,
     skipped_image_existing: skippedImage,
     remaining,
-    inserted, updated, image_ok: imageOk, image_failed: imageFailed,
+    inserted, updated, image_ok: imageOk, image_failed: imageFailed, wiped,
     scrape_errors: scrapeErrors.slice(0, 10),
     errors: errors.slice(0, 20),
   }, null, 2), { headers: { ...cors, "Content-Type": "application/json" } });
