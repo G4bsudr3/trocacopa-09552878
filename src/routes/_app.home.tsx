@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Bell, Crown } from "lucide-react";
+import { Bell, Crown, Repeat2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TOTAL_STICKERS } from "@/lib/stickers";
@@ -96,6 +96,23 @@ function Home() {
         <ActionCard to="/near" label="Perto de Mim" emoji="📍" />
         <ActionCard to="/album" label="Meu Álbum" emoji="📊" />
       </div>
+
+      {(dups.data ?? 0) > 0 && (
+        <Link to="/duplicates" className="block mt-5">
+          <motion.div whileHover={{ scale: 1.01 }} className="glass-strong rounded-2xl p-4 flex items-center gap-3 border border-gold/30">
+            <span className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center glow-gold">
+              <Repeat2 className="text-gold-foreground" size={22} />
+            </span>
+            <div className="flex-1">
+              <p className="font-bold text-sm">Minhas Repetidas</p>
+              <p className="text-xs text-muted-foreground">
+                {dups.data} trocável{dups.data === 1 ? "" : "is"} pronta{dups.data === 1 ? "" : "s"} para troca
+              </p>
+            </div>
+            <span className="text-gold font-display text-2xl">→</span>
+          </motion.div>
+        </Link>
+      )}
 
       {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-5">
