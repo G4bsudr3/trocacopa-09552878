@@ -34,10 +34,13 @@ type NearbyRow = {
   compat_album: boolean;
   recent_active: boolean;
   nationwide: boolean;
+  lat_approx?: number | null;
+  lng_approx?: number | null;
 };
 
 const RADII = [10, 25, 50, 100, 500] as const;
 type SortMode = "match" | "distance";
+type ViewMode = "list" | "map";
 
 function Near() {
   const { user, profile } = useAuth();
