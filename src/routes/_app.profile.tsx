@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TOTAL_STICKERS } from "@/lib/stickers";
@@ -8,7 +8,7 @@ import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2, UserPlus
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
-import { InviteFriendSheet } from "@/components/invite-friend-sheet";
+const InviteFriendSheet = lazy(() => import("@/components/invite-friend-sheet").then((m) => ({ default: m.InviteFriendSheet })));
 
 export const Route = createFileRoute("/_app/profile")({
   head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
@@ -202,7 +202,11 @@ function Profile() {
         </button>
       </div>
 
-      <InviteFriendSheet open={inviteOpen} onOpenChange={setInviteOpen} />
+      {inviteOpen && (
+        <Suspense fallback={null}>
+          <InviteFriendSheet open={inviteOpen} onOpenChange={setInviteOpen} />
+        </Suspense>
+      )}
     </div>
   );
 }

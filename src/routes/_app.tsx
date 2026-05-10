@@ -17,10 +17,11 @@ function AppLayout() {
   const { session, loading, user, profile } = useAuth();
   const nav = useNavigate();
   const lastToastRef = useRef(0);
+  const prefsRef = useRef(profile?.notification_prefs);
+  prefsRef.current = profile?.notification_prefs;
 
   useEffect(() => {
     if (!user) return;
-    const prefs = (profile?.notification_prefs as { trades?: boolean; messages?: boolean; matches?: boolean } | null) ?? {};
     const name = `notif-toast-${user.id}`;
     supabase.getChannels().forEach((c) => {
       if (c.topic === `realtime:${name}` || c.topic === name) supabase.removeChannel(c);
@@ -32,6 +33,7 @@ function AppLayout() {
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (p) => {
           const n = p.new as { type: string; payload: { trade_id?: string; score?: number; city?: string; preview?: string } };
+          const prefs = (prefsRef.current as { trades?: boolean; messages?: boolean; matches?: boolean } | null) ?? {};
           if (n.type === "trade_message" && prefs.messages === false) return;
           if (n.type === "match_high" && prefs.matches === false) return;
           if (n.type.startsWith("trade_") && n.type !== "trade_message" && prefs.trades === false) return;
@@ -63,7 +65,7 @@ function AppLayout() {
       )
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user, profile?.notification_prefs, nav]);
+  }, [user?.id, nav]);
 
   if (loading) {
     return (

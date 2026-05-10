@@ -1,47 +1,50 @@
-## Resumo
+## Por que está lento
 
-Adicionar dois recursos:
+- Cache do React Query desligado: `staleTime: 0` em todo lugar → cada visita à Home/Near/Trades refaz tudo no Supabase.
+- RPC `match_collectors` (consulta pesada) é chamada em Home + Near sem reutilização.
+- `_app.tsx` espera `loading` do auth (getSession + fetchProfile) antes de renderizar a casca da app, então a primeira tela parece travada.
+- Realtime do toast re-cria o channel toda vez que `profile.notification_prefs` muda.
+- `leaflet` (mapa do Near) e `qrcode.react` (sheet de convite) são importados eager, então pesam no bundle inicial mesmo quando não usados.
+- Em `_app.near.tsx` o `useQuery` consulta `trades` duas vezes seguidas (give/receive) — dá pra unir em uma chamada só.
 
-1. **Convidar amigo por QR Code / link** — no Perfil, gera um QR e link de convite único do usuário. Quem entra pelo link já é cadastrado como "amigo" (match automático), aparece destacado em Perto/Trocas e enxerga as figurinhas (tem/repetidas/falta) do outro.
-2. **Marcar encontro para troca** — dentro da tela da troca, botão "Marcar encontro" que abre um seletor simples (data + horário + local) e grava na troca. Os dois veem o combinado, podem confirmar, remarcar ou cancelar. Notificação automática quando algo muda.
+## Plano
 
-## O que será criado / alterado
+1. **Cache global do React Query**
+   - Em `src/router.tsx`, configurar `QueryClient` com `defaultOptions: { queries: { staleTime: 60_000, gcTime: 5*60_000, refetchOnWindowFocus: false, retry: 1 } }`.
+   - Tirar `defaultPreloadStaleTime: 0` (deixar default 30s) para o preload do TanStack realmente reaproveitar dados.
 
-### Banco de dados (migração)
+2. **Cache específico nas queries pesadas**
+   - `match_collectors` (Home `featured-match` e Near `nearby`): `staleTime: 2 * 60_000`, `placeholderData: keepPreviousData` para não piscar entre navegações.
+   - `user_stickers` da Home (`album-dups`): `staleTime: 30_000`.
+   - Trades list e notifications: `staleTime: 30_000`.
 
-- Nova tabela `friendships` (`user_a`, `user_b`, `created_at`, `source`) com par único e RLS para que cada usuário leia apenas suas relações.
-- Nova tabela `invites` (`id`, `inviter_id`, `code` único curto, `created_at`, `accepted_by`, `accepted_at`). RLS: dono lê/cria os seus; qualquer autenticado pode validar pelo `code` via função `accept_invite(_code)` `SECURITY DEFINER` que cria a `friendship`, marca o invite e dispara notificação.
-- Adicionar em `trades`: `meet_at timestamptz`, `meet_place text`, `meet_status` (`proposed|confirmed|cancelled`), `meet_proposed_by uuid`. Trigger de notificação quando `meet_*` muda.
+3. **Render imediato da casca em `_app.tsx`**
+   - Não bloquear o layout inteiro com `loading`; mostrar `Outlet` assim que tiver `session` (mesmo sem `profile`), e fazer o splash só enquanto `session === undefined`.
+   - Mover o `useEffect` do realtime para depender apenas de `user?.id` (ler `prefs` via `ref` ou recomputar dentro do callback). Evita re-subscribe a cada update de profile.
 
-### Frontend
+4. **Lazy-load de bibliotecas pesadas**
+   - `NearMap` (leaflet) → `const NearMap = lazy(() => import("@/components/NearMap"))` + `<Suspense>` dentro de `_app.near.tsx`.
+   - `InviteFriendSheet` (qrcode.react) → lazy no `_app.profile.tsx`, só monta quando o usuário clica em "Convidar amigo".
+   - Conferir `framer-motion` em telas que só usam 1 fade simples; trocar por CSS quando trivial.
 
-- **`src/routes/_app.profile.tsx`**: novo card "Convidar amigo" → abre sheet com QR Code (lib `qrcode.react`) + link copiável + botão de compartilhar nativo (`navigator.share`). Mostra contador de amigos convidados.
-- **Nova rota `src/routes/invite.$code.tsx`** (pública): se logado, chama `accept_invite` e redireciona para o perfil do convidador; se não logado, salva o code em `localStorage`, manda para `/login`, e após signup/login consome.
-- **`src/lib/auth.tsx`** ou listener no `_app.tsx`: ao logar com `pendingInvite`, executa `accept_invite` e limpa.
-- **`src/routes/_app.near.tsx`** e **`_app.trades.tsx`**: badge "Amigo" para perfis com `friendship` ativa; seção "Meus amigos" no topo de Perto.
-- **`src/routes/_app.trade.$id.tsx`**: novo bloco "Encontro" com botão "Marcar/Editar encontro" → dialog com `Calendar` (shadcn) + input de horário + input de local. Mostra resumo "Sáb 17/05 às 15h00 — Praça da Sé" com botões Confirmar / Remarcar / Cancelar.
+5. **Limpar duplicação no Near**
+   - `_app.near.tsx`: unir as duas chamadas a `trades` (linhas 86 e 96) em uma só com `or(...)` ou pegar tudo onde o user é participante e filtrar no client.
 
-### Dependências
+6. **Pré-warm do perfil**
+   - Em `auth.tsx`, passar o `profile` direto via `queryClient.setQueryData(["profile", uid], data)` depois do `fetchProfile`, e nas telas trocar leituras diretas por `useQuery(["profile", uid], ...)` com `staleTime: Infinity` enquanto a sessão durar.
 
-- `bun add qrcode.react` (QR Code)
-- `date-fns` já presente para formatação
+## Detalhes técnicos
 
-## Fluxos
+- `keepPreviousData` vem de `@tanstack/react-query` v5 como `placeholderData: keepPreviousData`.
+- Manter `enabled: !!user` em todas as queries que dependem do user.
+- Não mexer em RLS nem em migrations — é só perf de frontend + config de cliente.
+- Não tocar em `src/integrations/supabase/client.ts` nem `types.ts`.
 
-```text
-Convidar amigo:
-Perfil → "Convidar amigo" → QR + link /invite/abc123
-   → amigo abre link → login/signup → accept_invite(abc123)
-   → friendship criada → notificação "Você e Fulano agora são amigos"
-   → ambos se enxergam destacados em Perto/Trocas
+## Fora de escopo
 
-Marcar troca:
-Trade → "Marcar encontro" → data/hora/local → salva proposed
-   → outro recebe notif → Confirmar/Remarcar
-   → vira confirmed; ao concluir a troca, status volta normal
-```
+- Reescrever `match_collectors` no banco (dá pra otimizar depois com índice/materialized view, mas não agora).
+- Mudar layout/responsividade visual — a queixa é tempo de carregamento, não breakpoint.
 
-## Pontos de confirmação
+## Confirmação
 
-- O convite deve gerar **match automático sempre** (amigo) ou só **destaque sem virar amizade obrigatória**? — proponho criar amizade automática, mais simples.
-- Local do encontro: texto livre ou usar lista de pontos sugeridos? — proponho texto livre por simplicidade.
+Posso seguir com esse plano? Se quiser, posso também já adicionar índices auxiliares no banco para `match_collectors` numa segunda etapa.

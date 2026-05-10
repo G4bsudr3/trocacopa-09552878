@@ -57,10 +57,11 @@ function Near() {
   const canShowMap = hasGeo && !isMinor;
 
   const nearby = useQuery({
-    queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius, view, isMinor],
+    queryKey: ["match", user?.id, radius, view, isMinor],
     enabled: !!user,
+    staleTime: 2 * 60_000,
+    placeholderData: (prev) => prev,
     queryFn: async (): Promise<NearbyRow[]> => {
-      // Use geo variant when map is needed (also returns lat/lng for adults)
       const rpc = view === "map" && !isMinor ? "match_collectors_geo" : "match_collectors";
       const { data, error } = await supabase.rpc(rpc as any, { _radius_km: radius });
       if (error) throw error;
