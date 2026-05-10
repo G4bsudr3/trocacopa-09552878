@@ -174,13 +174,8 @@ function EditProfile() {
             placeholder="Seu nome"
           />
         </Field>
-        <Field label="Cidade" error={errors.city}>
-          <input
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="w-full bg-input rounded-2xl px-4 py-3 outline-none border border-transparent focus:border-primary"
-            placeholder="Sua cidade"
-          />
+        <Field label="Estado / Cidade" error={errors.city}>
+          <LocationSelect value={city} onChange={setCity} error={errors.city} />
         </Field>
         <Field label="Bio" error={errors.bio}>
           <textarea
