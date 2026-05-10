@@ -101,7 +101,7 @@ function Notifs() {
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["notifications", user!.id] });
-    qc.invalidateQueries({ queryKey: ["unread-count", user!.id] });
+    qc.invalidateQueries({ queryKey: ["unread", user!.id] });
   };
 
   const markAllRead = async () => {

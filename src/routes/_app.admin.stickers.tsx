@@ -298,11 +298,12 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
     setBusy(true);
     const sourceChanged = (player_name || null) !== (row.player_name ?? null);
     const patch = {
-      country_name, country_code, flag_emoji, kind, position, group_letter,
+      country_name, country_code, flag_emoji, kind, position,
+      group_letter: group_letter.trim() || null,
       player_name: player_name || null,
       ...(sourceChanged ? { player_name_source: "manual" } : {}),
     };
-    const { error } = await supabase.from("stickers").update(patch).eq("code", row.code);
+    const { error } = await supabase.from("stickers").update(patch as any).eq("code", row.code);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Salvo");

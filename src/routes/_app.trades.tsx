@@ -70,6 +70,10 @@ function Trades() {
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-20 bg-surface rounded-2xl animate-pulse" />
           ))
+        ) : trades.isError ? (
+          <p className="text-center text-sm text-destructive py-10 glass rounded-2xl">
+            Não foi possível carregar suas trocas. Verifique sua conexão e tente novamente.
+          </p>
         ) : filtered.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-10 glass rounded-2xl">
             Nenhuma troca aqui ainda.
