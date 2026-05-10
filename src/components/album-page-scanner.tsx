@@ -230,7 +230,7 @@ export function AlbumPageScanner() {
         className="w-full mt-3 glass-strong rounded-full py-3.5 font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60 border border-primary/40"
       >
         {scanning ? <Loader2 size={18} className="animate-spin" /> : <BookOpen size={18} />}
-        {scanning ? "Analisando página..." : "Escanear página — revise e adicione várias"}
+        {scanning ? "Lendo códigos (OCR)..." : "Escanear página (OCR) — revise e adicione várias"}
       </button>
 
       <AnimatePresence>
