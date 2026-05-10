@@ -189,7 +189,8 @@ Deno.serve(async (req) => {
     const before = targets.length;
     targets = targets.filter((r) => {
       const ex = existingMap.get(r.code);
-      const done = ex && ex.player_name_source === "checklist" && ex.player_name && (skipImages || ex.image_url);
+      const imgDone = skipImages || ex?.image_url != null; // null = not attempted; "" = attempted, no source
+      const done = ex && ex.player_name_source === "checklist" && ex.player_name && imgDone;
       return !done;
     });
     skippedDone = before - targets.length;
