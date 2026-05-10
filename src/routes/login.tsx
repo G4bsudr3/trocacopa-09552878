@@ -9,6 +9,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { computeAgeGroup, isMinor } from "@/lib/age";
 import { Link } from "@tanstack/react-router";
+import { LocationSelect } from "@/components/location-select";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
