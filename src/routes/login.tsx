@@ -355,7 +355,26 @@ function Field({
   );
 }
 
-function GoogleIcon() {
+function DateField({
+  icon, value, onChange, error,
+}: { icon: React.ReactNode; value: string; onChange: (v: string) => void; error?: string }) {
+  return (
+    <div>
+      <div className={`flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border transition ${error ? "border-destructive" : "border-transparent focus-within:border-primary"}`}>
+        <span className="text-muted-foreground">{icon}</span>
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          max={new Date().toISOString().slice(0, 10)}
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+        />
+      </div>
+      {!error && !value && <p className="text-[10px] text-muted-foreground mt-1 ml-2">Data de nascimento (Lei nº 15.211/2025)</p>}
+      {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
+    </div>
+  );
+}
   return (
     <svg width="18" height="18" viewBox="0 0 18 18">
       <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
