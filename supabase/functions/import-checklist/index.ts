@@ -124,6 +124,8 @@ Deno.serve(async (req) => {
   const skipImages: boolean = body.skip_images === true;
   const onlyMissingNames: boolean = body.only_missing_names === true;
   const onlyCodes: string[] | null = Array.isArray(body.only_codes) && body.only_codes.length ? body.only_codes : null;
+  const onlyMissingImages: boolean = body.only_missing_images === true; // image_url IS NULL (não tentado)
+  const resume: boolean = body.resume === true; // alias: retoma só os faltantes (image_url IS NULL)
   const force: boolean = body.force === true;
   const wipeImages: boolean = body.wipe_images === true;
   const limit: number = Math.max(1, Math.min(500, Number(body.limit) || 200));
