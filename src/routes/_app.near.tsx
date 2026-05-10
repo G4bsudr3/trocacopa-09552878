@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, MapPin, Compass, Loader2, Globe2 } from "lucide-react";
+import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+
+const NearMap = lazy(() => import("@/components/NearMap"));
 
 export const Route = createFileRoute("/_app/near")({
   head: () => ({ meta: [{ title: "Perto de mim — TrocaCopa" }] }),
@@ -32,10 +34,13 @@ type NearbyRow = {
   compat_album: boolean;
   recent_active: boolean;
   nationwide: boolean;
+  lat_approx?: number | null;
+  lng_approx?: number | null;
 };
 
 const RADII = [10, 25, 50, 100, 500] as const;
 type SortMode = "match" | "distance";
+type ViewMode = "list" | "map";
 
 function Near() {
   const { user, profile } = useAuth();
@@ -44,15 +49,20 @@ function Near() {
   const [onlyCity, setOnlyCity] = useState(false);
   const [onlyMutual, setOnlyMutual] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("match");
+  const [view, setView] = useState<ViewMode>("list");
 
   const hasGeo = profile?.lat != null && profile?.lng != null;
   const hasCity = !!profile?.city;
+  const isMinor = profile?.kids_mode === true || profile?.age_group === "child" || profile?.age_group === "teen";
+  const canShowMap = hasGeo && !isMinor;
 
   const nearby = useQuery({
-    queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius],
+    queryKey: ["match", user?.id, profile?.lat, profile?.lng, radius, view, isMinor],
     enabled: !!user,
     queryFn: async (): Promise<NearbyRow[]> => {
-      const { data, error } = await supabase.rpc("match_collectors", { _radius_km: radius });
+      // Use geo variant when map is needed (also returns lat/lng for adults)
+      const rpc = view === "map" && !isMinor ? "match_collectors_geo" : "match_collectors";
+      const { data, error } = await supabase.rpc(rpc as any, { _radius_km: radius });
       if (error) throw error;
       return (data ?? []) as unknown as NearbyRow[];
     },
@@ -159,6 +169,42 @@ function Near() {
         </div>
       </div>
 
+      {canShowMap && (
+        <div className="mt-4 flex gap-1 glass rounded-full p-1 w-fit">
+          <button
+            onClick={() => setView("list")}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 ${view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            <List size={12} /> Lista
+          </button>
+          <button
+            onClick={() => setView("map")}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 ${view === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            <MapIcon size={12} /> Mapa
+          </button>
+        </div>
+      )}
+
+      {view === "map" && canShowMap ? (
+        <div className="mt-4">
+          <Suspense fallback={<div className="w-full h-[60vh] md:h-[70vh] rounded-2xl bg-surface animate-pulse" />}>
+            <NearMap
+              rows={(filtered as any[]).filter((r) => r.lat_approx != null && r.lng_approx != null) as any}
+              myLat={profile!.lat as number}
+              myLng={profile!.lng as number}
+              radiusKm={radius}
+              onStartTrade={startTrade}
+            />
+          </Suspense>
+          {filtered.filter((r: any) => r.lat_approx != null).length === 0 && (
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Ninguém com localização visível neste raio. Tente aumentar ou abrir a lista.
+            </p>
+          )}
+        </div>
+      ) : (
+        <>
       <h2 className="font-display text-xl tracking-wide mt-6 mb-3">Melhores matches</h2>
 
       {nearby.isLoading ? (
@@ -272,6 +318,8 @@ function Near() {
             </Link>
           )}
         </div>
+      )}
+        </>
       )}
 
       {nearby.isFetching && nearby.data && (

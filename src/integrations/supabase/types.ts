@@ -469,6 +469,32 @@ export type Database = {
           trades_count: number
         }[]
       }
+      match_collectors_geo: {
+        Args: { _radius_km?: number }
+        Returns: {
+          album_progress: number
+          avatar_url: string
+          city: string
+          compat_album: boolean
+          distance_km: number
+          full_name: string
+          give_count: number
+          id: string
+          lat_approx: number
+          lng_approx: number
+          mutual_count: number
+          nationwide: boolean
+          out_of_radius: boolean
+          plan: string
+          proximity_score: number
+          receive_count: number
+          recent_active: boolean
+          region_bonus: number
+          same_city: boolean
+          score_pct: number
+          trades_count: number
+        }[]
+      }
       nearby_collectors: {
         Args: { _radius_km?: number }
         Returns: {
