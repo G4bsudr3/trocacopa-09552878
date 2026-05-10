@@ -127,7 +127,20 @@ function Profile() {
         </div>
       </Link>
 
-      {profile?.plan !== "pro" && (
+      <button onClick={() => setInviteOpen(true)} className="block w-full mt-3 text-left">
+        <div className="glass-strong rounded-2xl p-4 flex items-center gap-3 border border-primary/30 active:scale-[0.99] transition">
+          <span className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center glow-primary shrink-0">
+            <UserPlus className="text-primary-foreground" size={22} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-display text-lg leading-tight">Convidar amigo (QR)</p>
+            <p className="text-xs text-muted-foreground">
+              {friendsCount.data ? `${friendsCount.data} amigo${friendsCount.data === 1 ? "" : "s"} no app · vire match automático` : "Quem entrar pelo seu QR já vira amigo"}
+            </p>
+          </div>
+          <span className="text-primary font-display text-2xl">→</span>
+        </div>
+      </button>
         <Link to="/pro" className="block mt-4">
           <div className="rounded-2xl p-5 gradient-gold text-gold-foreground flex items-center gap-3 glow-gold">
             <Crown size={28} />
