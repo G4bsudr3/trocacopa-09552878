@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { useStickerCatalog } from "@/lib/stickers";
 import { useAlbum } from "@/lib/use-album";
 import { useQueryClient } from "@tanstack/react-query";
+import { ocrAlbumPage } from "@/lib/scan-ocr";
 
 type ItemStatus = "add" | "already" | "missing";
 type ScanItem = {
