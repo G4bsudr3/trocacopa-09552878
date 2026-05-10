@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Camera, Check, Repeat, Search, Loader2, Sparkles, X, Gift } from "lucide-react";
 import { toast } from "sonner";
@@ -29,8 +29,67 @@ function Scan() {
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [donated, setDonated] = useState(false);
   const [donating, setDonating] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const canDonate = profile?.kids_mode === false;
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOpen(false);
+  };
+
+  const openCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      fileRef.current?.click();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCameraOpen(true);
+      setPreview(null);
+      setResult(null);
+      setSuggestions([]);
+      // attach in next tick after element mounts
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 50);
+    } catch (e: any) {
+      toast.error(
+        e?.name === "NotAllowedError"
+          ? "Permissão da câmera negada"
+          : e?.name === "NotFoundError"
+            ? "Nenhuma câmera encontrada"
+            : "Não consegui abrir a câmera — usando upload",
+      );
+      fileRef.current?.click();
+    }
+  };
+
+  const capturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
+    if (!blob) return toast.error("Falha ao capturar imagem");
+    const file = new File([blob], `scan-${Date.now()}.jpg`, { type: "image/jpeg" });
+    stopCamera();
+    handleFile(file);
+  };
 
   const matches = !query
     ? []
@@ -111,6 +170,8 @@ function Scan() {
     }
   };
 
+  useEffect(() => () => stopCamera(), []);
+
   return (
     <div className="px-5 pt-4 max-w-2xl mx-auto">
       <h1 className="font-display text-3xl tracking-wide">Escanear Figurinha</h1>
@@ -129,7 +190,43 @@ function Scan() {
       />
 
       <div className="mt-5 relative aspect-[3/4] rounded-3xl overflow-hidden glass-strong">
-        {preview ? (
+        {cameraOpen ? (
+          <>
+            <video
+              ref={videoRef}
+              playsInline
+              muted
+              autoPlay
+              className="absolute inset-0 w-full h-full object-cover bg-black"
+            />
+            <button
+              onClick={stopCamera}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
+              aria-label="Fechar câmera"
+            >
+              <X size={16} />
+            </button>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[70%] h-[80%]">
+                {[
+                  "top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl",
+                  "top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl",
+                  "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl",
+                  "bottom-0 right-0 border-b-4 border-r-4 rounded-br-2xl",
+                ].map((cls) => (
+                  <div key={cls} className={`absolute w-12 h-12 border-primary ${cls}`} />
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={capturePhoto}
+              aria-label="Capturar"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-primary border-4 border-background glow-primary active:scale-95 transition flex items-center justify-center"
+            >
+              <Camera size={26} className="text-primary-foreground" strokeWidth={2.5} />
+            </button>
+          </>
+        ) : preview ? (
           <>
             <img src={preview} alt="figurinha" className="absolute inset-0 w-full h-full object-cover" />
             <button
@@ -172,21 +269,31 @@ function Scan() {
 
             <div className="absolute bottom-5 inset-x-0 text-center px-6">
               <p className="text-xs text-muted-foreground">
-                Tire uma foto da figurinha — a IA identifica automaticamente
+                Aponte a câmera para a figurinha — a IA identifica automaticamente
               </p>
             </div>
           </>
         )}
       </div>
 
-      <button
-        onClick={() => fileRef.current?.click()}
-        disabled={scanning}
-        className="w-full mt-3 gradient-primary text-primary-foreground rounded-full py-3.5 font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60"
-      >
-        {scanning ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
-        {scanning ? "Analisando..." : "Tirar foto / Enviar imagem"}
-      </button>
+      <div className="grid grid-cols-2 gap-2 mt-3">
+        <button
+          onClick={openCamera}
+          disabled={scanning || cameraOpen}
+          className="gradient-primary text-primary-foreground rounded-full py-3.5 font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60"
+        >
+          <Camera size={18} />
+          Abrir câmera
+        </button>
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={scanning || cameraOpen}
+          className="glass-strong rounded-full py-3.5 font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-60"
+        >
+          {scanning ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+          {scanning ? "Analisando..." : "Enviar imagem"}
+        </button>
+      </div>
 
       <AlbumPageScanner />
 
