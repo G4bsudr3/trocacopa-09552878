@@ -149,6 +149,19 @@ function EditProfile() {
           <input type="file" accept="image/*" onChange={onAvatar} className="hidden" />
         </label>
         <p className="text-xs text-muted-foreground mt-2">Toque para trocar a foto</p>
+        {canDonate && (
+          <label className="mt-3 flex items-start gap-2 max-w-xs text-[11px] text-muted-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={donateAvatar}
+              onChange={(e) => setDonateAvatar(e.target.checked)}
+              className="mt-0.5 accent-primary"
+            />
+            <span>
+              Permitir que minha foto seja usada como inspiração no app (opcional). Você pode revogar nas configurações.
+            </span>
+          </label>
+        )}
       </motion.div>
 
       <div className="space-y-4 mt-6">
