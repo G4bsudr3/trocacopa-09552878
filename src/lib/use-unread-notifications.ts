@@ -36,8 +36,12 @@ export function useUnreadNotifications() {
 
   useEffect(() => {
     if (!user) return;
+    const name = `unread-${user.id}`;
+    supabase.getChannels().forEach((c) => {
+      if (c.topic === `realtime:${name}` || c.topic === name) supabase.removeChannel(c);
+    });
     const ch = supabase
-      .channel(`unread-${user.id}`)
+      .channel(name)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
