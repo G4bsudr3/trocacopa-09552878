@@ -319,6 +319,8 @@ function Near() {
           )}
         </div>
       )}
+        </>
+      )}
 
       {nearby.isFetching && nearby.data && (
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-3">
