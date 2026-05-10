@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_app/scan")({
 
 function Scan() {
   const nav = useNavigate();
+  const { profile } = useAuth();
   const catalog = useStickerCatalog();
   const { stickers, addDuplicate, toggleOwned } = useAlbum();
   const [query, setQuery] = useState("");
@@ -24,7 +25,11 @@ function Scan() {
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<StickerCatalogItem | null>(null);
   const [suggestions, setSuggestions] = useState<Array<{ code: string; player_name: string | null; country_name: string | null; flag_emoji: string | null; score: number }>>([]);
+  const [lastFile, setLastFile] = useState<File | null>(null);
+  const [donated, setDonated] = useState(false);
+  const [donating, setDonating] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const canDonate = profile?.kids_mode === false;
 
   const matches = !query
     ? []
