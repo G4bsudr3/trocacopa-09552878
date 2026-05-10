@@ -421,9 +421,11 @@ function StickerCell({
       animate={{ opacity: 1, scale: 1 }}
       whileTap={{ scale: 0.94 }}
       className={`aspect-[3/4] rounded-lg flex flex-col items-center justify-center text-center relative overflow-hidden select-none ${
-        s.owned
-          ? "border border-primary/40 glow-primary"
-          : "bg-surface border border-border/50"
+        s.duplicates > 1
+          ? "border-2 border-gold glow-gold"
+          : s.owned
+            ? "border-2 border-primary/60 glow-primary"
+            : "bg-surface border border-border/50"
       }`}
     >
       {s.image_url ? (
@@ -451,8 +453,9 @@ function StickerCell({
         </span>
       )}
       {s.duplicates > 1 && (
-        <span className="absolute top-0.5 right-0.5 z-10 bg-gold text-gold-foreground text-[8px] font-bold px-1 py-0.5 rounded-full">
-          {s.duplicates}x
+        <span className="absolute top-0.5 right-0.5 z-10 bg-gold text-gold-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+          <Repeat2 size={9} strokeWidth={3} />
+          {s.duplicates}
         </span>
       )}
       {s.owned && s.duplicates < 2 && (
