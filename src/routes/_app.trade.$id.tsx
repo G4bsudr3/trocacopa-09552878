@@ -20,6 +20,10 @@ type TradeRow = {
   requested_stickers: string[];
   status: "pending" | "accepted" | "declined" | "completed" | "cancelled";
   created_at: string;
+  meet_at: string | null;
+  meet_place: string | null;
+  meet_status: "proposed" | "confirmed" | "cancelled" | null;
+  meet_proposed_by: string | null;
 };
 
 type Message = {
