@@ -9,8 +9,6 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { computeAgeGroup, isMinor } from "@/lib/age";
 import { Link } from "@tanstack/react-router";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _unusedLink = Link;
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -333,6 +331,10 @@ function LoginPage() {
           </>
         )}
       </motion.div>
+
+      <Link to="/seguranca" className="text-[11px] text-muted-foreground hover:text-primary mt-6 inline-flex items-center gap-1">
+        🛡️ Segurança e proteção de crianças
+      </Link>
     </div>
   );
 }
