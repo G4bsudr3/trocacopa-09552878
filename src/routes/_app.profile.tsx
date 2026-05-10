@@ -141,6 +141,8 @@ function Profile() {
           <span className="text-primary font-display text-2xl">→</span>
         </div>
       </button>
+
+      {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-4">
           <div className="rounded-2xl p-5 gradient-gold text-gold-foreground flex items-center gap-3 glow-gold">
             <Crown size={28} />
