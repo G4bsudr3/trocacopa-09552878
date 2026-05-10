@@ -51,6 +51,12 @@ function AppLayout() {
           else if (n.type === "trade_completed") title = "🎉 Troca concluída";
           else if (n.type === "trade_cancelled") title = "Troca cancelada";
           else if (n.type === "trade_message") title = n.payload.preview ? `💬 ${n.payload.preview}` : "Nova mensagem";
+          else if (n.type === "trade_meet") {
+            title = "📅 Encontro de troca atualizado";
+            const tid = (n.payload as { trade_id?: string }).trade_id;
+            if (tid) action = { label: "Ver", onClick: () => nav({ to: "/trade/$id", params: { id: tid } }) };
+          }
+          else if (n.type === "friend_added") title = `🤝 ${(n.payload as { name?: string }).name ?? "Novo amigo"} virou seu amigo`;
 
           toast(title, action ? { action } : undefined);
         }
