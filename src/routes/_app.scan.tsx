@@ -334,7 +334,7 @@ function Scan() {
               return (
                 <button
                   key={s.code}
-                  onClick={() => { register(s.code, false); setSuggestions([]); }}
+                  onClick={() => { registerProgressive(s.code); setSuggestions([]); }}
                   className="w-full glass rounded-xl p-2.5 flex items-center gap-3 text-left active:scale-[0.98] transition"
                 >
                   {cat?.image_url ? (
