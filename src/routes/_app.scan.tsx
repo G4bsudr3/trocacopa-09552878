@@ -187,6 +187,8 @@ function Scan() {
         {scanning ? "Analisando..." : "Tirar foto / Enviar imagem"}
       </button>
 
+      <AlbumPageScanner />
+
       {result && (() => {
         const owned = stickers.find((x) => x.code === result.code)?.owned ?? false;
         const dup = dupCount(result.code);
