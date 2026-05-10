@@ -2,11 +2,13 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Mail, Lock, User as UserIcon, MapPin } from "lucide-react";
+import { Mail, Lock, User as UserIcon, MapPin, Cake, Shield } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
+import { computeAgeGroup, isMinor } from "@/lib/age";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -28,6 +30,10 @@ const signupSchema = z.object({
   city: z.string().trim().min(2, "Informe sua cidade").max(80),
   email: z.string().trim().email("E-mail inválido").max(255),
   password: z.string().min(8, "Senha precisa ter pelo menos 8 caracteres").max(72),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
+    .refine((v) => { const d = new Date(v); return !isNaN(d.getTime()) && d < new Date() && d > new Date("1900-01-01"); }, "Data inválida"),
+  guardian_name: z.string().trim().max(80).optional().or(z.literal("")),
+  guardian_email: z.string().trim().email("E-mail do responsável inválido").max(255).optional().or(z.literal("")),
 });
 
 const resetSchema = z.object({
@@ -52,9 +58,15 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showReset, setShowReset] = useState(false);
+
+  const ag = birthDate ? computeAgeGroup(birthDate) : null;
+  const willBeMinor = isMinor(ag);
 
   if (!loading && session) return <Navigate to="/home" />;
 
@@ -63,11 +75,22 @@ function LoginPage() {
     setErrors({});
 
     if (mode === "signup") {
-      const parsed = signupSchema.safeParse({ name, city, email, password });
+      const parsed = signupSchema.safeParse({
+        name, city, email, password, birth_date: birthDate,
+        guardian_name: guardianName, guardian_email: guardianEmail,
+      });
       if (!parsed.success) {
         const errs: Record<string, string> = {};
         parsed.error.issues.forEach((i) => (errs[i.path[0] as string] = i.message));
         setErrors(errs);
+        return;
+      }
+      // Validate guardian fields if minor
+      if (willBeMinor && (!guardianEmail || !guardianName)) {
+        setErrors({
+          guardian_email: !guardianEmail ? "Informe o e-mail do responsável" : "",
+          guardian_name: !guardianName ? "Informe o nome do responsável" : "",
+        });
         return;
       }
       setBusy(true);
@@ -77,18 +100,37 @@ function LoginPage() {
           password: parsed.data.password,
           options: {
             emailRedirectTo: `${window.location.origin}/home`,
-            data: { full_name: parsed.data.name, city: parsed.data.city },
+            data: {
+              full_name: parsed.data.name,
+              city: parsed.data.city,
+              birth_date: parsed.data.birth_date,
+              ...(willBeMinor ? { guardian_name: guardianName, guardian_email: guardianEmail } : {}),
+            },
           },
         });
         if (error) throw error;
 
         if (data.session) {
-          // Auto-confirm está ligado: já temos sessão; complementa cidade caso o trigger não tenha pego
           await supabase
             .from("profiles")
-            .update({ full_name: parsed.data.name, city: parsed.data.city })
+            .update({
+              full_name: parsed.data.name,
+              city: parsed.data.city,
+              birth_date: parsed.data.birth_date,
+              ...(willBeMinor ? { guardian_email: guardianEmail, guardian_name: guardianName } : {}),
+            })
             .eq("id", data.session.user.id);
-          toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
+
+          if (willBeMinor) {
+            await supabase.from("guardian_consents").insert({
+              minor_user_id: data.session.user.id,
+              guardian_email: guardianEmail,
+              guardian_name: guardianName,
+            });
+            toast.success("Conta criada! 🛡️ Avisamos seu responsável por e-mail. Algumas funções ficam pausadas até a aprovação.", { duration: 9000 });
+          } else {
+            toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
+          }
           navigate({ to: "/home" });
         } else {
           toast.success(`Enviamos um e-mail de confirmação para ${parsed.data.email}. Confirme para entrar.`, {
@@ -239,6 +281,16 @@ function LoginPage() {
                 <>
                   <Field icon={<UserIcon size={18} />} placeholder="Seu nome" value={name} onChange={setName} error={errors.name} />
                   <Field icon={<MapPin size={18} />} placeholder="Cidade / região" value={city} onChange={setCity} error={errors.city} />
+                  <DateField icon={<Cake size={18} />} value={birthDate} onChange={setBirthDate} error={errors.birth_date} />
+                  {willBeMinor && (
+                    <div className="rounded-2xl bg-gold/10 border border-gold/30 p-3 space-y-2">
+                      <p className="text-[11px] text-gold font-bold flex items-center gap-1.5">
+                        <Shield size={12} /> Menor de 18 — autorização do responsável
+                      </p>
+                      <Field icon={<UserIcon size={18} />} placeholder="Nome do responsável" value={guardianName} onChange={setGuardianName} error={errors.guardian_name} />
+                      <Field icon={<Mail size={18} />} placeholder="E-mail do responsável" value={guardianEmail} onChange={setGuardianEmail} type="email" error={errors.guardian_email} />
+                    </div>
+                  )}
                 </>
               )}
               <Field icon={<Mail size={18} />} placeholder="E-mail" value={email} onChange={setEmail} type="email" error={errors.email} />
@@ -279,6 +331,10 @@ function LoginPage() {
           </>
         )}
       </motion.div>
+
+      <Link to="/seguranca" className="text-[11px] text-muted-foreground hover:text-primary mt-6 inline-flex items-center gap-1">
+        🛡️ Segurança e proteção de crianças
+      </Link>
     </div>
   );
 }
@@ -298,6 +354,27 @@ function Field({
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
         />
       </div>
+      {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
+    </div>
+  );
+}
+
+function DateField({
+  icon, value, onChange, error,
+}: { icon: React.ReactNode; value: string; onChange: (v: string) => void; error?: string }) {
+  return (
+    <div>
+      <div className={`flex items-center gap-3 bg-input rounded-2xl px-4 py-3 border transition ${error ? "border-destructive" : "border-transparent focus-within:border-primary"}`}>
+        <span className="text-muted-foreground">{icon}</span>
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          max={new Date().toISOString().slice(0, 10)}
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+        />
+      </div>
+      {!error && !value && <p className="text-[10px] text-muted-foreground mt-1 ml-2">Data de nascimento (Lei nº 15.211/2025)</p>}
       {error && <p className="text-xs text-destructive mt-1 ml-2">{error}</p>}
     </div>
   );
