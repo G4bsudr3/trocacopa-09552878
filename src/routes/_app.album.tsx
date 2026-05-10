@@ -62,12 +62,29 @@ function Album() {
   const onCellTap = (s: Sticker) => {
     if (!s.owned) {
       toggleOwned(s.code);
-      toast.success(`${s.code} adicionada ao álbum ✅`);
+      toast.success(`${s.code} adicionada ao álbum ✅`, {
+        action: {
+          label: "Desfazer",
+          onClick: () => {
+            toggleOwned(s.code);
+            toast(`${s.code} removida do álbum`);
+          },
+        },
+      });
     } else {
       addDuplicate(s.code);
       const next = s.duplicates + 1;
       toast.success(
         next === 2 ? `${s.code} agora é repetida (2x) 🔁` : `${s.code} +1 repetida (${next}x)`,
+        {
+          action: {
+            label: "Desfazer",
+            onClick: () => {
+              removeDuplicate(s.code);
+              toast(`${s.code}: repetida desfeita`);
+            },
+          },
+        },
       );
     }
   };
@@ -76,7 +93,21 @@ function Album() {
     if (s.duplicates > 1) {
       removeDuplicate(s.code);
       const next = s.duplicates - 1;
-      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`);
+      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`, {
+        action: {
+          label: "Desfazer",
+          onClick: () => addDuplicate(s.code),
+        },
+      });
+    } else if (s.owned) {
+      // Toque longo em figurinha sem repetidas: oferece remover do álbum
+      toggleOwned(s.code);
+      toast(`${s.code} removida do álbum`, {
+        action: {
+          label: "Desfazer",
+          onClick: () => toggleOwned(s.code),
+        },
+      });
     } else {
       setSelected(s);
     }
