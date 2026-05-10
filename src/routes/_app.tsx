@@ -33,6 +33,7 @@ function AppLayout() {
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (p) => {
           const n = p.new as { type: string; payload: { trade_id?: string; score?: number; city?: string; preview?: string } };
+          const prefs = (prefsRef.current as { trades?: boolean; messages?: boolean; matches?: boolean } | null) ?? {};
           if (n.type === "trade_message" && prefs.messages === false) return;
           if (n.type === "match_high" && prefs.matches === false) return;
           if (n.type.startsWith("trade_") && n.type !== "trade_message" && prefs.trades === false) return;
