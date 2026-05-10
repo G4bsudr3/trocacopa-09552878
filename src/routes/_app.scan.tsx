@@ -71,6 +71,8 @@ function Scan() {
     setScanning(true);
     setSuggestions([]);
     setResult(null);
+    setLastFile(file);
+    setDonated(false);
     try {
       const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
       if (error) throw error;
