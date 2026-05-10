@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield } from "lucide-react";
-import { useState } from "react";
+import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield, Gift } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useIsAdmin } from "@/lib/use-admin";
+import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
