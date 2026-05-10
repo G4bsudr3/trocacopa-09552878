@@ -16,6 +16,9 @@ export const Route = createFileRoute("/_app/profile")({
 function Profile() {
   const { profile, user, signOut } = useAuth();
   const nav = useNavigate();
+  const { stickers } = useAlbum();
+  const dupUnique = stickers.filter((s) => s.duplicates > 1).length;
+  const dupExtras = stickers.reduce((a, s) => a + Math.max(0, s.duplicates - 1), 0);
 
   const stats = useQuery({
     queryKey: ["profile-stats", user?.id],
