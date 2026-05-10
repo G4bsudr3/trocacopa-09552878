@@ -288,3 +288,188 @@ function StatusBadge({ status }: { status: TradeRow["status"] }) {
   const m = map[status];
   return <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${m.cls}`}>{m.label}</span>;
 }
+
+function MeetBlock({
+  trade,
+  meId,
+  onChange,
+}: {
+  trade: TradeRow;
+  meId: string;
+  onChange: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [date, setDate] = useState(trade.meet_at ? trade.meet_at.slice(0, 10) : "");
+  const [time, setTime] = useState(trade.meet_at ? trade.meet_at.slice(11, 16) : "");
+  const [place, setPlace] = useState(trade.meet_place ?? "");
+  const [busy, setBusy] = useState(false);
+
+  const hasMeet = !!trade.meet_at;
+  const otherProposed = trade.meet_proposed_by && trade.meet_proposed_by !== meId;
+  const cancelled = trade.meet_status === "cancelled";
+
+  const save = async () => {
+    if (!date || !time) {
+      toast.error("Escolha data e horário");
+      return;
+    }
+    setBusy(true);
+    const meetAt = new Date(`${date}T${time}:00`).toISOString();
+    const { error } = await supabase
+      .from("trades")
+      .update({
+        meet_at: meetAt,
+        meet_place: place.trim() || null,
+        meet_status: "proposed",
+        meet_proposed_by: meId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", trade.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Encontro proposto! Aguardando confirmação.");
+    setEditing(false);
+    onChange();
+  };
+
+  const confirm = async () => {
+    const { error } = await supabase
+      .from("trades")
+      .update({ meet_status: "confirmed", updated_at: new Date().toISOString() })
+      .eq("id", trade.id);
+    if (error) return toast.error(error.message);
+    toast.success("Encontro confirmado! 📍");
+    onChange();
+  };
+
+  const cancel = async () => {
+    const { error } = await supabase
+      .from("trades")
+      .update({ meet_status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", trade.id);
+    if (error) return toast.error(error.message);
+    toast.success("Encontro cancelado");
+    onChange();
+  };
+
+  if (editing || (!hasMeet && trade.status === "accepted")) {
+    return (
+      <div className="glass-strong rounded-3xl mt-4 p-4">
+        <p className="font-display text-lg flex items-center gap-2">
+          <CalendarClock size={18} /> {hasMeet ? "Remarcar encontro" : "Marcar encontro"}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">Escolha quando e onde se encontrar para trocar.</p>
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <input
+            type="date"
+            value={date}
+            min={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setDate(e.target.value)}
+            className="bg-input rounded-xl px-3 py-2.5 text-sm outline-none"
+          />
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="bg-input rounded-xl px-3 py-2.5 text-sm outline-none"
+          />
+        </div>
+        <input
+          type="text"
+          value={place}
+          onChange={(e) => setPlace(e.target.value)}
+          placeholder="Local (ex: Praça da Sé, Shopping...)"
+          maxLength={120}
+          className="w-full mt-2 bg-input rounded-xl px-3 py-2.5 text-sm outline-none"
+        />
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          {hasMeet && (
+            <button
+              onClick={() => setEditing(false)}
+              className="glass rounded-full py-2.5 text-sm font-semibold"
+            >
+              Cancelar edição
+            </button>
+          )}
+          <button
+            onClick={save}
+            disabled={busy}
+            className={`gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold disabled:opacity-50 ${hasMeet ? "" : "col-span-2"}`}
+          >
+            {busy ? "Salvando..." : hasMeet ? "Salvar nova proposta" : "Propor encontro"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasMeet) {
+    return (
+      <div className="glass-strong rounded-3xl mt-4 p-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          Aceitem a troca para combinar data, horário e local do encontro.
+        </p>
+      </div>
+    );
+  }
+
+  const meetDate = new Date(trade.meet_at!);
+  const fmt = meetDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+  const hour = meetDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div className={`glass-strong rounded-3xl mt-4 p-4 border ${cancelled ? "border-border" : trade.meet_status === "confirmed" ? "border-primary/40" : "border-gold/40"}`}>
+      <div className="flex items-center justify-between">
+        <p className="font-display text-lg flex items-center gap-2">
+          <CalendarClock size={18} /> Encontro
+        </p>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          cancelled ? "bg-surface text-muted-foreground" :
+          trade.meet_status === "confirmed" ? "bg-primary/20 text-primary" : "bg-gold/20 text-gold"
+        }`}>
+          {cancelled ? "Cancelado" : trade.meet_status === "confirmed" ? "Confirmado" : "Aguardando"}
+        </span>
+      </div>
+      <p className="text-base font-semibold mt-2 capitalize">{fmt} às {hour}</p>
+      {trade.meet_place && (
+        <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+          <MapPin size={14} /> {trade.meet_place}
+        </p>
+      )}
+
+      {!cancelled && (
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          {otherProposed && trade.meet_status === "proposed" && (
+            <button
+              onClick={confirm}
+              className="gradient-primary text-primary-foreground rounded-full py-2 text-sm font-bold flex items-center justify-center gap-1"
+            >
+              <Check size={14} /> Confirmar
+            </button>
+          )}
+          <button
+            onClick={() => setEditing(true)}
+            className={`glass rounded-full py-2 text-sm font-semibold flex items-center justify-center gap-1 ${otherProposed && trade.meet_status === "proposed" ? "" : "col-span-1"}`}
+          >
+            <Edit3 size={14} /> Remarcar
+          </button>
+          <button
+            onClick={cancel}
+            className={`glass border border-destructive/30 text-destructive rounded-full py-2 text-sm font-semibold ${otherProposed && trade.meet_status === "proposed" ? "col-span-2" : ""}`}
+          >
+            Cancelar encontro
+          </button>
+        </div>
+      )}
+
+      {cancelled && (
+        <button
+          onClick={() => setEditing(true)}
+          className="w-full mt-3 gradient-primary text-primary-foreground rounded-full py-2 text-sm font-bold"
+        >
+          Propor novo horário
+        </button>
+      )}
+    </div>
+  );
+}
