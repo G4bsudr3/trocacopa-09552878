@@ -1,1 +1,1 @@
-## Objetivo\n\nHoje, ao escanear uma página do álbum (botão \
+## Objetivo\n\nTransformar o scanner de páginas em um fluxo de múltiplas páginas com revisão opcional antes de gravar, mantendo a sensação de \
