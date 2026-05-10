@@ -2,11 +2,13 @@ import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Mail, Lock, User as UserIcon, MapPin } from "lucide-react";
+import { Mail, Lock, User as UserIcon, MapPin, Cake, Shield } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
+import { computeAgeGroup, isMinor } from "@/lib/age";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -28,6 +30,10 @@ const signupSchema = z.object({
   city: z.string().trim().min(2, "Informe sua cidade").max(80),
   email: z.string().trim().email("E-mail inválido").max(255),
   password: z.string().min(8, "Senha precisa ter pelo menos 8 caracteres").max(72),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
+    .refine((v) => { const d = new Date(v); return !isNaN(d.getTime()) && d < new Date() && d > new Date("1900-01-01"); }, "Data inválida"),
+  guardian_name: z.string().trim().max(80).optional().or(z.literal("")),
+  guardian_email: z.string().trim().email("E-mail do responsável inválido").max(255).optional().or(z.literal("")),
 });
 
 const resetSchema = z.object({
@@ -52,9 +58,15 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showReset, setShowReset] = useState(false);
+
+  const ag = birthDate ? computeAgeGroup(birthDate) : null;
+  const willBeMinor = isMinor(ag);
 
   if (!loading && session) return <Navigate to="/home" />;
 
