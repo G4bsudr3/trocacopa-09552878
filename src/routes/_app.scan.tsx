@@ -404,21 +404,20 @@ function Scan() {
                           : "Capa do álbum"}
                   </p>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex">
                   <button
-                    onClick={() => register(s.code, false)}
-                    disabled={owned}
-                    className={`px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 ${
-                      owned ? "bg-surface text-muted-foreground" : "gradient-primary text-primary-foreground"
+                    onClick={() => registerProgressive(s.code)}
+                    className={`px-3 py-2 rounded-full text-xs font-bold flex items-center gap-1 active:scale-95 transition ${
+                      dup === 0
+                        ? "gradient-primary text-primary-foreground"
+                        : "bg-gold text-gold-foreground"
                     }`}
                   >
-                    <Check size={12} /> {owned ? "✓" : "Tenho"}
-                  </button>
-                  <button
-                    onClick={() => register(s.code, true)}
-                    className="px-3 py-2 rounded-full bg-gold text-gold-foreground text-xs font-bold flex items-center gap-1"
-                  >
-                    <Repeat size={12} /> Rep.
+                    {dup === 0 ? (
+                      <><Check size={12} /> Tenho</>
+                    ) : (
+                      <><Repeat size={12} /> +1 ({dup + 1}x)</>
+                    )}
                   </button>
                 </div>
               </div>
