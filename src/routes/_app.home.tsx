@@ -22,6 +22,7 @@ function Home() {
   const dups = useQuery({
     queryKey: ["album-dups", user?.id],
     enabled: !!user,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data } = await supabase.from("user_stickers").select("duplicates").eq("user_id", user!.id);
       return (data ?? []).reduce((a, r: any) => a + Math.max(0, r.duplicates - 1), 0);
@@ -31,8 +32,9 @@ function Home() {
   const unread = useUnreadNotifications();
 
   const featured = useQuery({
-    queryKey: ["featured-match", user?.id, profile?.lat, profile?.lng, profile?.city],
+    queryKey: ["featured-match", user?.id],
     enabled: !!user,
+    staleTime: 2 * 60_000,
     queryFn: async () => {
       const { data } = await supabase.rpc("match_collectors", { _radius_km: 50 });
       return ((data ?? []) as any[]).slice(0, 5);
