@@ -45,6 +45,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(data as Profile | null);
   };
 
+  const consumePendingInvite = async () => {
+    if (typeof window === "undefined") return;
+    const code = localStorage.getItem("pendingInvite");
+    if (!code) return;
+    try {
+      const { data, error } = await supabase.rpc("accept_invite", { _code: code });
+      if (error) return;
+      const res = data as { ok?: boolean; error?: string } | null;
+      if (res?.ok) {
+        const { toast } = await import("sonner");
+        toast.success("Você ganhou um novo amigo no TrocaCopa! 🎉");
+      }
+    } finally {
+      localStorage.removeItem("pendingInvite");
+    }
+  };
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
