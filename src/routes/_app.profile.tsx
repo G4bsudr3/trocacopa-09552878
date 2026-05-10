@@ -202,7 +202,11 @@ function Profile() {
         </button>
       </div>
 
-      <InviteFriendSheet open={inviteOpen} onOpenChange={setInviteOpen} />
+      {inviteOpen && (
+        <Suspense fallback={null}>
+          <InviteFriendSheet open={inviteOpen} onOpenChange={setInviteOpen} />
+        </Suspense>
+      )}
     </div>
   );
 }
