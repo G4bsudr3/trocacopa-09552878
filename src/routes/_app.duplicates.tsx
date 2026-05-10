@@ -185,7 +185,7 @@ function Duplicates() {
 
       {/* Sticky CTA */}
       {dupAll.length > 0 && (
-        <div className="fixed bottom-24 inset-x-0 z-40 px-5">
+        <div className="fixed bottom-24 md:static md:bottom-auto md:mt-6 inset-x-0 z-40 px-5">
           <div className="max-w-3xl mx-auto">
             <Link
               to="/near"
