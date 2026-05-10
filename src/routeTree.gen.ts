@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as ConsentTokenRouteImport } from './routes/consent.$token'
 import { Route as AppTradesRouteImport } from './routes/_app.trades'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -52,6 +53,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsentTokenRoute = ConsentTokenRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
   '/consent/$token': typeof ConsentTokenRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
   '/consent/$token': typeof ConsentTokenRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/trades': typeof AppTradesRoute
   '/consent/$token': typeof ConsentTokenRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/_app/admin/stickers': typeof AppAdminStickersRoute
   '/_app/profile/edit': typeof AppProfileEditRoute
   '/_app/trade/$id': typeof AppTradeIdRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/trades'
     | '/consent/$token'
+    | '/invite/$code'
     | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/trades'
     | '/consent/$token'
+    | '/invite/$code'
     | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/trades'
     | '/consent/$token'
+    | '/invite/$code'
     | '/_app/admin/stickers'
     | '/_app/profile/edit'
     | '/_app/trade/$id'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SegurancaRoute: typeof SegurancaRoute
   ConsentTokenRoute: typeof ConsentTokenRoute
+  InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicHooksScanMatchAlertsRoute: typeof ApiPublicHooksScanMatchAlertsRoute
 }
 
@@ -308,6 +321,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consent/$token': {
@@ -469,8 +489,19 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SegurancaRoute: SegurancaRoute,
   ConsentTokenRoute: ConsentTokenRoute,
+  InviteCodeRoute: InviteCodeRoute,
   ApiPublicHooksScanMatchAlertsRoute: ApiPublicHooksScanMatchAlertsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
