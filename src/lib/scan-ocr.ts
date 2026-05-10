@@ -60,7 +60,6 @@ export async function ocrAlbumPage(
       }
     },
     // Restrict to alphanumerics + space; speeds up and reduces noise.
-    // @ts-expect-error tessedit_char_whitelist is a runtime-supported param
     tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ",
   } as Parameters<typeof Tesseract.recognize>[2]);
 
