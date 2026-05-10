@@ -125,7 +125,25 @@ Deno.serve(async (req) => {
   const onlyMissingNames: boolean = body.only_missing_names === true;
   const onlyCodes: string[] | null = Array.isArray(body.only_codes) && body.only_codes.length ? body.only_codes : null;
   const force: boolean = body.force === true;
+  const wipeImages: boolean = body.wipe_images === true;
   const limit: number = Math.max(1, Math.min(500, Number(body.limit) || 200));
+
+  let wiped = 0;
+  if (wipeImages) {
+    // List & delete all objects in sticker-images bucket
+    let offset = 0;
+    while (true) {
+      const { data: list, error: listErr } = await admin.storage.from("sticker-images").list("", { limit: 1000, offset });
+      if (listErr) break;
+      if (!list || list.length === 0) break;
+      const paths = list.map((o) => o.name);
+      const { error: rmErr } = await admin.storage.from("sticker-images").remove(paths);
+      if (rmErr) break;
+      wiped += paths.length;
+      if (list.length < 1000) break;
+    }
+    await admin.from("stickers").update({ image_url: null }).not("code", "is", null);
+  }
 
   // Preload existing flag/country data
   const { data: existing } = await admin.from("stickers").select("code,country_code,flag_emoji,country_name,player_name,player_name_source,image_url");
