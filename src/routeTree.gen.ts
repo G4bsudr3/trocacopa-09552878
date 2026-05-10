@@ -23,6 +23,7 @@ import { Route as AppProRouteImport } from './routes/_app.pro'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppNearRouteImport } from './routes/_app.near'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
+import { Route as AppDuplicatesRouteImport } from './routes/_app.duplicates'
 import { Route as AppAlbumRouteImport } from './routes/_app.album'
 import { Route as AppTradeIdRouteImport } from './routes/_app.trade.$id'
 import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
@@ -98,6 +99,11 @@ const AppHomeRoute = AppHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDuplicatesRoute = AppDuplicatesRouteImport.update({
+  id: '/duplicates',
+  path: '/duplicates',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAlbumRoute = AppAlbumRouteImport.update({
   id: '/album',
   path: '/album',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
   '/album': typeof AppAlbumRoute
+  '/duplicates': typeof AppDuplicatesRoute
   '/home': typeof AppHomeRoute
   '/near': typeof AppNearRoute
   '/notifications': typeof AppNotificationsRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
   '/album': typeof AppAlbumRoute
+  '/duplicates': typeof AppDuplicatesRoute
   '/home': typeof AppHomeRoute
   '/near': typeof AppNearRoute
   '/notifications': typeof AppNotificationsRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
   '/_app/album': typeof AppAlbumRoute
+  '/_app/duplicates': typeof AppDuplicatesRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/near': typeof AppNearRoute
   '/_app/notifications': typeof AppNotificationsRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/seguranca'
     | '/album'
+    | '/duplicates'
     | '/home'
     | '/near'
     | '/notifications'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/seguranca'
     | '/album'
+    | '/duplicates'
     | '/home'
     | '/near'
     | '/notifications'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/seguranca'
     | '/_app/album'
+    | '/_app/duplicates'
     | '/_app/home'
     | '/_app/near'
     | '/_app/notifications'
@@ -361,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHomeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/duplicates': {
+      id: '/_app/duplicates'
+      path: '/duplicates'
+      fullPath: '/duplicates'
+      preLoaderRoute: typeof AppDuplicatesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/album': {
       id: '/_app/album'
       path: '/album'
@@ -413,6 +432,7 @@ const AppProfileRouteWithChildren = AppProfileRoute._addFileChildren(
 
 interface AppRouteChildren {
   AppAlbumRoute: typeof AppAlbumRoute
+  AppDuplicatesRoute: typeof AppDuplicatesRoute
   AppHomeRoute: typeof AppHomeRoute
   AppNearRoute: typeof AppNearRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
@@ -427,6 +447,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAlbumRoute: AppAlbumRoute,
+  AppDuplicatesRoute: AppDuplicatesRoute,
   AppHomeRoute: AppHomeRoute,
   AppNearRoute: AppNearRoute,
   AppNotificationsRoute: AppNotificationsRoute,
@@ -453,3 +474,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
