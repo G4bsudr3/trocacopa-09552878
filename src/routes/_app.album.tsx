@@ -216,7 +216,7 @@ function Album() {
                             key={s.code}
                             s={s as Sticker}
                             onTap={() => onCellTap(s as Sticker)}
-                            onLong={() => setSelected(s as Sticker)}
+                            onLong={() => onCellLong(s as Sticker)}
                           />
                         ))}
                       </div>
@@ -245,7 +245,7 @@ function Album() {
           </p>
           <div className="grid grid-cols-5 md:grid-cols-8 gap-2">
             {specials.map((s) => (
-              <StickerCell key={s.code} s={s} onTap={() => onCellTap(s)} onLong={() => setSelected(s)} />
+              <StickerCell key={s.code} s={s} onTap={() => onCellTap(s)} onLong={() => onCellLong(s)} />
             ))}
           </div>
           {specials.length === 0 && (
