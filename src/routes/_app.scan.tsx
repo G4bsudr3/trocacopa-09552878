@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Check, Repeat, Search, Loader2, Sparkles, X } from "lucide-react";
+import { Camera, Check, Repeat, Search, Loader2, Sparkles, X, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
 import { useStickerCatalog, type StickerCatalogItem } from "@/lib/stickers";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { uploadContribution } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/scan")({
   head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
