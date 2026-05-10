@@ -60,8 +60,14 @@ function EditProfile() {
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     setAvatarUrl(data.publicUrl);
+    if (donateAvatar && canDonate) {
+      const r = await uploadContribution(file, "avatar");
+      if (r) toast.success("Avatar enviado · obrigado pela doação 💙");
+      else toast.success("Avatar enviado");
+    } else {
+      toast.success("Avatar enviado");
+    }
     setUploading(false);
-    toast.success("Avatar enviado");
   };
 
   const useGps = () => {
