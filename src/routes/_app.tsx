@@ -65,7 +65,7 @@ function AppLayout() {
       )
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user, profile?.notification_prefs, nav]);
+  }, [user?.id, nav]);
 
   if (loading) {
     return (
