@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Camera, Check, Repeat, Search, Loader2, Sparkles, X, Gift } from "lucide-react";
 import { toast } from "sonner";
