@@ -9,10 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConsentTokenRouteImport } from './routes/consent.$token'
 import { Route as AppTradesRouteImport } from './routes/_app.trades'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppScanRouteImport } from './routes/_app.scan'
@@ -27,6 +29,11 @@ import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
 import { Route as AppAdminStickersRouteImport } from './routes/_app.admin.stickers'
 import { Route as ApiPublicHooksScanMatchAlertsRouteImport } from './routes/api/public/hooks/scan-match-alerts'
 
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -44,6 +51,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsentTokenRoute = ConsentTokenRouteImport.update({
+  id: '/consent/$token',
+  path: '/consent/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppTradesRoute = AppTradesRouteImport.update({
@@ -117,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/seguranca': typeof SegurancaRoute
   '/album': typeof AppAlbumRoute
   '/home': typeof AppHomeRoute
   '/near': typeof AppNearRoute
@@ -126,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
+  '/consent/$token': typeof ConsentTokenRoute
   '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
@@ -135,6 +149,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/seguranca': typeof SegurancaRoute
   '/album': typeof AppAlbumRoute
   '/home': typeof AppHomeRoute
   '/near': typeof AppNearRoute
@@ -144,6 +159,7 @@ export interface FileRoutesByTo {
   '/scan': typeof AppScanRoute
   '/settings': typeof AppSettingsRoute
   '/trades': typeof AppTradesRoute
+  '/consent/$token': typeof ConsentTokenRoute
   '/admin/stickers': typeof AppAdminStickersRoute
   '/profile/edit': typeof AppProfileEditRoute
   '/trade/$id': typeof AppTradeIdRoute
@@ -155,6 +171,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/seguranca': typeof SegurancaRoute
   '/_app/album': typeof AppAlbumRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/near': typeof AppNearRoute
@@ -164,6 +181,7 @@ export interface FileRoutesById {
   '/_app/scan': typeof AppScanRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/trades': typeof AppTradesRoute
+  '/consent/$token': typeof ConsentTokenRoute
   '/_app/admin/stickers': typeof AppAdminStickersRoute
   '/_app/profile/edit': typeof AppProfileEditRoute
   '/_app/trade/$id': typeof AppTradeIdRoute
@@ -175,6 +193,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/reset-password'
+    | '/seguranca'
     | '/album'
     | '/home'
     | '/near'
@@ -184,6 +203,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/trades'
+    | '/consent/$token'
     | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
@@ -193,6 +213,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/reset-password'
+    | '/seguranca'
     | '/album'
     | '/home'
     | '/near'
@@ -202,6 +223,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/settings'
     | '/trades'
+    | '/consent/$token'
     | '/admin/stickers'
     | '/profile/edit'
     | '/trade/$id'
@@ -212,6 +234,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/reset-password'
+    | '/seguranca'
     | '/_app/album'
     | '/_app/home'
     | '/_app/near'
@@ -221,6 +244,7 @@ export interface FileRouteTypes {
     | '/_app/scan'
     | '/_app/settings'
     | '/_app/trades'
+    | '/consent/$token'
     | '/_app/admin/stickers'
     | '/_app/profile/edit'
     | '/_app/trade/$id'
@@ -232,11 +256,20 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SegurancaRoute: typeof SegurancaRoute
+  ConsentTokenRoute: typeof ConsentTokenRoute
   ApiPublicHooksScanMatchAlertsRoute: typeof ApiPublicHooksScanMatchAlertsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -263,6 +296,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consent/$token': {
+      id: '/consent/$token'
+      path: '/consent/$token'
+      fullPath: '/consent/$token'
+      preLoaderRoute: typeof ConsentTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/trades': {
@@ -406,6 +446,8 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SegurancaRoute: SegurancaRoute,
+  ConsentTokenRoute: ConsentTokenRoute,
   ApiPublicHooksScanMatchAlertsRoute: ApiPublicHooksScanMatchAlertsRoute,
 }
 export const routeTree = rootRouteImport
