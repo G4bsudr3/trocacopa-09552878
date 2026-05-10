@@ -109,7 +109,7 @@ Return STRICT JSON:
 
     const data = await aiRes.json();
     const content = data?.choices?.[0]?.message?.content ?? "{}";
-    let parsed: { slots?: Array<{ code: string; status: string }>; page_hint?: string } = {};
+    let parsed: { slots?: Array<{ code: string; status: string }>; page_hint?: string; country_code?: string } = {};
     try {
       parsed = JSON.parse(content);
     } catch {
@@ -130,6 +130,7 @@ Return STRICT JSON:
         filled: [...filledSet],
         empty: [...emptySet],
         page_hint: parsed.page_hint ?? null,
+        country_code: parsed.country_code ?? null,
       }),
       { headers: { ...cors, "Content-Type": "application/json" } },
     );
