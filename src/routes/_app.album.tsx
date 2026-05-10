@@ -72,6 +72,16 @@ function Album() {
     }
   };
 
+  const onCellLong = (s: Sticker) => {
+    if (s.duplicates > 1) {
+      removeDuplicate(s.code);
+      const next = s.duplicates - 1;
+      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`);
+    } else {
+      setSelected(s);
+    }
+  };
+
   return (
     <div className="px-5 pt-4 max-w-3xl mx-auto pb-10">
       <div className="flex items-center justify-between gap-2 pr-14 md:pr-0">
