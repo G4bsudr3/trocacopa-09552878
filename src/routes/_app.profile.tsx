@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TOTAL_STICKERS } from "@/lib/stickers";
-import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon } from "lucide-react";
+import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useAlbum } from "@/lib/use-album";
 
 export const Route = createFileRoute("/_app/profile")({
   head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
