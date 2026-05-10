@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadNotifications } from "@/lib/use-unread-notifications";
 import { AgeGate } from "@/components/AgeGate";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -67,18 +69,27 @@ function AppLayout() {
   if (!session) return <Navigate to="/login" />;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <NotificationBell />
-      <main className="flex-1 pb-24">
-        <Outlet />
-      </main>
-      <BottomNav />
-      <AgeGate />
-    </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="hidden md:flex h-12 items-center justify-between border-b border-border/50 px-3 sticky top-0 z-30 bg-background/80 backdrop-blur">
+            <SidebarTrigger />
+            <NotificationBell inline />
+          </header>
+          <NotificationBell />
+          <main className="flex-1 pb-24 md:pb-6">
+            <Outlet />
+          </main>
+          <BottomNav />
+        </div>
+        <AgeGate />
+      </div>
+    </SidebarProvider>
   );
 }
 
-function NotificationBell() {
+function NotificationBell({ inline = false }: { inline?: boolean }) {
   const loc = useLocation();
   const { total, top } = useUnreadNotifications();
   if (loc.pathname.startsWith("/notifications")) return null;
@@ -86,11 +97,14 @@ function NotificationBell() {
     top === "matches" ? "bg-gold text-gold-foreground"
     : top === "messages" ? "bg-accent text-accent-foreground"
     : "bg-primary text-primary-foreground";
+  const base = inline
+    ? "relative w-10 h-10 rounded-full glass flex items-center justify-center active:scale-95 transition"
+    : "md:hidden fixed top-3 right-3 z-50 w-11 h-11 rounded-full glass-strong flex items-center justify-center active:scale-95 transition shadow-card";
   return (
     <Link
       to="/notifications"
       aria-label={`Notificações${total > 0 ? ` (${total} não lidas)` : ""}`}
-      className="fixed top-3 right-3 z-50 w-11 h-11 rounded-full glass-strong flex items-center justify-center active:scale-95 transition shadow-card"
+      className={base}
     >
       <Bell size={18} />
       {total > 0 && (
@@ -116,7 +130,7 @@ const tabs: Tab[] = [
 function BottomNav() {
   const loc = useLocation();
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 safe-bottom">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 safe-bottom">
       <div className="mx-auto max-w-2xl px-3 pb-2">
         <div className="glass-strong rounded-3xl flex items-end justify-around px-2 py-2 shadow-card">
           {tabs.map(({ to, icon: Icon, label, center }) => {
