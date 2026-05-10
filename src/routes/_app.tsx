@@ -19,8 +19,12 @@ function AppLayout() {
   useEffect(() => {
     if (!user) return;
     const prefs = (profile?.notification_prefs as { trades?: boolean; messages?: boolean; matches?: boolean } | null) ?? {};
+    const name = `notif-toast-${user.id}`;
+    supabase.getChannels().forEach((c) => {
+      if (c.topic === `realtime:${name}` || c.topic === name) supabase.removeChannel(c);
+    });
     const ch = supabase
-      .channel(`notif-toast-${user.id}`)
+      .channel(name)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
