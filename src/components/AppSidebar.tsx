@@ -81,7 +81,7 @@ export function AppSidebar() {
             <SidebarMenuButton asChild isActive={isActive("/profile")} tooltip="Perfil">
               <Link to="/profile">
                 <User />
-                <span className="truncate">{profile?.username ?? "Perfil"}</span>
+                <span className="truncate">{profile?.full_name ?? "Perfil"}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
