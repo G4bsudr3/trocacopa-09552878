@@ -19,8 +19,21 @@ function Profile() {
   const { profile, user, signOut } = useAuth();
   const nav = useNavigate();
   const { stickers } = useAlbum();
+  const [inviteOpen, setInviteOpen] = useState(false);
   const dupUnique = stickers.filter((s) => s.duplicates > 1).length;
   const dupExtras = stickers.reduce((a, s) => a + Math.max(0, s.duplicates - 1), 0);
+
+  const friendsCount = useQuery({
+    queryKey: ["friends-count", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("friendships")
+        .select("id", { count: "exact", head: true })
+        .or(`user_a.eq.${user!.id},user_b.eq.${user!.id}`);
+      return count ?? 0;
+    },
+  });
 
   const stats = useQuery({
     queryKey: ["profile-stats", user?.id],
