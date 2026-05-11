@@ -137,12 +137,7 @@ function Album() {
             <Repeat2 size={12} /> Repetidas
           </Link>
           <button
-            onClick={() => {
-              if (confirm("Tem certeza que deseja resetar todo o álbum?")) {
-                reset();
-                toast.success("Álbum reiniciado");
-              }
-            }}
+            onClick={() => setResetOpen(true)}
             className="text-xs text-muted-foreground flex items-center gap-1 px-3 py-1.5 rounded-full glass"
           >
             <RotateCcw size={12} /> Resetar
