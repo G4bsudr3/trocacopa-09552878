@@ -55,14 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!code) return;
     try {
       const { data, error } = await supabase.rpc("accept_invite", { _code: code });
-      if (error) return;
-      const res = data as { ok?: boolean; error?: string } | null;
-      if (res?.ok) {
-        const { toast } = await import("sonner");
-        toast.success("Você ganhou um novo amigo no TrocaCopa! 🎉");
+      if (!error) {
+        localStorage.removeItem("pendingInvite");
+        const res = data as { ok?: boolean; error?: string } | null;
+        if (res?.ok) {
+          const { toast } = await import("sonner");
+          toast.success("Você ganhou um novo amigo no TrocaCopa! 🎉");
+        }
       }
-    } finally {
-      localStorage.removeItem("pendingInvite");
+    } catch {
+      // network error — keep code in localStorage for retry on next session
     }
   };
 
@@ -77,9 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
-      if (data.session?.user) fetchProfile(data.session.user.id);
+      if (data.session?.user) await fetchProfile(data.session.user.id);
       setLoading(false);
     });
 
