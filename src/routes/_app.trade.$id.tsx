@@ -45,6 +45,7 @@ function Trade() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [confettiOn, setConfettiOn] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<TradeRow["status"] | null>(null);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (navTimerRef.current) clearTimeout(navTimerRef.current); }, []);
