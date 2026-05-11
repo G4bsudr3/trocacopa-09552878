@@ -372,7 +372,7 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
           <button onClick={() => fileRef.current?.click()} disabled={busy} className="px-4 py-2 rounded-full glass text-sm font-semibold flex items-center gap-2">
             <Upload size={14} /> Trocar imagem
           </button>
-          <button onClick={remove} disabled={busy} className="ml-auto px-4 py-2 rounded-full text-destructive border border-destructive/40 text-sm">
+          <button onClick={() => setConfirmRemove(true)} disabled={busy} className="ml-auto px-4 py-2 rounded-full text-destructive border border-destructive/40 text-sm">
             Excluir
           </button>
           <button onClick={onClose} className="px-4 py-2 rounded-full glass text-sm">Fechar</button>
