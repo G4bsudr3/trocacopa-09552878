@@ -428,6 +428,28 @@ function Album() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar álbum?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai apagar todas as figurinhas e repetidas que você marcou. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                reset();
+                toast.success("Álbum reiniciado");
+              }}
+            >
+              Resetar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
