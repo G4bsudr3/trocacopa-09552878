@@ -152,7 +152,7 @@ function AdminStickers() {
         <span className="text-xs text-muted-foreground">{filtered.length}/{rows.length}</span>
         <div className="ml-auto flex gap-2 flex-wrap">
           <button
-            onClick={() => runImportLoop(false)}
+            onClick={() => setConfirmImport({ force: false })}
             disabled={importing}
             className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
             title="Importa só o que falta. Pula o que já tem nome + imagem."
@@ -161,7 +161,7 @@ function AdminStickers() {
             {importing ? (progress || "Importando...") : "Importar faltantes"}
           </button>
           <button
-            onClick={() => runImportLoop(true)}
+            onClick={() => setConfirmImport({ force: true })}
             disabled={importing}
             className="px-3 py-2 rounded-full glass text-xs font-semibold disabled:opacity-50"
             title="Reimporta tudo, inclusive imagens já enviadas"
