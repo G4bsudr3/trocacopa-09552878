@@ -162,11 +162,11 @@ function Home() {
         {featured.isLoading ? (
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="min-w-[200px] h-28 bg-surface rounded-xl animate-pulse shrink-0" />
+              <div key={i} className="min-w-[200px] h-28 bg-surface rounded-2xl animate-pulse shrink-0" />
             ))}
           </div>
         ) : (featured.data ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground card rounded-xl p-4 text-center">
+          <p className="text-sm text-muted-foreground card rounded-2xl p-4 text-center">
             Ninguém por perto ainda.
           </p>
         ) : (
@@ -175,7 +175,7 @@ function Home() {
               <Link
                 key={c.id}
                 to="/near"
-                className="min-w-[190px] card rounded-xl p-3 shrink-0 active:scale-[0.97] transition"
+                className="min-w-[190px] card rounded-2xl p-3 shrink-0 active:scale-[0.97] transition"
               >
                 <div className="flex items-center gap-2.5 mb-3">
                   <div className="w-9 h-9 rounded-lg overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground text-sm shrink-0">
