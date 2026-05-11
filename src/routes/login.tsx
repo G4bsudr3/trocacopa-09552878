@@ -13,6 +13,8 @@ import { useAuth } from "@/lib/auth";
 import { computeAgeGroup, isMinor } from "@/lib/age";
 import { Link } from "@tanstack/react-router";
 import { LocationSelect } from "@/components/location-select";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -198,6 +200,23 @@ function LoginPage() {
 
   const handleGoogle = async () => {
     setBusy(true);
+
+    if (Capacitor.isNativePlatform()) {
+      // Native Android: Google blocks OAuth in WebViews — open Chrome instead
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: "trocacopa://auth/callback",
+          skipBrowserRedirect: true,
+        },
+      });
+      setBusy(false);
+      if (error || !data.url) return toast.error("Erro ao iniciar login com Google");
+      await Browser.open({ url: data.url });
+      return;
+    }
+
+    // Web
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/home`,
     });

@@ -1,6 +1,7 @@
 ﻿import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from "@capacitor/core";
 
 type Profile = {
   id: string;
@@ -85,7 +86,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => sub.subscription.unsubscribe();
+    // Native Android: handle OAuth deep link callback (trocacopa://auth/callback)
+    let appListenerCleanup: (() => void) | undefined;
+    if (Capacitor.isNativePlatform()) {
+      import("@capacitor/app").then(({ App }) => {
+        App.addListener("appUrlOpen", async ({ url }) => {
+          if (!url.startsWith("trocacopa://auth/callback")) return;
+          // PKCE flow: ?code=...
+          const urlObj = new URL(url);
+          const code = urlObj.searchParams.get("code");
+          if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) console.error("[Auth] exchangeCodeForSession:", error.message);
+            return;
+          }
+          // Implicit flow: #access_token=...
+          const hash = url.split("#")[1];
+          if (hash) {
+            const params = new URLSearchParams(hash);
+            const access_token = params.get("access_token");
+            const refresh_token = params.get("refresh_token");
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({ access_token, refresh_token });
+            }
+          }
+        }).then((handle) => {
+          appListenerCleanup = () => handle.remove();
+        });
+      });
+    }
+
+    return () => {
+      sub.subscription.unsubscribe();
+      appListenerCleanup?.();
+    };
   }, []);
 
   return (
