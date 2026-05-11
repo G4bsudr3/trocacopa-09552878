@@ -156,7 +156,24 @@ function Profile() {
       )}
 
       <section className="mt-6">
-        <h3 className="font-display text-xl mb-3">Avaliações</h3>
+        {(() => {
+          const reviews = stats.data?.reviews ?? [];
+          const avg = reviews.length
+            ? reviews.reduce((a: number, r: any) => a + (r.stars || 0), 0) / reviews.length
+            : 0;
+          return (
+            <div className="flex items-end justify-between mb-3">
+              <h3 className="font-display text-xl">Avaliações</h3>
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Star size={14} className="fill-gold text-gold" />
+                  <span className="font-bold">{avg.toFixed(1)}</span>
+                  <span className="text-muted-foreground">· {reviews.length}{reviews.length === 10 ? "+" : ""}</span>
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {stats.isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 2 }).map((_, i) => (
