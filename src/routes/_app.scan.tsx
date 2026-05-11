@@ -343,7 +343,7 @@ function Scan() {
                       : result.kind === "history"
                         ? "FIFA World Cup History"
                         : result.kind === "special"
-                          ? "Coca-Cola"
+                          ? "Especial"
                           : "Capa do álbum"}
                 </p>
               </div>
@@ -432,6 +432,15 @@ function Scan() {
           placeholder="Ex: BRA10, FWC7 ou Brasil"
           className="flex-1 bg-transparent outline-none text-sm"
         />
+        {query && (
+          <button
+            onClick={() => setQuery("")}
+            aria-label="Limpar busca"
+            className="text-muted-foreground hover:text-foreground active:scale-90 transition"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {suggestions.length > 0 && (
@@ -512,9 +521,9 @@ function Scan() {
                         ? `Grupo ${s.group_letter} · pos ${s.position}`
                         : s.kind === "history"
                           ? "FIFA World Cup History"
-                          : s.kind === "special"
-                            ? "Coca-Cola"
-                            : "Capa do álbum"}
+                        : s.kind === "special"
+                          ? "Especial"
+                          : "Capa do álbum"}
                   </p>
                 </div>
                 <div className="flex">
