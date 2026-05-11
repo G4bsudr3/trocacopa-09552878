@@ -101,12 +101,9 @@ function AdminStickers() {
 
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState<string>("");
+  const [confirmImport, setConfirmImport] = useState<null | { force: boolean }>(null);
 
   const runImportLoop = async (force = false) => {
-    const msg = force
-      ? "Reimportar TUDO (vai re-baixar imagens já enviadas). Confirma?"
-      : "Importar figurinhas faltantes do Central da Copa? Pula o que já está pronto.";
-    if (!confirm(msg)) return;
     setImporting(true);
     const t = toast.loading("Iniciando importação...");
     let totalInserted = 0, totalUpdated = 0, totalImg = 0, totalFail = 0;
