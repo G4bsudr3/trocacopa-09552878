@@ -30,6 +30,7 @@ function Trades() {
   const trades = useQuery({
     queryKey: ["my-trades", user?.id],
     enabled: !!user,
+    staleTime: 30_000,
     queryFn: async (): Promise<TradeWithProfiles[]> => {
       const { data, error } = await supabase
         .from("trades")

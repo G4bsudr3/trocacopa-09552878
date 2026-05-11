@@ -159,13 +159,18 @@ function Album() {
 
       {/* Search */}
       <div className="flex items-center gap-3 bg-input rounded-full px-4 py-3 mt-3 border border-transparent focus-within:border-primary">
-        <Search size={18} className="text-muted-foreground" />
+        <Search size={18} className="text-muted-foreground shrink-0" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Buscar por código (BRA10) ou país..."
           className="flex-1 bg-transparent outline-none text-sm"
         />
+        {q && (
+          <button onClick={() => setQ("")} aria-label="Limpar busca" className="text-muted-foreground hover:text-foreground transition shrink-0">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -276,7 +281,7 @@ function Album() {
 
       <div className="mt-4 glass rounded-2xl px-4 py-3 space-y-2">
         <p className="text-[11px] text-muted-foreground text-center">
-          Toque para marcar/somar repetida · toque longo remove repetida ou tira do álbum · use "Desfazer" no aviso se errar
+          Toque para marcar/somar repetida · toque longo abre a ficha da figurinha · use "Desfazer" no aviso se errar
         </p>
         <div className="flex items-center justify-center gap-3 text-[10px]">
           <span className="flex items-center gap-1.5">
