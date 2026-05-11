@@ -233,6 +233,25 @@ function Settings() {
       <p className="text-center text-[10px] text-muted-foreground mt-8">
         TrocaCopa © {new Date().getFullYear()}
       </p>
+
+      <ConfirmDialog
+        open={confirmDeleteContribs}
+        onOpenChange={setConfirmDeleteContribs}
+        title="Apagar contribuições?"
+        description="Todas as fotos que você doou serão removidas. Esta ação não pode ser desfeita."
+        confirmLabel="Apagar"
+        destructive
+        onConfirm={onDeleteContribs}
+      />
+      <ConfirmDialog
+        open={confirmDeleteAccount}
+        onOpenChange={setConfirmDeleteAccount}
+        title="Excluir sua conta?"
+        description="Sua conta, álbum e histórico serão removidos permanentemente. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir conta"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
