@@ -212,7 +212,7 @@ function Settings() {
         </div>
         {contribCount > 0 && (
           <button
-            onClick={onDeleteContribs}
+            onClick={() => setConfirmDeleteContribs(true)}
             disabled={contribBusy}
             className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left text-destructive border border-destructive/30"
           >
