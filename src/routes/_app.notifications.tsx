@@ -78,6 +78,7 @@ function Notifs() {
   const { filter } = Route.useSearch();
   const navigate = useNavigate({ from: "/notifications" });
   const unread = useUnreadNotifications();
+  const [confirmClear, setConfirmClear] = useState(false);
   const setFilter = (f: Filter) =>
     navigate({ search: { filter: f } });
 
