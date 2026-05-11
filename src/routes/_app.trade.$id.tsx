@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useStickerCatalog } from "@/lib/stickers";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_app/trade/$id")({
   head: () => ({ meta: [{ title: "Troca — TrocaCopa" }] }),
@@ -44,6 +45,7 @@ function Trade() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [confettiOn, setConfettiOn] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<TradeRow["status"] | null>(null);
   const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (navTimerRef.current) clearTimeout(navTimerRef.current); }, []);
@@ -130,16 +132,17 @@ function Trade() {
     }
   };
 
+  const requestStatus = (status: TradeRow["status"]) => {
+    if (actionBusy) return;
+    if (status === "completed" || status === "cancelled") {
+      setPendingStatus(status);
+      return;
+    }
+    void updateStatus(status);
+  };
+
   const updateStatus = async (status: TradeRow["status"]) => {
     if (actionBusy) return;
-    if (status === "completed") {
-      const ok = window.confirm("Confirmar que a troca foi realizada presencialmente?");
-      if (!ok) return;
-    }
-    if (status === "cancelled") {
-      const ok = window.confirm("Cancelar esta troca? Essa ação não pode ser desfeita.");
-      if (!ok) return;
-    }
     setActionBusy(true);
     const { error } = await supabase.from("trades").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     setActionBusy(false);
@@ -205,14 +208,14 @@ function Trade() {
       {t.status === "pending" && isReceiver && (
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button
-            onClick={() => updateStatus("accepted")}
+            onClick={() => requestStatus("accepted")}
             disabled={actionBusy}
             className="gradient-primary text-primary-foreground rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Aceitar
           </button>
           <button
-            onClick={() => updateStatus("declined")}
+            onClick={() => requestStatus("declined")}
             disabled={actionBusy}
             className="glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
@@ -223,7 +226,7 @@ function Trade() {
 
       {t.status === "pending" && !isReceiver && (
         <button
-          onClick={() => updateStatus("cancelled")}
+          onClick={() => requestStatus("cancelled")}
           disabled={actionBusy}
           className="w-full mt-3 glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
         >
@@ -234,14 +237,14 @@ function Trade() {
       {t.status === "accepted" && (
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button
-            onClick={() => updateStatus("completed")}
+            onClick={() => requestStatus("completed")}
             disabled={actionBusy}
             className="gradient-primary text-primary-foreground rounded-full py-3 font-bold glow-primary flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={16} />} Concluída
           </button>
           <button
-            onClick={() => updateStatus("cancelled")}
+            onClick={() => requestStatus("cancelled")}
             disabled={actionBusy}
             className="glass border border-destructive/30 text-destructive rounded-full py-3 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
@@ -327,6 +330,31 @@ function Trade() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={pendingStatus === "completed"}
+        onOpenChange={(o) => !o && setPendingStatus(null)}
+        title="Confirmar troca realizada?"
+        description="Marque como concluída apenas após o encontro presencial. Vocês poderão se avaliar."
+        confirmLabel="Confirmar troca"
+        onConfirm={() => {
+          setPendingStatus(null);
+          void updateStatus("completed");
+        }}
+      />
+      <ConfirmDialog
+        open={pendingStatus === "cancelled"}
+        onOpenChange={(o) => !o && setPendingStatus(null)}
+        title="Cancelar esta troca?"
+        description="A outra pessoa será avisada e a troca será encerrada. Esta ação não pode ser desfeita."
+        confirmLabel="Cancelar troca"
+        cancelLabel="Voltar"
+        destructive
+        onConfirm={() => {
+          setPendingStatus(null);
+          void updateStatus("cancelled");
+        }}
+      />
     </div>
   );
 }

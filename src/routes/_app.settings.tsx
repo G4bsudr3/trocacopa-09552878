@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useTheme } from "@/lib/use-theme";
 import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
@@ -29,6 +30,8 @@ function Settings() {
   const [contribBusy, setContribBusy] = useState(false);
   const [prefsSaving, setPrefsSaving] = useState<keyof Prefs | null>(null);
   const [discoverableSaving, setDiscoverableSaving] = useState(false);
+  const [confirmDeleteContribs, setConfirmDeleteContribs] = useState(false);
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false);
   const serverPrefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
   const serverDiscoverable = profile?.discoverable !== false;
   const [localPrefs, setLocalPrefs] = useState<Prefs>(serverPrefs);
@@ -50,7 +53,6 @@ function Settings() {
   }, [user?.id]);
 
   const onDeleteContribs = async () => {
-    if (!confirm("Apagar todas as fotos que você doou?")) return;
     setContribBusy(true);
     const n = await deleteAllMyContributions();
     setContribBusy(false);
@@ -119,7 +121,6 @@ function Settings() {
 
   const handleDelete = async () => {
     if (!user) return;
-    if (!confirm("Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.")) return;
     setBusy(true);
     const { error } = await supabase.functions.invoke("delete-account");
     setBusy(false);
@@ -192,7 +193,7 @@ function Settings() {
           <LogOut size={18} /> <span className="flex-1 text-sm font-semibold">Sair</span>
         </button>
         <button
-          onClick={handleDelete}
+          onClick={() => setConfirmDeleteAccount(true)}
           disabled={busy}
           className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left text-destructive border border-destructive/30"
         >
@@ -211,7 +212,7 @@ function Settings() {
         </div>
         {contribCount > 0 && (
           <button
-            onClick={onDeleteContribs}
+            onClick={() => setConfirmDeleteContribs(true)}
             disabled={contribBusy}
             className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left text-destructive border border-destructive/30"
           >
@@ -232,6 +233,25 @@ function Settings() {
       <p className="text-center text-[10px] text-muted-foreground mt-8">
         TrocaCopa © {new Date().getFullYear()}
       </p>
+
+      <ConfirmDialog
+        open={confirmDeleteContribs}
+        onOpenChange={setConfirmDeleteContribs}
+        title="Apagar contribuições?"
+        description="Todas as fotos que você doou serão removidas. Esta ação não pode ser desfeita."
+        confirmLabel="Apagar"
+        destructive
+        onConfirm={onDeleteContribs}
+      />
+      <ConfirmDialog
+        open={confirmDeleteAccount}
+        onOpenChange={setConfirmDeleteAccount}
+        title="Excluir sua conta?"
+        description="Sua conta, álbum e histórico serão removidos permanentemente. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir conta"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

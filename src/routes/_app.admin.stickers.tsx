@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
 import { ChevronLeft, Loader2, Upload, Search, Download } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_app/admin/stickers")({
   head: () => ({ meta: [{ title: "Admin · Figurinhas" }] }),
@@ -100,12 +101,9 @@ function AdminStickers() {
 
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState<string>("");
+  const [confirmImport, setConfirmImport] = useState<null | { force: boolean }>(null);
 
   const runImportLoop = async (force = false) => {
-    const msg = force
-      ? "Reimportar TUDO (vai re-baixar imagens já enviadas). Confirma?"
-      : "Importar figurinhas faltantes do Central da Copa? Pula o que já está pronto.";
-    if (!confirm(msg)) return;
     setImporting(true);
     const t = toast.loading("Iniciando importação...");
     let totalInserted = 0, totalUpdated = 0, totalImg = 0, totalFail = 0;
@@ -154,7 +152,7 @@ function AdminStickers() {
         <span className="text-xs text-muted-foreground">{filtered.length}/{rows.length}</span>
         <div className="ml-auto flex gap-2 flex-wrap">
           <button
-            onClick={() => runImportLoop(false)}
+            onClick={() => setConfirmImport({ force: false })}
             disabled={importing}
             className="px-3 py-2 rounded-full gradient-primary text-primary-foreground text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
             title="Importa só o que falta. Pula o que já tem nome + imagem."
@@ -163,7 +161,7 @@ function AdminStickers() {
             {importing ? (progress || "Importando...") : "Importar faltantes"}
           </button>
           <button
-            onClick={() => runImportLoop(true)}
+            onClick={() => setConfirmImport({ force: true })}
             disabled={importing}
             className="px-3 py-2 rounded-full glass text-xs font-semibold disabled:opacity-50"
             title="Reimporta tudo, inclusive imagens já enviadas"
@@ -270,6 +268,24 @@ function AdminStickers() {
           onSaved={() => qc.invalidateQueries({ queryKey: ["admin-stickers"] })}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirmImport}
+        onOpenChange={(o) => !o && setConfirmImport(null)}
+        title={confirmImport?.force ? "Reimportar TUDO?" : "Importar faltantes?"}
+        description={
+          confirmImport?.force
+            ? "Vai re-baixar imagens já enviadas. Pode levar vários minutos."
+            : "Importa só o que falta do Central da Copa. Pula o que já tem nome + imagem."
+        }
+        confirmLabel={confirmImport?.force ? "Reimportar tudo" : "Importar"}
+        destructive={!!confirmImport?.force}
+        onConfirm={() => {
+          const f = !!confirmImport?.force;
+          setConfirmImport(null);
+          void runImportLoop(f);
+        }}
+      />
     </div>
   );
 }
@@ -285,6 +301,7 @@ function Stat({ label, value, ok, onClick }: { label: string; value: string; ok:
 
 function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; onSaved: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [country_name, setName] = useState(row.country_name);
   const [country_code, setCode] = useState(row.country_code);
   const [flag_emoji, setFlag] = useState(row.flag_emoji);
@@ -328,7 +345,6 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
   };
 
   const remove = async () => {
-    if (!confirm(`Excluir ${row.code}?`)) return;
     setBusy(true);
     const { error } = await supabase.from("stickers").delete().eq("code", row.code);
     setBusy(false);
@@ -374,13 +390,22 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
           <button onClick={() => fileRef.current?.click()} disabled={busy} className="px-4 py-2 rounded-full glass text-sm font-semibold flex items-center gap-2">
             <Upload size={14} /> Trocar imagem
           </button>
-          <button onClick={remove} disabled={busy} className="ml-auto px-4 py-2 rounded-full text-destructive border border-destructive/40 text-sm">
+          <button onClick={() => setConfirmRemove(true)} disabled={busy} className="ml-auto px-4 py-2 rounded-full text-destructive border border-destructive/40 text-sm">
             Excluir
           </button>
           <button onClick={onClose} className="px-4 py-2 rounded-full glass text-sm">Fechar</button>
         </div>
       </div>
       <style>{`.input{width:100%;background:transparent;border:1px solid hsl(var(--border));border-radius:.75rem;padding:.5rem .75rem;font-size:.875rem;outline:none}`}</style>
+      <ConfirmDialog
+        open={confirmRemove}
+        onOpenChange={setConfirmRemove}
+        title={`Excluir ${row.code}?`}
+        description="A figurinha será removida do catálogo. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        destructive
+        onConfirm={() => { setConfirmRemove(false); void remove(); }}
+      />
     </div>
   );
 }
