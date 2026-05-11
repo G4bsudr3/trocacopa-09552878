@@ -327,7 +327,6 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
   };
 
   const remove = async () => {
-    if (!confirm(`Excluir ${row.code}?`)) return;
     setBusy(true);
     const { error } = await supabase.from("stickers").delete().eq("code", row.code);
     setBusy(false);
