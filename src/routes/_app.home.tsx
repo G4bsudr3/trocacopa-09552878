@@ -193,7 +193,7 @@ function Home() {
                 <div className="flex items-end justify-between">
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Score</p>
-                    <p className="font-display text-2xl text-primary leading-none">{c.score_pct ?? 0}</p>
+                    <p className="font-display text-2xl text-primary leading-none">{c.score_pct ?? 0}<span className="text-sm">%</span></p>
                   </div>
                   {c.distance_km != null && (
                     <p className="text-[11px] text-muted-foreground">~{c.distance_km.toFixed(0)} km</p>
