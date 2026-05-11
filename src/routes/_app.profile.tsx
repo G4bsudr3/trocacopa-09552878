@@ -47,10 +47,10 @@ function Profile() {
           .eq("status", "completed"),
         supabase
           .from("reviews")
-          .select("stars,comment,reviewer_id,created_at")
+          .select("stars,comment,reviewer_id,created_at,reviewer:profiles!reviews_reviewer_id_fkey(full_name,avatar_url)")
           .eq("reviewed_id", user!.id)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
       ]);
       return { tradesCount: tradesCount ?? 0, reviews: reviews ?? [] };
     },
@@ -165,17 +165,25 @@ function Profile() {
           </div>
         ) : stats.data && stats.data.reviews.length > 0 ? (
           <div className="space-y-2">
-            {stats.data.reviews.map((r) => (
+            {stats.data.reviews.map((r: any) => (
               <div key={`${r.reviewer_id}-${r.created_at}`} className="glass rounded-2xl p-3">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm">{new Date(r.created_at).toLocaleDateString("pt-BR")}</p>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: r.stars }).map((_, s) => (
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center font-bold text-primary-foreground text-xs shrink-0 overflow-hidden">
+                      {r.reviewer?.avatar_url
+                        ? <img src={r.reviewer.avatar_url} alt="" className="w-full h-full object-cover" />
+                        : (r.reviewer?.full_name?.[0] || "?").toUpperCase()}
+                    </div>
+                    <p className="font-semibold text-sm truncate">{r.reviewer?.full_name || "Colecionador"}</p>
+                  </div>
+                  <div className="flex gap-0.5 shrink-0">
+                    {Array.from({ length: r.stars }).map((_: unknown, s: number) => (
                       <Star key={s} size={12} className="fill-gold text-gold" />
                     ))}
                   </div>
                 </div>
-                {r.comment && <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>}
+                {r.comment && <p className="text-xs text-muted-foreground mt-1.5">{r.comment}</p>}
+                <p className="text-[10px] text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString("pt-BR")}</p>
               </div>
             ))}
           </div>

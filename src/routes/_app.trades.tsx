@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_app/trades")({
   component: Trades,
 });
 
-type Tab = "all" | "pending" | "accepted" | "completed";
+type Tab = "all" | "pending" | "accepted" | "completed" | "closed";
 
 type TradeWithProfiles = {
   id: string;
@@ -39,12 +39,18 @@ function Trades() {
     },
   });
 
-  const filtered = (trades.data ?? []).filter((t) => tab === "all" || t.status === tab);
+  const filtered = (trades.data ?? []).filter((t) => {
+    if (tab === "all") return true;
+    if (tab === "closed") return t.status === "cancelled" || t.status === "declined";
+    return t.status === tab;
+  });
+
   const tabs: { k: Tab; label: string }[] = [
     { k: "all", label: "Todas" },
     { k: "pending", label: "Pendentes" },
     { k: "accepted", label: "Aceitas" },
     { k: "completed", label: "Concluídas" },
+    { k: "closed", label: "Encerradas" },
   ];
 
   return (

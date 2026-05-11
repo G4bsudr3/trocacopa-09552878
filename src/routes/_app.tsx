@@ -52,10 +52,20 @@ function AppLayout() {
           } else if (n.type === "trade_request") {
             title = "📨 Novo pedido de troca";
             if (n.payload.trade_id) action = { label: "Abrir", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
-          } else if (n.type === "trade_accepted") title = "✅ Sua troca foi aceita";
-          else if (n.type === "trade_declined") title = "❌ Sua troca foi recusada";
-          else if (n.type === "trade_completed") title = "🎉 Troca concluída";
-          else if (n.type === "trade_cancelled") title = "Troca cancelada";
+          } else if (n.type === "trade_accepted") {
+            title = "✅ Sua troca foi aceita!";
+            if (n.payload.trade_id) action = { label: "Abrir", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
+          } else if (n.type === "trade_declined") {
+            title = "❌ Sua troca foi recusada";
+            if (n.payload.trade_id) action = { label: "Ver", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
+          }
+          else if (n.type === "trade_completed") {
+            title = "🎉 Troca concluída!";
+            if (n.payload.trade_id) action = { label: "Ver", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
+          } else if (n.type === "trade_cancelled") {
+            title = "Troca cancelada";
+            if (n.payload.trade_id) action = { label: "Ver", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
+          }
           else if (n.type === "trade_message") title = n.payload.preview ? `💬 ${n.payload.preview}` : "Nova mensagem";
           else if (n.type === "trade_meet") {
             title = "📅 Encontro de troca atualizado";

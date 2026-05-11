@@ -50,6 +50,7 @@ function Near() {
   const [onlyMutual, setOnlyMutual] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("match");
   const [view, setView] = useState<ViewMode>("list");
+  const [loadingTradeId, setLoadingTradeId] = useState<string | null>(null);
 
   const hasGeo = profile?.lat != null && profile?.lng != null;
   const hasCity = !!profile?.city;
@@ -82,7 +83,8 @@ function Near() {
   }, [nearby.data, onlyCity, onlyMutual, sortMode]);
 
   const startTrade = async (otherId: string) => {
-    if (!user) return;
+    if (!user || loadingTradeId) return;
+    setLoadingTradeId(otherId);
     const { data: existing } = await supabase
       .from("trades")
       .select("id")
@@ -90,6 +92,7 @@ function Near() {
       .in("status", ["pending", "accepted"])
       .maybeSingle();
     if (existing) {
+      setLoadingTradeId(null);
       nav({ to: "/trade/$id", params: { id: existing.id } });
       return;
     }
@@ -98,6 +101,7 @@ function Near() {
       .insert({ requester_id: user.id, receiver_id: otherId, offered_stickers: [], requested_stickers: [] })
       .select("id")
       .single();
+    setLoadingTradeId(null);
     if (error || !data) return toast.error(error?.message || "Erro ao criar troca");
     nav({ to: "/trade/$id", params: { id: data.id } });
   };
@@ -295,9 +299,12 @@ function Near() {
 
                 <button
                   onClick={() => startTrade(c.id)}
-                  className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition"
+                  disabled={!!loadingTradeId}
+                  className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-70"
                 >
-                  <MessageCircle size={16} /> Iniciar Troca
+                  {loadingTradeId === c.id
+                    ? <><Loader2 size={16} className="animate-spin" /> Abrindo...</>
+                    : <><MessageCircle size={16} /> Iniciar Troca</>}
                 </button>
               </motion.div>
             );

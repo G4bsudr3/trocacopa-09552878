@@ -27,8 +27,16 @@ function Settings() {
   const [gpsBusy, setGpsBusy] = useState(false);
   const [contribCount, setContribCount] = useState(0);
   const [contribBusy, setContribBusy] = useState(false);
-  const prefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
-  const discoverable = profile?.discoverable !== false;
+  const [prefsSaving, setPrefsSaving] = useState<keyof Prefs | null>(null);
+  const [discoverableSaving, setDiscoverableSaving] = useState(false);
+  const serverPrefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
+  const serverDiscoverable = profile?.discoverable !== false;
+  const [localPrefs, setLocalPrefs] = useState<Prefs>(serverPrefs);
+  const [localDiscoverable, setLocalDiscoverable] = useState(serverDiscoverable);
+
+  // Sync local state when profile loads/refreshes
+  const prefs = localPrefs;
+  const discoverable = localDiscoverable;
 
   useEffect(() => {
     countMyContributions().then(setContribCount).catch(() => {});
@@ -44,17 +52,31 @@ function Settings() {
   };
 
   const updatePref = async (k: keyof Prefs, v: boolean) => {
-    if (!user) return;
+    if (!user || prefsSaving) return;
     const next = { ...prefs, [k]: v };
+    setLocalPrefs(next);
+    setPrefsSaving(k);
     const { error } = await supabase.from("profiles").update({ notification_prefs: next }).eq("id", user.id);
-    if (error) return toast.error(error.message);
+    setPrefsSaving(null);
+    if (error) {
+      setLocalPrefs(serverPrefs);
+      return toast.error(error.message);
+    }
+    toast.success("Preferências salvas");
     refreshProfile();
   };
 
   const setDiscoverable = async (v: boolean) => {
-    if (!user) return;
+    if (!user || discoverableSaving) return;
+    setLocalDiscoverable(v);
+    setDiscoverableSaving(true);
     const { error } = await supabase.from("profiles").update({ discoverable: v } as any).eq("id", user.id);
-    if (error) return toast.error(error.message);
+    setDiscoverableSaving(false);
+    if (error) {
+      setLocalDiscoverable(serverDiscoverable);
+      return toast.error(error.message);
+    }
+    toast.success(v ? "Você agora aparece no radar" : "Você está oculto no radar");
     refreshProfile();
   };
 
@@ -147,14 +169,15 @@ function Settings() {
           icon={<Eye size={16} />}
           label="Aparecer no radar de colecionadores"
           checked={discoverable}
+          saving={discoverableSaving}
           onChange={setDiscoverable}
         />
       </Section>
 
       <Section title="Notificações">
-        <Toggle label="Pedidos de troca" checked={prefs.trades !== false} onChange={(v) => updatePref("trades", v)} />
-        <Toggle label="Mensagens" checked={prefs.messages !== false} onChange={(v) => updatePref("messages", v)} />
-        <Toggle label="Novos matches" checked={prefs.matches !== false} onChange={(v) => updatePref("matches", v)} />
+        <Toggle label="Pedidos de troca" checked={prefs.trades !== false} saving={prefsSaving === "trades"} onChange={(v) => updatePref("trades", v)} />
+        <Toggle label="Mensagens" checked={prefs.messages !== false} saving={prefsSaving === "messages"} onChange={(v) => updatePref("messages", v)} />
+        <Toggle label="Novos matches" checked={prefs.matches !== false} saving={prefsSaving === "matches"} onChange={(v) => updatePref("matches", v)} />
       </Section>
 
       <Section title="Sessão">
@@ -224,16 +247,19 @@ function Row({ icon, label, to }: { icon: React.ReactNode; label: string; to: st
   );
 }
 
-function Toggle({ icon, label, checked, onChange }: { icon?: React.ReactNode; label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ icon, label, checked, saving, onChange }: { icon?: React.ReactNode; label: string; checked: boolean; saving?: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="glass rounded-2xl p-4 flex items-center gap-3">
       {icon}
       <span className="flex-1 text-sm">{label}</span>
       <button
-        onClick={() => onChange(!checked)}
-        className={`w-12 h-7 rounded-full p-0.5 transition ${checked ? "bg-primary" : "bg-surface"}`}
+        onClick={() => !saving && onChange(!checked)}
+        disabled={saving}
+        aria-pressed={checked}
+        className={`w-12 h-7 rounded-full p-0.5 transition-colors relative ${checked ? "bg-primary" : "bg-surface"} ${saving ? "opacity-60 cursor-wait" : ""}`}
       >
-        <span className={`block w-6 h-6 rounded-full bg-background transition ${checked ? "translate-x-5" : ""}`} />
+        <span className={`block w-6 h-6 rounded-full bg-background transition-transform ${checked ? "translate-x-5" : ""}`} />
+        {saving && <Loader2 size={10} className="animate-spin absolute inset-0 m-auto text-muted-foreground" />}
       </button>
     </div>
   );
