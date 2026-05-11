@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useStickerCatalog } from "@/lib/stickers";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_app/trade/$id")({
   head: () => ({ meta: [{ title: "Troca — TrocaCopa" }] }),
