@@ -489,8 +489,10 @@ function StickerCell({
         </>
       )}
       {s.image_url && (
-        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center py-1.5">
-          <span className="font-display text-sm font-bold text-white drop-shadow">{s.code}</span>
+        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="font-display text-sm font-bold text-white" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.8)" }}>
+            {s.code}
+          </span>
         </span>
       )}
       {!s.owned && (
@@ -507,12 +509,6 @@ function StickerCell({
       {s.owned && s.duplicates < 2 && (
         <span className="absolute top-0.5 right-0.5 z-10 bg-primary text-primary-foreground rounded-full p-0.5">
           <Check size={8} />
-        </span>
-      )}
-      {s.owned && s.image_url && (
-        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent text-[10px] font-display font-bold py-1 text-center flex items-center justify-center gap-1">
-          <span>{s.code}</span>
-          <FlagImg emoji={s.flag_emoji} size={12} />
         </span>
       )}
     </motion.button>
