@@ -17,10 +17,12 @@ export const Route = createFileRoute("/_app/home")({
 
 function Home() {
   const { profile, user } = useAuth();
-  const owned = profile?.album_progress ?? 0;
-  const missing = TOTAL_STICKERS - owned;
-  const pct = Math.round((owned / TOTAL_STICKERS) * 100);
+  const owned = Math.max(0, Math.min(profile?.album_progress ?? 0, TOTAL_STICKERS));
+  const missing = Math.max(0, TOTAL_STICKERS - owned);
+  const pct = Math.max(0, Math.min(100, Math.round((owned / TOTAL_STICKERS) * 100)));
   const name = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Colecionador";
+  const hour = new Date().getHours();
+  const greeting = hour < 5 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
   const dups = useQuery({
     queryKey: ["album-dups", user?.id],
