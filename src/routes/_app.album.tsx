@@ -216,7 +216,7 @@ function Album() {
                   className="w-full glass rounded-2xl px-4 py-3 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-2xl shrink-0">{c.flag_emoji}</span>
+                    <FlagImg code={c.country_code} />
                     <div className="text-left min-w-0">
                       <p className="font-display text-base tracking-wide truncate">
                         {c.country_name}
@@ -346,7 +346,7 @@ function Album() {
                     </>
                   ) : (
                     <>
-                      <span className="text-3xl leading-none">{current.flag_emoji}</span>
+                      <FlagImg code={current.country_code} size={48} />
                       <span className="text-sm mt-1">{current.code}</span>
                     </>
                   )}
@@ -482,7 +482,7 @@ function StickerCell({
         />
       ) : (
         <>
-          <span className="text-base leading-none">{s.flag_emoji}</span>
+          <FlagImg code={s.country_code} size={24} />
           <span className={`font-display text-sm font-bold leading-none mt-1 ${s.owned ? "text-primary" : "text-foreground"}`}>{s.code}</span>
         </>
       )}
@@ -494,9 +494,7 @@ function StickerCell({
           >
             {s.code}
           </span>
-          <span className="text-[10px] leading-none text-foreground/80 flex items-center gap-1">
-            <span>{s.flag_emoji}</span>
-          </span>
+          <FlagImg code={s.country_code} size={14} />
         </span>
       )}
       {!s.owned && (
@@ -518,10 +516,24 @@ function StickerCell({
       {s.owned && s.image_url && (
         <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent text-[10px] font-display font-bold py-1 text-center flex items-center justify-center gap-1">
           <span>{s.code}</span>
-          <span className="text-[10px] leading-none">{s.flag_emoji}</span>
+          <FlagImg code={s.country_code} size={12} />
         </span>
       )}
     </motion.button>
+  );
+}
+
+function FlagImg({ code, size = 32 }: { code: string; size?: number }) {
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
+      alt={code}
+      width={size}
+      height={Math.round(size * 0.67)}
+      loading="lazy"
+      decoding="async"
+      className="rounded-sm object-cover shrink-0"
+    />
   );
 }
 
