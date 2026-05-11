@@ -17,10 +17,12 @@ export const Route = createFileRoute("/_app/home")({
 
 function Home() {
   const { profile, user } = useAuth();
-  const owned = profile?.album_progress ?? 0;
-  const missing = TOTAL_STICKERS - owned;
-  const pct = Math.round((owned / TOTAL_STICKERS) * 100);
+  const owned = Math.max(0, Math.min(profile?.album_progress ?? 0, TOTAL_STICKERS));
+  const missing = Math.max(0, TOTAL_STICKERS - owned);
+  const pct = Math.max(0, Math.min(100, Math.round((owned / TOTAL_STICKERS) * 100)));
   const name = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Colecionador";
+  const hour = new Date().getHours();
+  const greeting = hour < 5 ? "Boa madrugada" : hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
   const dups = useQuery({
     queryKey: ["album-dups", user?.id],
@@ -80,7 +82,7 @@ function Home() {
 
       {/* Greeting */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
-        <p className="text-xl font-semibold">Oi, {name} 👋</p>
+        <p className="text-xl font-semibold">{greeting}, {name} 👋</p>
         <p className="text-sm text-muted-foreground">Pronto para mais trocas hoje?</p>
       </motion.div>
 
@@ -117,7 +119,7 @@ function Home() {
       {/* Duplicates CTA */}
       {(dups.data ?? 0) > 0 && (
         <Link to="/duplicates" className="block mt-4">
-          <div className="card rounded-xl p-4 flex items-center gap-3 border-l-2 border-l-primary active:scale-[0.98] transition">
+          <div className="card rounded-2xl p-4 flex items-center gap-3 border-l-2 border-l-primary active:scale-[0.98] transition">
             <span className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center shrink-0">
               <Repeat2 className="text-primary-foreground" size={16} />
             </span>
@@ -135,7 +137,7 @@ function Home() {
       {/* Pro CTA */}
       {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-3">
-          <div className="card rounded-xl p-4 flex items-center gap-3 border-l-2 border-l-gold active:scale-[0.98] transition">
+          <div className="card rounded-2xl p-4 flex items-center gap-3 border-l-2 border-l-gold active:scale-[0.98] transition">
             <span className="w-9 h-9 rounded-lg gradient-gold flex items-center justify-center shrink-0">
               <Crown className="text-gold-foreground" size={16} />
             </span>
@@ -151,7 +153,7 @@ function Home() {
       {/* Featured matches */}
       <section className="mt-6 pb-28 md:pb-6">
         <div className="flex items-center justify-between mb-3">
-          <p className="font-semibold text-sm">Trocas Disponíveis</p>
+          <p className="font-semibold text-sm">Combinações pra você</p>
           <Link to="/near" className="text-xs text-primary font-semibold flex items-center gap-1">
             Ver todas <ArrowRight size={12} />
           </Link>
@@ -160,11 +162,11 @@ function Home() {
         {featured.isLoading ? (
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="min-w-[200px] h-28 bg-surface rounded-xl animate-pulse shrink-0" />
+              <div key={i} className="min-w-[200px] h-28 bg-surface rounded-2xl animate-pulse shrink-0" />
             ))}
           </div>
         ) : (featured.data ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground card rounded-xl p-4 text-center">
+          <p className="text-sm text-muted-foreground card rounded-2xl p-4 text-center">
             Ninguém por perto ainda.
           </p>
         ) : (
@@ -173,7 +175,7 @@ function Home() {
               <Link
                 key={c.id}
                 to="/near"
-                className="min-w-[190px] card rounded-xl p-3 shrink-0 active:scale-[0.97] transition"
+                className="min-w-[190px] card rounded-2xl p-3 shrink-0 active:scale-[0.97] transition"
               >
                 <div className="flex items-center gap-2.5 mb-3">
                   <div className="w-9 h-9 rounded-lg overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground text-sm shrink-0">
@@ -191,7 +193,7 @@ function Home() {
                 <div className="flex items-end justify-between">
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Score</p>
-                    <p className="font-display text-2xl text-primary leading-none">{c.score_pct ?? 0}</p>
+                    <p className="font-display text-2xl text-primary leading-none">{c.score_pct ?? 0}<span className="text-sm">%</span></p>
                   </div>
                   {c.distance_km != null && (
                     <p className="text-[11px] text-muted-foreground">~{c.distance_km.toFixed(0)} km</p>
@@ -229,9 +231,6 @@ function ProgressRing({ pct }: { pct: number }) {
           transition={{ duration: 1, ease: "easeOut" }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center font-display text-xl leading-none">
-        {pct}%
-      </div>
     </div>
   );
 }
