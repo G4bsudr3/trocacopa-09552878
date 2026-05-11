@@ -132,16 +132,17 @@ function Trade() {
     }
   };
 
+  const requestStatus = (status: TradeRow["status"]) => {
+    if (actionBusy) return;
+    if (status === "completed" || status === "cancelled") {
+      setPendingStatus(status);
+      return;
+    }
+    void updateStatus(status);
+  };
+
   const updateStatus = async (status: TradeRow["status"]) => {
     if (actionBusy) return;
-    if (status === "completed") {
-      const ok = window.confirm("Confirmar que a troca foi realizada presencialmente?");
-      if (!ok) return;
-    }
-    if (status === "cancelled") {
-      const ok = window.confirm("Cancelar esta troca? Essa ação não pode ser desfeita.");
-      if (!ok) return;
-    }
     setActionBusy(true);
     const { error } = await supabase.from("trades").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     setActionBusy(false);
