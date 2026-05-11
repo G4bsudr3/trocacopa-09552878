@@ -121,7 +121,6 @@ function Settings() {
 
   const handleDelete = async () => {
     if (!user) return;
-    if (!confirm("Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita.")) return;
     setBusy(true);
     const { error } = await supabase.functions.invoke("delete-account");
     setBusy(false);
