@@ -512,9 +512,9 @@ function Scan() {
                         ? `Grupo ${s.group_letter} · pos ${s.position}`
                         : s.kind === "history"
                           ? "FIFA World Cup History"
-                          : s.kind === "special"
-                            ? "Coca-Cola"
-                            : "Capa do álbum"}
+                        : s.kind === "special"
+                          ? "Especial"
+                          : "Capa do álbum"}
                   </p>
                 </div>
                 <div className="flex">
