@@ -343,7 +343,7 @@ function Scan() {
                       : result.kind === "history"
                         ? "FIFA World Cup History"
                         : result.kind === "special"
-                          ? "Coca-Cola"
+                          ? "Especial"
                           : "Capa do álbum"}
                 </p>
               </div>
