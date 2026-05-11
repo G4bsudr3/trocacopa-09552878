@@ -216,7 +216,7 @@ function Album() {
                   className="w-full glass rounded-2xl px-4 py-3 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <FlagImg code={c.country_code} />
+                    <FlagImg emoji={c.flag_emoji} />
                     <div className="text-left min-w-0">
                       <p className="font-display text-base tracking-wide truncate">
                         {c.country_name}
@@ -346,7 +346,7 @@ function Album() {
                     </>
                   ) : (
                     <>
-                      <FlagImg code={current.country_code} size={48} />
+                      <FlagImg emoji={current.flag_emoji} size={48} />
                       <span className="text-sm mt-1">{current.code}</span>
                     </>
                   )}
@@ -482,7 +482,7 @@ function StickerCell({
         />
       ) : (
         <>
-          <FlagImg code={s.country_code} size={24} />
+          <FlagImg emoji={s.flag_emoji} size={24} />
           <span className={`font-display text-sm font-bold leading-none mt-1 ${s.owned ? "text-primary" : "text-foreground"}`}>{s.code}</span>
         </>
       )}
@@ -494,7 +494,7 @@ function StickerCell({
           >
             {s.code}
           </span>
-          <FlagImg code={s.country_code} size={14} />
+          <FlagImg emoji={s.flag_emoji} size={14} />
         </span>
       )}
       {!s.owned && (
@@ -516,18 +516,25 @@ function StickerCell({
       {s.owned && s.image_url && (
         <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent text-[10px] font-display font-bold py-1 text-center flex items-center justify-center gap-1">
           <span>{s.code}</span>
-          <FlagImg code={s.country_code} size={12} />
+          <FlagImg emoji={s.flag_emoji} size={12} />
         </span>
       )}
     </motion.button>
   );
 }
 
-function FlagImg({ code, size = 32 }: { code: string; size?: number }) {
+function FlagImg({ emoji, size = 32 }: { emoji: string; size?: number }) {
+  // Flag emojis encode ISO2 as Regional Indicator symbols (🇧🇷 → "br")
+  const chars = [...(emoji ?? "")];
+  const iso2 = chars.slice(0, 2)
+    .map((c) => String.fromCharCode((c.codePointAt(0) ?? 0) - 0x1f1e6 + 65))
+    .join("")
+    .toLowerCase();
+  if (iso2.length !== 2 || !/^[a-z]{2}$/.test(iso2)) return null;
   return (
     <img
-      src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
-      alt={code}
+      src={`https://flagcdn.com/w40/${iso2}.png`}
+      alt={iso2.toUpperCase()}
       width={size}
       height={Math.round(size * 0.67)}
       loading="lazy"
