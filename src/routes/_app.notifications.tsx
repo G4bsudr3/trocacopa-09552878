@@ -148,12 +148,12 @@ function Notifs() {
 
   const removeAll = async () => {
     if (!user) return;
-    if (!confirm("Apagar todas as notificações?")) return;
     // optimistic: clear list immediately
     qc.setQueryData<Notif[]>(["notifications", user.id], []);
     qc.invalidateQueries({ queryKey: ["unread", user.id] });
     const { error } = await supabase.from("notifications").delete().eq("user_id", user.id);
     if (error) { toast.error(error.message); invalidate(); }
+    else toast.success("Notificações apagadas");
   };
 
   const all = notifs.data ?? [];
