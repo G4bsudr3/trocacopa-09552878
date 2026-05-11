@@ -17,8 +17,8 @@ import { LocationSelect } from "@/components/location-select";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — TrocaAI" },
-      { name: "description", content: "Entre no TrocaAI e troque figurinhas da Copa 2026." },
+      { title: "Entrar — TrocaCopa" },
+      { name: "description", content: "Entre no TrocaCopa e troque figurinhas da Copa 2026." },
     ],
   }),
   component: LoginPage,
@@ -134,7 +134,7 @@ function LoginPage() {
             });
             toast.success("Conta criada! 🛡️ Avisamos seu responsável por e-mail. Algumas funções ficam pausadas até a aprovação.", { duration: 9000 });
           } else {
-            toast.success("Conta criada! Bem-vindo ao TrocaAI ⚽");
+            toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
           }
           navigate({ to: "/home" });
         } else {
@@ -223,7 +223,7 @@ function LoginPage() {
           className="h-20 md:h-24 object-contain mx-auto"
         />
         <div className="font-brand text-5xl md:text-6xl font-black leading-none tracking-tight mt-1">
-          Troca<span className="text-gold">AI</span>
+          Troca<span className="text-gold">Copa</span>
         </div>
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Copa do Mundo 2026</p>
       </motion.div>

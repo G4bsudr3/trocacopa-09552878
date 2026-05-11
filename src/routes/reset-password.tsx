@@ -7,7 +7,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Redefinir senha — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Redefinir senha — TrocaCopa" }] }),
   component: ResetPasswordPage,
 });
 

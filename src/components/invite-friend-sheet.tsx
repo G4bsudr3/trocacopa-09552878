@@ -52,10 +52,10 @@ export function InviteFriendSheet({ open, onOpenChange }: { open: boolean; onOpe
 
   const share = async () => {
     if (!url) return;
-    const text = "Vem trocar figurinhas comigo no TrocaAI! ⚽";
+    const text = "Vem trocar figurinhas comigo no TrocaCopa! ⚽";
     if (navigator.share) {
       try {
-        await navigator.share({ title: "TrocaAI", text, url });
+        await navigator.share({ title: "TrocaCopa", text, url });
       } catch {
         // user cancelled
       }

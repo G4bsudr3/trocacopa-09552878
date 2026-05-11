@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = data as { ok?: boolean; error?: string } | null;
       if (res?.ok) {
         const { toast } = await import("sonner");
-        toast.success("Você ganhou um novo amigo no TrocaAI! 🎉");
+        toast.success("Você ganhou um novo amigo no TrocaCopa! 🎉");
       }
     } finally {
       localStorage.removeItem("pendingInvite");

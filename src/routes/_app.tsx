@@ -76,7 +76,7 @@ function AppLayout() {
       <div className="flex min-h-screen items-center justify-center">
         <img
           src={theme === "dark" ? logoBranca : logoPreta}
-          alt="TrocaAI"
+          alt="TrocaCopa"
           className="h-16 object-contain animate-pulse"
         />
       </div>

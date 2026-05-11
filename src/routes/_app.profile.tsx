@@ -11,7 +11,7 @@ import { useAlbum } from "@/lib/use-album";
 const InviteFriendSheet = lazy(() => import("@/components/invite-friend-sheet").then((m) => ({ default: m.InviteFriendSheet })));
 
 export const Route = createFileRoute("/_app/profile")({
-  head: () => ({ meta: [{ title: "Perfil — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
   component: Profile,
 });
 
@@ -147,7 +147,7 @@ function Profile() {
           <div className="rounded-2xl p-5 gradient-gold text-gold-foreground flex items-center gap-3 glow-gold">
             <Crown size={28} />
             <div className="flex-1">
-              <p className="font-display text-xl">TrocaAI Pro</p>
+              <p className="font-display text-xl">TrocaCopa Pro</p>
               <p className="text-xs">Desbloqueie radar ilimitado e match automático</p>
             </div>
             <span className="font-display text-2xl">→</span>

@@ -10,7 +10,7 @@ import { uploadContribution } from "@/lib/contributions";
 import { LocationSelect } from "@/components/location-select";
 
 export const Route = createFileRoute("/_app/profile/edit")({
-  head: () => ({ meta: [{ title: "Editar Perfil — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Editar Perfil — TrocaCopa" }] }),
   component: EditProfile,
 });
 

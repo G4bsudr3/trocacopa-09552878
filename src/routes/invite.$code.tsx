@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/invite/$code")({
-  head: () => ({ meta: [{ title: "Convite — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Convite — TrocaCopa" }] }),
   component: InvitePage,
 });
 

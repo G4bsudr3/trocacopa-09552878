@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield, Gift, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -10,7 +10,7 @@ import { useTheme } from "@/lib/use-theme";
 import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "Configurações — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
   component: Settings,
 });
 
@@ -122,7 +122,7 @@ function Settings() {
           )}
         </button>
         {profile?.plan !== "pro" && (
-          <Row icon={<Crown size={18} className="text-gold" />} label="TrocaAI Pro" to="/pro" />
+          <Row icon={<Crown size={18} className="text-gold" />} label="TrocaCopa Pro" to="/pro" />
         )}
         {isAdmin && (
           <Row icon={<Shield size={18} className="text-primary" />} label="Admin · Figurinhas" to="/admin/stickers" />
@@ -200,7 +200,7 @@ function Settings() {
       </Section>
 
       <p className="text-center text-[10px] text-muted-foreground mt-8">
-        TrocaAI © {new Date().getFullYear()}
+        TrocaCopa © {new Date().getFullYear()}
       </p>
     </div>
   );

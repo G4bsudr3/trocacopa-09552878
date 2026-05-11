@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Bell, Crown, Repeat2, ArrowRight, ScanLine, MapPin, BookOpen, type LucideIcon } from "lucide-react";
@@ -11,7 +11,7 @@ import logoBranca from "@/assets/logo-branca.png";
 import logoPreta from "@/assets/logo-preta.png";
 
 export const Route = createFileRoute("/_app/home")({
-  head: () => ({ meta: [{ title: "Início — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Início — TrocaCopa" }] }),
   component: Home,
 });
 
@@ -51,7 +51,7 @@ function Home() {
       <header className="flex items-center justify-between mb-5">
         <img
           src={theme === "dark" ? logoBranca : logoPreta}
-          alt="TrocaAI"
+          alt="TrocaCopa"
           className="h-8 object-contain"
         />
         <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ function Home() {
               <Crown className="text-gold-foreground" size={16} />
             </span>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm">TrocaAI Pro</p>
+              <p className="font-semibold text-sm">TrocaCopa Pro</p>
               <p className="text-xs text-muted-foreground">Match automático e radar ilimitado</p>
             </div>
             <ArrowRight size={16} className="text-muted-foreground shrink-0" />

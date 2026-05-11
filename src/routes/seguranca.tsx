@@ -4,8 +4,8 @@ import { Shield, Mail, Flag, Baby, Lock } from "lucide-react";
 export const Route = createFileRoute("/seguranca")({
   head: () => ({
     meta: [
-      { title: "Segurança e Crianças — TrocaAI" },
-      { name: "description", content: "Como o TrocaAI protege crianças e adolescentes conforme a Lei nº 15.211/2025 (ECA Digital)." },
+      { title: "Segurança e Crianças — TrocaCopa" },
+      { name: "description", content: "Como o TrocaCopa protege crianças e adolescentes conforme a Lei nº 15.211/2025 (ECA Digital)." },
     ],
   }),
   component: SegurancaPage,
@@ -21,7 +21,7 @@ function SegurancaPage() {
           <Shield size={12} /> ECA Digital · Lei 15.211/2025
         </div>
         <h1 className="font-display text-4xl text-primary text-glow">Segurança & Crianças</h1>
-        <p className="text-muted-foreground mt-2">Como protegemos quem ainda não tem 18 anos no TrocaAI.</p>
+        <p className="text-muted-foreground mt-2">Como protegemos quem ainda não tem 18 anos no TrocaCopa.</p>
       </header>
 
       <Section icon={<Baby />} title="Verificação de idade no cadastro">
@@ -54,13 +54,13 @@ function SegurancaPage() {
         O responsável pode, a qualquer momento:
         <ul className="list-disc list-inside mt-2 text-sm text-muted-foreground space-y-1">
           <li>Revogar a autorização (link recebido por e-mail)</li>
-          <li>Solicitar exclusão dos dados do menor por <a className="text-primary" href="mailto:suporte@TrocaAI.com">suporte@TrocaAI.com</a></li>
+          <li>Solicitar exclusão dos dados do menor por <a className="text-primary" href="mailto:suporte@TrocaCopa.com">suporte@TrocaCopa.com</a></li>
           <li>Pedir histórico de atividade da conta</li>
         </ul>
       </Section>
 
       <p className="text-xs text-muted-foreground text-center mt-10">
-        Dúvidas ou denúncias: <a className="text-primary" href="mailto:suporte@TrocaAI.com">suporte@TrocaAI.com</a>
+        Dúvidas ou denúncias: <a className="text-primary" href="mailto:suporte@TrocaCopa.com">suporte@TrocaCopa.com</a>
       </p>
     </main>
   );

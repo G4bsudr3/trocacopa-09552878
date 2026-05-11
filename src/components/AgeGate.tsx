@@ -136,7 +136,7 @@ export function AgeGate() {
               <h2 className="font-display text-2xl text-primary text-glow">
                 {step === "dob" ? "Quantos anos você tem?" : "Precisamos do seu responsável"}
               </h2>
-              <p className="text-xs text-muted-foreground">Para deixar o TrocaAI seguro pra você 🛡️</p>
+              <p className="text-xs text-muted-foreground">Para deixar o TrocaCopa seguro pra você 🛡️</p>
             </div>
           </div>
 

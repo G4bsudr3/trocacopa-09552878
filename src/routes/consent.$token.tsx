@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/consent/$token")({
   head: () => ({
     meta: [
-      { title: "Autorização do responsável — TrocaAI" },
-      { name: "description", content: "Aprove o uso do TrocaAI por um menor sob sua responsabilidade." },
+      { title: "Autorização do responsável — TrocaCopa" },
+      { name: "description", content: "Aprove o uso do TrocaCopa por um menor sob sua responsabilidade." },
     ],
   }),
   component: ConsentPage,
@@ -87,7 +87,7 @@ function ConsentPage() {
           </div>
           <div>
             <h1 className="font-display text-2xl text-primary text-glow">Autorização parental</h1>
-            <p className="text-xs text-muted-foreground">TrocaAI · ECA Digital</p>
+            <p className="text-xs text-muted-foreground">TrocaCopa · ECA Digital</p>
           </div>
         </div>
 
@@ -121,7 +121,7 @@ function ConsentPage() {
         ) : (
           <>
             <p className="text-sm mb-4">
-              O TrocaAI é um aplicativo para colecionar e trocar figurinhas da Copa 2026. Ao autorizar, você confirma que conhece o uso e aceita que o menor:
+              O TrocaCopa é um aplicativo para colecionar e trocar figurinhas da Copa 2026. Ao autorizar, você confirma que conhece o uso e aceita que o menor:
             </p>
             <ul className="text-xs text-muted-foreground space-y-1 mb-4 list-disc list-inside">
               <li>Tenha um perfil em <strong>Modo Kids</strong> (privacidade reforçada, sem localização exata, sem aparecer em buscas públicas)</li>
@@ -148,7 +148,7 @@ function ConsentPage() {
         )}
 
         <p className="text-[10px] text-muted-foreground text-center mt-5">
-          Lei nº 15.211/2025 — ECA Digital. Dúvidas: suporte@TrocaAI.com
+          Lei nº 15.211/2025 — ECA Digital. Dúvidas: suporte@TrocaCopa.com
         </p>
       </motion.div>
     </Centered>

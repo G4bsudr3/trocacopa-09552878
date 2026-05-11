@@ -11,7 +11,7 @@ import { uploadContribution } from "@/lib/contributions";
 import { AlbumPageScanner } from "@/components/album-page-scanner";
 
 export const Route = createFileRoute("/_app/scan")({
-  head: () => ({ meta: [{ title: "Escanear figurinha — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
   component: Scan,
 });
 

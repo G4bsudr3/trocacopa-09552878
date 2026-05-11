@@ -67,7 +67,7 @@ export function AppSidebar() {
           />
           {!collapsed && (
             <span className="font-brand text-xl font-black leading-none tracking-tight">
-              Troca<span className="text-gold">AI</span>
+              Troca<span className="text-gold">Copa</span>
             </span>
           )}
         </Link>

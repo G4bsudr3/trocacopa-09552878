@@ -7,7 +7,7 @@ import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/album")({
-  head: () => ({ meta: [{ title: "Meu Álbum — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
   component: Album,
 });
 

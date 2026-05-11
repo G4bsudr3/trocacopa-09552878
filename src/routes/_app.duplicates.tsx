@@ -7,7 +7,7 @@ import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/duplicates")({
-  head: () => ({ meta: [{ title: "Minhas Repetidas — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Minhas Repetidas — TrocaCopa" }] }),
   component: Duplicates,
 });
 

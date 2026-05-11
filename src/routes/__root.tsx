@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -57,12 +57,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0A0A0F" },
-      { title: "TrocaAI — Troque figurinhas da Copa 2026" },
+      { title: "TrocaCopa — Troque figurinhas da Copa 2026" },
       { name: "description", content: "Plataforma comunitária para colecionadores trocarem figurinhas da Copa do Mundo 2026 com pessoas próximas." },
-      { property: "og:title", content: "TrocaAI — Troque figurinhas da Copa 2026" },
+      { property: "og:title", content: "TrocaCopa — Troque figurinhas da Copa 2026" },
       { property: "og:description", content: "Plataforma comunitária para colecionadores trocarem figurinhas da Copa do Mundo 2026 com pessoas próximas." },
       { property: "og:type", content: "website" },
-      { name: "twitter:title", content: "TrocaAI — Troque figurinhas da Copa 2026" },
+      { name: "twitter:title", content: "TrocaCopa — Troque figurinhas da Copa 2026" },
       { name: "twitter:description", content: "Plataforma comunitária para colecionadores trocarem figurinhas da Copa do Mundo 2026 com pessoas próximas." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2ed9750-6232-41f0-901a-168c7897155e/id-preview-462f6ef5--13ab35bb-d389-423a-88d5-dac0a3864064.lovable.app-1778380852344.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2ed9750-6232-41f0-901a-168c7897155e/id-preview-462f6ef5--13ab35bb-d389-423a-88d5-dac0a3864064.lovable.app-1778380852344.png" },

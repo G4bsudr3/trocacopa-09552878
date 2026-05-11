@@ -11,7 +11,7 @@ const FILTERS = ["all", "trades", "messages", "matches"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export const Route = createFileRoute("/_app/notifications")({
-  head: () => ({ meta: [{ title: "Notificações — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Notificações — TrocaCopa" }] }),
   validateSearch: (s: Record<string, unknown>): { filter: Filter } => {
     const f = s.filter;
     return { filter: FILTERS.includes(f as Filter) ? (f as Filter) : "all" };

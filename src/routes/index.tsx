@@ -16,7 +16,7 @@ function Index() {
       <div className="flex min-h-screen items-center justify-center">
         <img
           src={theme === "dark" ? logoBranca : logoPreta}
-          alt="TrocaAI"
+          alt="TrocaCopa"
           className="h-20 object-contain animate-pulse"
         />
       </div>

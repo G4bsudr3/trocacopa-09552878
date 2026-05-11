@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/trade/$id")({
-  head: () => ({ meta: [{ title: "Troca — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Troca — TrocaCopa" }] }),
   component: Trade,
 });
 

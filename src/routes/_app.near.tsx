@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 const NearMap = lazy(() => import("@/components/NearMap"));
 
 export const Route = createFileRoute("/_app/near")({
-  head: () => ({ meta: [{ title: "Perto de mim — TrocaAI" }] }),
+  head: () => ({ meta: [{ title: "Perto de mim — TrocaCopa" }] }),
   component: Near,
 });
 

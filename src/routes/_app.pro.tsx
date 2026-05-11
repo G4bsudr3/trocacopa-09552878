@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { Crown, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/pro")({
-  head: () => ({ meta: [{ title: "TrocaAI Pro" }] }),
+  head: () => ({ meta: [{ title: "TrocaCopa Pro" }] }),
   component: Pro,
 });
 
@@ -48,7 +48,7 @@ function Pro() {
           <Crown size={32} className="text-gold-foreground" />
         </span>
         <h1 className="font-display text-4xl tracking-wide mt-3">
-          TrocaAI <span className="text-gold text-glow-gold">Pro</span> 🏆
+          TrocaCopa <span className="text-gold text-glow-gold">Pro</span> 🏆
         </h1>
         <p className="text-muted-foreground text-sm mt-2 max-w-xs mx-auto">
           Encontre qualquer figurinha. Faça as trocas perfeitas. Complete seu álbum mais rápido.
@@ -83,7 +83,7 @@ function Pro() {
         {joined ? "✓ Você está na lista" : "Quero ser avisado quando lançar"}
       </button>
       <p className="text-center text-xs text-muted-foreground mt-3">
-        TrocaAI Pro está em desenvolvimento. Sem cobranças por enquanto.
+        TrocaCopa Pro está em desenvolvimento. Sem cobranças por enquanto.
       </p>
     </div>
   );
