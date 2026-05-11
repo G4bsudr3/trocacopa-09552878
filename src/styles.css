@@ -1,12 +1,13 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Nunito:wght@900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-display: "Bebas Neue", sans-serif;
+  --font-brand: "Nunito", sans-serif;
   --font-sans: "DM Sans", system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);

@@ -222,7 +222,7 @@ function LoginPage() {
           alt=""
           className="h-20 md:h-24 object-contain mx-auto"
         />
-        <div className="font-display text-5xl md:text-6xl tracking-widest leading-none mt-1">
+        <div className="font-brand text-5xl md:text-6xl font-black leading-none tracking-tight mt-1">
           Troca<span className="text-gold">AI</span>
         </div>
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Copa do Mundo 2026</p>

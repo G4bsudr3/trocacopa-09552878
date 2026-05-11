@@ -66,7 +66,7 @@ export function AppSidebar() {
             className="h-6 w-6 object-contain shrink-0"
           />
           {!collapsed && (
-            <span className="font-display text-xl tracking-widest leading-none">
+            <span className="font-brand text-xl font-black leading-none tracking-tight">
               Troca<span className="text-gold">AI</span>
             </span>
           )}
