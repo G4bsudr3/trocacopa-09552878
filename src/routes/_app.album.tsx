@@ -482,7 +482,9 @@ function StickerCell({
         />
       ) : (
         <>
-          <FlagImg emoji={s.flag_emoji} size={24} />
+          {s.flag_emoji
+            ? <FlagImg emoji={s.flag_emoji} size={24} />
+            : <span className="text-lg leading-none">⭐</span>}
           <span className={`font-display text-sm font-bold leading-none mt-1 ${s.owned ? "text-primary" : "text-foreground"}`}>{s.code}</span>
         </>
       )}
@@ -523,18 +525,36 @@ function StickerCell({
   );
 }
 
-function FlagImg({ emoji, size = 32 }: { emoji: string; size?: number }) {
-  // Flag emojis encode ISO2 as Regional Indicator symbols (🇧🇷 → "br")
-  const chars = [...(emoji ?? "")];
-  const iso2 = chars.slice(0, 2)
-    .map((c) => String.fromCharCode((c.codePointAt(0) ?? 0) - 0x1f1e6 + 65))
-    .join("")
-    .toLowerCase();
-  if (iso2.length !== 2 || !/^[a-z]{2}$/.test(iso2)) return null;
+function FlagImg({ emoji, size = 32 }: { emoji?: string | null; size?: number }) {
+  if (!emoji) return null;
+  const chars = [...emoji];
+  let path = "";
+
+  if (chars[0]?.codePointAt(0) === 0x1f3f4) {
+    // Subdivision flag (🏴󠁧󠁢󠁥󠁮󠁧󠁿 England, Scotland…) — decode tag letters
+    const sub = chars
+      .slice(1)
+      .map((c) => c.codePointAt(0) ?? 0)
+      .filter((cp) => cp >= 0xe0061 && cp <= 0xe007a)
+      .map((cp) => String.fromCharCode(cp - 0xe0000))
+      .join(""); // "gbeng" | "gbsct" | "gbwls"
+    if (sub.length < 3) return null;
+    path = `${sub.slice(0, 2)}-${sub.slice(2)}`; // "gb-eng"
+  } else {
+    // Standard Regional Indicator pair (🇧🇷 → "br")
+    const iso2 = chars
+      .slice(0, 2)
+      .map((c) => String.fromCharCode((c.codePointAt(0) ?? 0) - 0x1f1e6 + 65))
+      .join("")
+      .toLowerCase();
+    if (iso2.length !== 2 || !/^[a-z]{2}$/.test(iso2)) return null;
+    path = iso2;
+  }
+
   return (
     <img
-      src={`https://flagcdn.com/w40/${iso2}.png`}
-      alt={iso2.toUpperCase()}
+      src={`https://flagcdn.com/w40/${path}.png`}
+      alt={path.toUpperCase()}
       width={size}
       height={Math.round(size * 0.67)}
       loading="lazy"
