@@ -90,10 +90,12 @@ function Near() {
       .select("id")
       .or(`and(requester_id.eq.${user.id},receiver_id.eq.${otherId}),and(requester_id.eq.${otherId},receiver_id.eq.${user.id})`)
       .in("status", ["pending", "accepted"])
-      .maybeSingle();
-    if (existing) {
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const existingId = existing?.[0]?.id;
+    if (existingId) {
       setLoadingTradeId(null);
-      nav({ to: "/trade/$id", params: { id: existing.id } });
+      nav({ to: "/trade/$id", params: { id: existingId } });
       return;
     }
     const { data, error } = await supabase
