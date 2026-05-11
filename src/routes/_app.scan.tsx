@@ -432,6 +432,15 @@ function Scan() {
           placeholder="Ex: BRA10, FWC7 ou Brasil"
           className="flex-1 bg-transparent outline-none text-sm"
         />
+        {query && (
+          <button
+            onClick={() => setQuery("")}
+            aria-label="Limpar busca"
+            className="text-muted-foreground hover:text-foreground active:scale-90 transition"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {suggestions.length > 0 && (
