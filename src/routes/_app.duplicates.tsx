@@ -172,7 +172,7 @@ function Duplicates() {
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
           <AnimatePresence>
             {filtered.map((s) => (
-              <DupCard key={s.code} s={s} onPlus={() => addDuplicate(s.code)} onMinus={() => removeDuplicate(s.code)} />
+              <DupCard key={s.code} s={s} onPlus={() => addDuplicate(s.code)} onMinus={() => { removeDuplicate(s.code); toast.success(`${s.code} ajustada`); }} />
             ))}
           </AnimatePresence>
           {filtered.length === 0 && (
