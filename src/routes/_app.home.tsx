@@ -82,7 +82,7 @@ function Home() {
 
       {/* Greeting */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
-        <p className="text-xl font-semibold">Oi, {name} 👋</p>
+        <p className="text-xl font-semibold">{greeting}, {name} 👋</p>
         <p className="text-sm text-muted-foreground">Pronto para mais trocas hoje?</p>
       </motion.div>
 
