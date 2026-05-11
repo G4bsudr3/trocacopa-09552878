@@ -1,11 +1,21 @@
 ﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bell, Repeat, MessageCircle, CheckCircle2, X, Trash2, MapPin, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useUnreadNotifications } from "@/lib/use-unread-notifications";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const FILTERS = ["all", "trades", "messages", "matches"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -68,6 +78,7 @@ function Notifs() {
   const { filter } = Route.useSearch();
   const navigate = useNavigate({ from: "/notifications" });
   const unread = useUnreadNotifications();
+  const [confirmClear, setConfirmClear] = useState(false);
   const setFilter = (f: Filter) =>
     navigate({ search: { filter: f } });
 
@@ -137,12 +148,12 @@ function Notifs() {
 
   const removeAll = async () => {
     if (!user) return;
-    if (!confirm("Apagar todas as notificações?")) return;
     // optimistic: clear list immediately
     qc.setQueryData<Notif[]>(["notifications", user.id], []);
     qc.invalidateQueries({ queryKey: ["unread", user.id] });
     const { error } = await supabase.from("notifications").delete().eq("user_id", user.id);
     if (error) { toast.error(error.message); invalidate(); }
+    else toast.success("Notificações apagadas");
   };
 
   const all = notifs.data ?? [];
@@ -163,7 +174,7 @@ function Notifs() {
         <div className="flex items-center gap-3">
           {unread.total > 0 && <button onClick={markAllRead} className="text-xs text-primary font-semibold">Marcar lidas</button>}
           {all.length > 0 && (
-            <button onClick={removeAll} className="text-xs text-destructive font-semibold flex items-center gap-1">
+            <button onClick={() => setConfirmClear(true)} className="text-xs text-destructive font-semibold flex items-center gap-1">
               <Trash2 size={12} /> Limpar
             </button>
           )}
@@ -250,6 +261,23 @@ function Notifs() {
           })}
         </div>
       )}
+
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar todas as notificações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Todas as notificações serão removidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={removeAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Apagar tudo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
