@@ -102,27 +102,9 @@ function Album() {
   };
 
   const onCellLong = (s: Sticker) => {
-    if (s.duplicates > 1) {
-      removeDuplicate(s.code);
-      const next = s.duplicates - 1;
-      toast.success(next === 1 ? `${s.code}: 1 repetida removida (agora 1x)` : `${s.code}: −1 repetida (${next}x)`, {
-        action: {
-          label: "Desfazer",
-          onClick: () => addDuplicate(s.code),
-        },
-      });
-    } else if (s.owned) {
-      // Toque longo em figurinha sem repetidas: oferece remover do álbum
-      toggleOwned(s.code);
-      toast(`${s.code} removida do álbum`, {
-        action: {
-          label: "Desfazer",
-          onClick: () => toggleOwned(s.code),
-        },
-      });
-    } else {
-      setSelected(s);
-    }
+    // Toque longo sempre abre a ficha — lá há botões claros para
+    // remover do álbum, ajustar repetidas ou ver detalhes.
+    setSelected(s);
   };
 
   return (
