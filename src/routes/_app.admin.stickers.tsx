@@ -268,6 +268,24 @@ function AdminStickers() {
           onSaved={() => qc.invalidateQueries({ queryKey: ["admin-stickers"] })}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirmImport}
+        onOpenChange={(o) => !o && setConfirmImport(null)}
+        title={confirmImport?.force ? "Reimportar TUDO?" : "Importar faltantes?"}
+        description={
+          confirmImport?.force
+            ? "Vai re-baixar imagens já enviadas. Pode levar vários minutos."
+            : "Importa só o que falta do Central da Copa. Pula o que já tem nome + imagem."
+        }
+        confirmLabel={confirmImport?.force ? "Reimportar tudo" : "Importar"}
+        destructive={!!confirmImport?.force}
+        onConfirm={() => {
+          const f = !!confirmImport?.force;
+          setConfirmImport(null);
+          void runImportLoop(f);
+        }}
+      />
     </div>
   );
 }
