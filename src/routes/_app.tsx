@@ -2,6 +2,8 @@ import { createFileRoute, Outlet, Link, useLocation, Navigate, useNavigate } fro
 import { Home, BookOpen, ScanLine, MapPin, User, Bell } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useTheme } from "@/lib/use-theme";
+import logoBranca from "@/assets/logo-branca.png";
+import logoPreta from "@/assets/logo-preta.png";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,7 +75,7 @@ function AppLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <img
-          src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+          src={theme === "dark" ? logoBranca : logoPreta}
           alt="TrocaCopa"
           className="h-16 object-contain animate-pulse"
         />

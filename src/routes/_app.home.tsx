@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth";
 import { TOTAL_STICKERS } from "@/lib/stickers";
 import { useUnreadNotifications } from "@/lib/use-unread-notifications";
 import { useTheme } from "@/lib/use-theme";
+import logoBranca from "@/assets/logo-branca.png";
+import logoPreta from "@/assets/logo-preta.png";
 
 export const Route = createFileRoute("/_app/home")({
   head: () => ({ meta: [{ title: "Início — TrocaCopa" }] }),
@@ -48,7 +50,7 @@ function Home() {
       {/* Header */}
       <header className="flex items-center justify-between mb-5">
         <img
-          src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+          src={theme === "dark" ? logoBranca : logoPreta}
           alt="TrocaCopa"
           className="h-8 object-contain"
         />

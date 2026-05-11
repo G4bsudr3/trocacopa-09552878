@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTheme } from "@/lib/use-theme";
+import logoBranca from "@/assets/logo-branca.png";
+import logoPreta from "@/assets/logo-preta.png";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -216,7 +218,7 @@ function LoginPage() {
         className="text-center mb-8"
       >
         <img
-          src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+          src={theme === "dark" ? logoBranca : logoPreta}
           alt="TrocaCopa"
           className="h-24 md:h-28 object-contain mx-auto mb-3"
         />

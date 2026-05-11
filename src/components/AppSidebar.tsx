@@ -22,6 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth";
+import logoBranca from "@/assets/logo-branca.png";
+import logoPreta from "@/assets/logo-preta.png";
 import { useUnreadNotifications } from "@/lib/use-unread-notifications";
 import { useTheme } from "@/lib/use-theme";
 import { toast } from "sonner";
@@ -59,7 +61,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link to="/home" className="flex items-center px-2 py-1.5">
           <img
-            src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+            src={theme === "dark" ? logoBranca : logoPreta}
             alt="TrocaCopa"
             className={collapsed ? "h-5 object-contain" : "h-7 object-contain"}
           />
