@@ -30,6 +30,8 @@ function Settings() {
   const [contribBusy, setContribBusy] = useState(false);
   const [prefsSaving, setPrefsSaving] = useState<keyof Prefs | null>(null);
   const [discoverableSaving, setDiscoverableSaving] = useState(false);
+  const [confirmDeleteContribs, setConfirmDeleteContribs] = useState(false);
+  const [confirmDeleteAccount, setConfirmDeleteAccount] = useState(false);
   const serverPrefs = (profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true };
   const serverDiscoverable = profile?.discoverable !== false;
   const [localPrefs, setLocalPrefs] = useState<Prefs>(serverPrefs);
