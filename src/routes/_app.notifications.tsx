@@ -174,7 +174,7 @@ function Notifs() {
         <div className="flex items-center gap-3">
           {unread.total > 0 && <button onClick={markAllRead} className="text-xs text-primary font-semibold">Marcar lidas</button>}
           {all.length > 0 && (
-            <button onClick={removeAll} className="text-xs text-destructive font-semibold flex items-center gap-1">
+            <button onClick={() => setConfirmClear(true)} className="text-xs text-destructive font-semibold flex items-center gap-1">
               <Trash2 size={12} /> Limpar
             </button>
           )}
