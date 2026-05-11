@@ -122,14 +122,17 @@ function Trades() {
             const isMine = t.requester_id === user?.id;
             const other = isMine ? t.receiver : t.requester;
             const name = other?.full_name || "Colecionador";
+            const needsAction = t.status === "pending" && !isMine;
             return (
               <Link
                 key={t.id}
                 to="/trade/$id"
                 params={{ id: t.id }}
-                className="glass rounded-2xl p-4 flex items-center gap-3"
+                className={`glass rounded-2xl p-4 flex items-center gap-3 transition ${
+                  needsAction ? "ring-1 ring-gold/50" : ""
+                }`}
               >
-                <div className="w-12 h-12 rounded-full overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground">
+                <div className="w-12 h-12 rounded-full overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground shrink-0">
                   {other?.avatar_url ? (
                     <img src={other.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -139,7 +142,7 @@ function Trades() {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold truncate">{name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {isMine ? "Você enviou" : "Recebida"} · {new Date(t.created_at).toLocaleDateString("pt-BR")}
+                    {isMine ? "↗ Você enviou" : "↙ Recebida"} · {new Date(t.created_at).toLocaleDateString("pt-BR")}
                   </p>
                   {(t.offered_stickers.length > 0 || t.requested_stickers.length > 0) && (
                     <p className="text-[11px] text-primary font-semibold mt-0.5">
