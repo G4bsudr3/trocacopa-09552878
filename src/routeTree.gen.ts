@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -31,6 +33,11 @@ import { Route as AppProfileEditRouteImport } from './routes/_app.profile.edit'
 import { Route as AppAdminStickersRouteImport } from './routes/_app.admin.stickers'
 import { Route as ApiPublicHooksScanMatchAlertsRouteImport } from './routes/api/public/hooks/scan-match-alerts'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SegurancaRoute = SegurancaRouteImport.update({
   id: '/seguranca',
   path: '/seguranca',
@@ -39,6 +46,11 @@ const SegurancaRoute = SegurancaRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -140,8 +152,10 @@ const ApiPublicHooksScanMatchAlertsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
+  '/termos': typeof TermosRoute
   '/album': typeof AppAlbumRoute
   '/duplicates': typeof AppDuplicatesRoute
   '/home': typeof AppHomeRoute
@@ -162,8 +176,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
+  '/termos': typeof TermosRoute
   '/album': typeof AppAlbumRoute
   '/duplicates': typeof AppDuplicatesRoute
   '/home': typeof AppHomeRoute
@@ -186,8 +202,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
+  '/termos': typeof TermosRoute
   '/_app/album': typeof AppAlbumRoute
   '/_app/duplicates': typeof AppDuplicatesRoute
   '/_app/home': typeof AppHomeRoute
@@ -210,8 +228,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/privacidade'
     | '/reset-password'
     | '/seguranca'
+    | '/termos'
     | '/album'
     | '/duplicates'
     | '/home'
@@ -232,8 +252,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/privacidade'
     | '/reset-password'
     | '/seguranca'
+    | '/termos'
     | '/album'
     | '/duplicates'
     | '/home'
@@ -255,8 +277,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/login'
+    | '/privacidade'
     | '/reset-password'
     | '/seguranca'
+    | '/termos'
     | '/_app/album'
     | '/_app/duplicates'
     | '/_app/home'
@@ -279,8 +303,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SegurancaRoute: typeof SegurancaRoute
+  TermosRoute: typeof TermosRoute
   ConsentTokenRoute: typeof ConsentTokenRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicHooksScanMatchAlertsRoute: typeof ApiPublicHooksScanMatchAlertsRoute
@@ -288,6 +314,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seguranca': {
       id: '/seguranca'
       path: '/seguranca'
@@ -300,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -486,8 +526,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SegurancaRoute: SegurancaRoute,
+  TermosRoute: TermosRoute,
   ConsentTokenRoute: ConsentTokenRoute,
   InviteCodeRoute: InviteCodeRoute,
   ApiPublicHooksScanMatchAlertsRoute: ApiPublicHooksScanMatchAlertsRoute,
@@ -495,3 +537,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

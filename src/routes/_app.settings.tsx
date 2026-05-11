@@ -233,6 +233,11 @@ function Settings() {
       <p className="text-center text-[10px] text-muted-foreground mt-8">
         TrocaCopa © {new Date().getFullYear()}
       </p>
+      <div className="flex justify-center gap-4 mt-2">
+        <Link to="/termos" className="text-[10px] text-muted-foreground hover:text-primary">Termos de Uso</Link>
+        <Link to="/privacidade" className="text-[10px] text-muted-foreground hover:text-primary">Privacidade</Link>
+        <Link to="/seguranca" className="text-[10px] text-muted-foreground hover:text-primary">Segurança</Link>
+      </div>
 
       <ConfirmDialog
         open={confirmDeleteContribs}

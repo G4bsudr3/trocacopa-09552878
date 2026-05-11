@@ -338,9 +338,17 @@ function LoginPage() {
         )}
       </motion.div>
 
-      <Link to="/seguranca" className="text-[11px] text-muted-foreground hover:text-primary mt-6 inline-flex items-center gap-1">
-        🛡️ Segurança e proteção de crianças
-      </Link>
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-6">
+        <Link to="/seguranca" className="text-[11px] text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+          🛡️ Segurança e crianças
+        </Link>
+        <Link to="/termos" className="text-[11px] text-muted-foreground hover:text-primary">
+          Termos de Uso
+        </Link>
+        <Link to="/privacidade" className="text-[11px] text-muted-foreground hover:text-primary">
+          Privacidade
+        </Link>
+      </div>
     </div>
   );
 }
