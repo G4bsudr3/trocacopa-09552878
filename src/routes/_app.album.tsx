@@ -31,10 +31,11 @@ function Album() {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Sticker | null>(null);
   const [openCountry, setOpenCountry] = useState<string | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
 
   const owned = stickers.filter((s) => s.owned).length;
   const dups = stickers.filter((s) => s.duplicates > 1).length;
-  const pct = total > 0 ? Math.round((owned / total) * 100) : 0;
+  const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((owned / total) * 100))) : 0;
 
   const passFilter = (s: Sticker) => {
     if (filter === "owned" && !s.owned) return false;
