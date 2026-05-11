@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon } from "lucide-react";
+import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon, Repeat2, Target, BookOpen, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -130,7 +130,7 @@ function Near() {
                 : "glass text-muted-foreground"
             }`}
           >
-            {r >= 500 ? "🌎 Brasil" : `${r} km`}
+            {r >= 500 ? <span className="flex items-center gap-1"><Globe2 size={10} /> Brasil</span> : `${r} km`}
           </button>
         ))}
       </div>
@@ -138,19 +138,19 @@ function Near() {
       <div className="flex flex-wrap gap-2 mt-3">
         <button
           onClick={() => setOnlyCity((v) => !v)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
+          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition flex items-center gap-1.5 ${
             onlyCity ? "bg-primary/20 text-primary border border-primary/40" : "glass text-muted-foreground"
           }`}
         >
-          📍 Só mesma cidade
+          <MapPin size={10} /> Só mesma cidade
         </button>
         <button
           onClick={() => setOnlyMutual((v) => !v)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition ${
+          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition flex items-center gap-1.5 ${
             onlyMutual ? "bg-primary/20 text-primary border border-primary/40" : "glass text-muted-foreground"
           }`}
         >
-          🔁 Só com troca 1-1
+          <Repeat2 size={10} /> Só com troca 1-1
         </button>
         <div className="ml-auto flex gap-1 glass rounded-full p-1">
           <button
@@ -238,28 +238,28 @@ function Near() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-semibold truncate">{c.full_name || "Colecionador"}</p>
                       {c.same_city && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">
-                          📍 Mesma cidade
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/20 text-primary flex items-center gap-1">
+                          <MapPin size={9} /> Mesma cidade
                         </span>
                       )}
                       {!c.same_city && isClose && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold">
-                          🎯 Perto
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold/20 text-gold flex items-center gap-1">
+                          <Target size={9} /> Perto
                         </span>
                       )}
                       {c.out_of_radius && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent flex items-center gap-1">
-                          <Globe2 size={10} /> Fora do raio
+                          <Globe2 size={9} /> Fora do raio
                         </span>
                       )}
                       {c.compat_album && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-surface text-muted-foreground">
-                          📊 Álbum parecido
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-surface text-muted-foreground flex items-center gap-1">
+                          <BookOpen size={9} /> Álbum parecido
                         </span>
                       )}
                       {!c.recent_active && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-surface text-muted-foreground">
-                          💤 Inativo
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-surface text-muted-foreground flex items-center gap-1">
+                          <Moon size={9} /> Inativo
                         </span>
                       )}
                     </div>

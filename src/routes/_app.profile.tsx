@@ -4,7 +4,7 @@ import { useState, lazy, Suspense } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { TOTAL_STICKERS } from "@/lib/stickers";
-import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2, UserPlus } from "lucide-react";
+import { Edit3, LogOut, Crown, Star, Settings as SettingsIcon, Repeat2, UserPlus, Trophy, Award, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAlbum } from "@/lib/use-album";
@@ -62,10 +62,10 @@ function Profile() {
 
   const badge =
     trades < 10
-      ? { icon: "🥉", name: "Iniciante" }
+      ? { Icon: Shield, name: "Iniciante", color: "text-muted-foreground" }
       : trades < 30
-        ? { icon: "🥈", name: "Colecionador" }
-        : { icon: "🥇", name: "Mestre das Trocas" };
+        ? { Icon: Award, name: "Colecionador", color: "text-primary" }
+        : { Icon: Trophy, name: "Mestre das Trocas", color: "text-gold" };
 
   return (
     <div className="px-5 pt-4 max-w-2xl mx-auto">
@@ -105,7 +105,7 @@ function Profile() {
         </div>
 
         <div className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-gold/30">
-          <span className="text-2xl">{badge.icon}</span>
+          <badge.Icon size={18} className={badge.color} />
           <span className="font-semibold text-sm">{badge.name}</span>
         </div>
       </motion.div>

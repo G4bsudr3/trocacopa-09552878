@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Bell, Crown, Repeat2, ArrowRight } from "lucide-react";
+import { Bell, Crown, Repeat2, ArrowRight, ScanLine, MapPin, BookOpen, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TOTAL_STICKERS } from "@/lib/stickers";
@@ -103,10 +103,10 @@ function Home() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 gap-2.5 mt-4">
-        <ActionCard to="/scan" label="Escanear" emoji="📷" desc="Adicionar figurinhas" />
-        <ActionCard to="/trades" label="Minhas Trocas" emoji="🔄" desc="Ver negociações" />
-        <ActionCard to="/near" label="Perto de Mim" emoji="📍" desc="Encontrar trocadores" />
-        <ActionCard to="/album" label="Meu Álbum" emoji="📊" desc="Ver coleção completa" />
+        <ActionCard to="/scan" label="Escanear" icon={ScanLine} desc="Adicionar figurinhas" />
+        <ActionCard to="/trades" label="Minhas Trocas" icon={Repeat2} desc="Ver negociações" />
+        <ActionCard to="/near" label="Perto de Mim" icon={MapPin} desc="Encontrar trocadores" />
+        <ActionCard to="/album" label="Meu Álbum" icon={BookOpen} desc="Ver coleção completa" />
       </div>
 
       {/* Duplicates CTA */}
@@ -231,10 +231,10 @@ function ProgressRing({ pct }: { pct: number }) {
   );
 }
 
-function ActionCard({ to, label, emoji, desc }: { to: string; label: string; emoji: string; desc: string }) {
+function ActionCard({ to, label, icon: Icon, desc }: { to: string; label: string; icon: LucideIcon; desc: string }) {
   return (
     <Link to={to as any} className="card rounded-xl p-4 flex flex-col gap-1 active:scale-[0.97] transition">
-      <span className="text-xl mb-0.5">{emoji}</span>
+      <span className="mb-1 text-primary"><Icon size={20} strokeWidth={2} /></span>
       <span className="font-semibold text-sm">{label}</span>
       <span className="text-[11px] text-muted-foreground leading-tight">{desc}</span>
     </Link>

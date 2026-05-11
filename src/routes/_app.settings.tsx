@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield, Gift } from "lucide-react";
+import { ChevronRight, User, MapPin, Crown, LogOut, Trash2, Loader2, Eye, Info, Shield, Gift, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useIsAdmin } from "@/lib/use-admin";
+import { useTheme } from "@/lib/use-theme";
 import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -20,6 +21,7 @@ const APP_VERSION = "1.0.0";
 function Settings() {
   const { user, profile, refreshProfile, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const { theme, toggle: toggleTheme } = useTheme();
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [gpsBusy, setGpsBusy] = useState(false);
@@ -125,6 +127,19 @@ function Settings() {
         {isAdmin && (
           <Row icon={<Shield size={18} className="text-primary" />} label="Admin · Figurinhas" to="/admin/stickers" />
         )}
+      </Section>
+
+      <Section title="Aparência">
+        <div className="glass rounded-2xl p-4 flex items-center gap-3">
+          {theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
+          <span className="flex-1 text-sm">Tema {theme === "dark" ? "escuro" : "claro"}</span>
+          <button
+            onClick={toggleTheme}
+            className={`w-12 h-7 rounded-full p-0.5 transition ${theme === "light" ? "bg-primary" : "bg-surface"}`}
+          >
+            <span className={`block w-6 h-6 rounded-full bg-background transition-transform ${theme === "light" ? "translate-x-5" : ""}`} />
+          </button>
+        </div>
       </Section>
 
       <Section title="Privacidade">

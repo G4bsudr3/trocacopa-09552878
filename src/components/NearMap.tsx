@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-le
 import L from "leaflet";
 import Supercluster from "supercluster";
 import "leaflet/dist/leaflet.css";
-import { MessageCircle, Globe2 } from "lucide-react";
+import { MessageCircle, Globe2, MapPin, BookOpen } from "lucide-react";
 
 export type NearbyGeoRow = {
   id: string;
@@ -153,8 +153,8 @@ function CollectorPopup({ row, onStartTrade }: { row: NearbyGeoRow; onStartTrade
         </div>
       </div>
       <div className="flex flex-wrap gap-1">
-        {row.same_city && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">📍 Mesma cidade</span>}
-        {row.compat_album && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">📊 Álbum parecido</span>}
+        {row.same_city && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 inline-flex items-center gap-1"><MapPin size={9} /> Mesma cidade</span>}
+        {row.compat_album && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700 inline-flex items-center gap-1"><BookOpen size={9} /> Álbum parecido</span>}
         {row.out_of_radius && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 inline-flex items-center gap-1"><Globe2 size={10} /> Fora do raio</span>}
       </div>
       <div className="grid grid-cols-3 gap-1 text-center text-[10px]">
