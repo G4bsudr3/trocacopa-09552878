@@ -231,9 +231,6 @@ function ProgressRing({ pct }: { pct: number }) {
           transition={{ duration: 1, ease: "easeOut" }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center font-display text-xl leading-none">
-        {pct}%
-      </div>
     </div>
   );
 }
