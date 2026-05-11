@@ -5,6 +5,16 @@ import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown, Repeat2 } 
 import { toast } from "sonner";
 import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/album")({
   head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
