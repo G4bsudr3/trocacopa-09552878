@@ -361,7 +361,9 @@ function Album() {
                         ? "Foto do time"
                         : current.kind === "special"
                           ? "Especial"
-                          : `Jogador #${current.position}`}
+                          : current.kind === "player"
+                            ? (current.player_name || `Jogador #${current.position}`)
+                            : `#${current.position}`}
                   </p>
                   <p className="text-xs mt-1">
                     {current.owned ? (

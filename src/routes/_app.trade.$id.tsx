@@ -43,6 +43,7 @@ function Trade() {
   const goBack = () => nav({ to: "/trades" });
   const [messages, setMessages] = useState<Message[]>([]);
   const [confettiOn, setConfettiOn] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const trade = useQuery({
@@ -127,6 +128,7 @@ function Trade() {
   };
 
   const updateStatus = async (status: TradeRow["status"]) => {
+    if (actionBusy) return;
     if (status === "completed") {
       const ok = window.confirm("Confirmar que a troca foi realizada presencialmente?");
       if (!ok) return;
@@ -135,7 +137,9 @@ function Trade() {
       const ok = window.confirm("Cancelar esta troca? Essa ação não pode ser desfeita.");
       if (!ok) return;
     }
+    setActionBusy(true);
     const { error } = await supabase.from("trades").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    setActionBusy(false);
     if (error) return toast.error(error.message);
     if (status === "completed") {
       setConfettiOn(true);
@@ -198,13 +202,15 @@ function Trade() {
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button
             onClick={() => updateStatus("accepted")}
-            className="gradient-primary text-primary-foreground rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2"
+            disabled={actionBusy}
+            className="gradient-primary text-primary-foreground rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <Check size={14} /> Aceitar
+            {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Aceitar
           </button>
           <button
             onClick={() => updateStatus("declined")}
-            className="glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2"
+            disabled={actionBusy}
+            className="glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
             <X size={14} /> Recusar
           </button>
@@ -214,9 +220,10 @@ function Trade() {
       {t.status === "pending" && !isReceiver && (
         <button
           onClick={() => updateStatus("cancelled")}
-          className="w-full mt-3 glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2"
+          disabled={actionBusy}
+          className="w-full mt-3 glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
         >
-          <X size={14} /> Cancelar solicitação
+          {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Cancelar solicitação
         </button>
       )}
 
@@ -224,13 +231,15 @@ function Trade() {
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button
             onClick={() => updateStatus("completed")}
-            className="gradient-primary text-primary-foreground rounded-full py-3 font-bold glow-primary flex items-center justify-center gap-2"
+            disabled={actionBusy}
+            className="gradient-primary text-primary-foreground rounded-full py-3 font-bold glow-primary flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <Check size={16} /> Concluída
+            {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={16} />} Concluída
           </button>
           <button
             onClick={() => updateStatus("cancelled")}
-            className="glass border border-destructive/30 text-destructive rounded-full py-3 font-bold text-sm flex items-center justify-center gap-2"
+            disabled={actionBusy}
+            className="glass border border-destructive/30 text-destructive rounded-full py-3 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
             <X size={14} /> Cancelar troca
           </button>

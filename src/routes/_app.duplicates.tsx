@@ -218,7 +218,7 @@ function DupRow({ s, onPlus, onMinus }: { s: Sticker; onPlus: () => void; onMinu
       <div className="flex-1 min-w-0">
         <p className="font-display text-sm tracking-wide leading-tight">{s.code}</p>
         <p className="text-[11px] text-muted-foreground truncate">
-          {s.kind === "crest" ? "Brasão" : s.kind === "team" ? "Time" : s.kind === "special" ? "Especial" : `Jogador #${s.position}`}
+          {s.kind === "crest" ? "Brasão" : s.kind === "team" ? "Time" : s.kind === "special" ? "Especial" : s.kind === "player" ? (s.player_name || `Jogador #${s.position}`) : `#${s.position}`}
         </p>
       </div>
       <div className="flex items-center gap-2">

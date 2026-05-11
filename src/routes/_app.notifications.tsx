@@ -161,7 +161,7 @@ function Notifs() {
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-3xl tracking-wide">Notificações</h1>
         <div className="flex items-center gap-3">
-          <button onClick={markAllRead} className="text-xs text-primary font-semibold">Marcar lidas</button>
+          {unread.total > 0 && <button onClick={markAllRead} className="text-xs text-primary font-semibold">Marcar lidas</button>}
           {all.length > 0 && (
             <button onClick={removeAll} className="text-xs text-destructive font-semibold flex items-center gap-1">
               <Trash2 size={12} /> Limpar

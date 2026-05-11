@@ -165,7 +165,7 @@ function Near() {
           </button>
           <button
             onClick={() => setSortMode("distance")}
-            className={`px-3 py-1 rounded-full text-[11px] font-bold ${sortMode === "distance" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+            className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${sortMode === "distance" ? "bg-primary text-primary-foreground" : "text-muted-foreground"} disabled:opacity-40 disabled:cursor-not-allowed`}
             disabled={!hasGeo}
             title={!hasGeo ? "Ative localização" : undefined}
           >

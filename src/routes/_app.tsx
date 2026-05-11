@@ -66,7 +66,10 @@ function AppLayout() {
             title = "Troca cancelada";
             if (n.payload.trade_id) action = { label: "Ver", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
           }
-          else if (n.type === "trade_message") title = n.payload.preview ? `💬 ${n.payload.preview}` : "Nova mensagem";
+          else if (n.type === "trade_message") {
+            title = n.payload.preview ? `💬 ${n.payload.preview}` : "Nova mensagem";
+            if (n.payload.trade_id) action = { label: "Abrir", onClick: () => nav({ to: "/trade/$id", params: { id: n.payload.trade_id! } }) };
+          }
           else if (n.type === "trade_meet") {
             title = "📅 Encontro de troca atualizado";
             const tid = (n.payload as { trade_id?: string }).trade_id;
