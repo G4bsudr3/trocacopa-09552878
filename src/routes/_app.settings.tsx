@@ -193,7 +193,7 @@ function Settings() {
           <LogOut size={18} /> <span className="flex-1 text-sm font-semibold">Sair</span>
         </button>
         <button
-          onClick={handleDelete}
+          onClick={() => setConfirmDeleteAccount(true)}
           disabled={busy}
           className="w-full glass rounded-2xl p-4 flex items-center gap-3 text-left text-destructive border border-destructive/30"
         >
