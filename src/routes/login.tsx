@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTheme } from "@/lib/use-theme";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -54,6 +55,7 @@ function translateAuthError(message: string): string {
 function LoginPage() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -213,10 +215,11 @@ function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-8"
       >
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="text-3xl">⚽</span>
-          <span className="font-display text-5xl md:text-6xl text-foreground tracking-widest">TROCACOPA</span>
-        </div>
+        <img
+          src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+          alt="TrocaCopa"
+          className="h-24 md:h-28 object-contain mx-auto mb-3"
+        />
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Copa do Mundo 2026</p>
       </motion.div>
 

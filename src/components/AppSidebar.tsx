@@ -57,11 +57,12 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/home" className="flex items-center gap-2 px-2 py-1.5">
-          <span className="text-2xl">⚽</span>
-          {!collapsed && (
-            <span className="font-display text-lg tracking-wide text-primary text-glow">TROCACOPA</span>
-          )}
+        <Link to="/home" className="flex items-center px-2 py-1.5">
+          <img
+            src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+            alt="TrocaCopa"
+            className={collapsed ? "h-5 object-contain" : "h-7 object-contain"}
+          />
         </Link>
       </SidebarHeader>
       <SidebarContent>

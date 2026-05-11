@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Link, useLocation, Navigate, useNavigate } from "@tanstack/react-router";
 import { Home, BookOpen, ScanLine, MapPin, User, Bell } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useTheme } from "@/lib/use-theme";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const { session, loading, user, profile } = useAuth();
   const nav = useNavigate();
+  const { theme } = useTheme();
   const lastToastRef = useRef(0);
   const prefsRef = useRef(profile?.notification_prefs);
   prefsRef.current = profile?.notification_prefs;
@@ -70,7 +72,11 @@ function AppLayout() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="font-display text-4xl text-primary text-glow animate-pulse">⚽</div>
+        <img
+          src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+          alt="TrocaCopa"
+          className="h-16 object-contain animate-pulse"
+        />
       </div>
     );
   }

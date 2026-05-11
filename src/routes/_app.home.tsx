@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { TOTAL_STICKERS } from "@/lib/stickers";
 import { useUnreadNotifications } from "@/lib/use-unread-notifications";
+import { useTheme } from "@/lib/use-theme";
 
 export const Route = createFileRoute("/_app/home")({
   head: () => ({ meta: [{ title: "Início — TrocaCopa" }] }),
@@ -30,6 +31,7 @@ function Home() {
   });
 
   const unread = useUnreadNotifications();
+  const { theme } = useTheme();
 
   const featured = useQuery({
     queryKey: ["featured-match", user?.id],
@@ -45,10 +47,11 @@ function Home() {
     <div className="px-4 pt-4 max-w-2xl mx-auto">
       {/* Header */}
       <header className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">⚽</span>
-          <span className="font-display text-xl tracking-widest text-foreground">TROCACOPA</span>
-        </div>
+        <img
+          src={theme === "dark" ? "/logo-branca.png" : "/logo-preta.png"}
+          alt="TrocaCopa"
+          className="h-8 object-contain"
+        />
         <div className="flex items-center gap-2">
           <Link
             to="/notifications"
