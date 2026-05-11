@@ -119,7 +119,7 @@ function Home() {
       {/* Duplicates CTA */}
       {(dups.data ?? 0) > 0 && (
         <Link to="/duplicates" className="block mt-4">
-          <div className="card rounded-xl p-4 flex items-center gap-3 border-l-2 border-l-primary active:scale-[0.98] transition">
+          <div className="card rounded-2xl p-4 flex items-center gap-3 border-l-2 border-l-primary active:scale-[0.98] transition">
             <span className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center shrink-0">
               <Repeat2 className="text-primary-foreground" size={16} />
             </span>
@@ -137,7 +137,7 @@ function Home() {
       {/* Pro CTA */}
       {profile?.plan !== "pro" && (
         <Link to="/pro" className="block mt-3">
-          <div className="card rounded-xl p-4 flex items-center gap-3 border-l-2 border-l-gold active:scale-[0.98] transition">
+          <div className="card rounded-2xl p-4 flex items-center gap-3 border-l-2 border-l-gold active:scale-[0.98] transition">
             <span className="w-9 h-9 rounded-lg gradient-gold flex items-center justify-center shrink-0">
               <Crown className="text-gold-foreground" size={16} />
             </span>
@@ -153,7 +153,7 @@ function Home() {
       {/* Featured matches */}
       <section className="mt-6 pb-28 md:pb-6">
         <div className="flex items-center justify-between mb-3">
-          <p className="font-semibold text-sm">Trocas Disponíveis</p>
+          <p className="font-semibold text-sm">Combinações pra você</p>
           <Link to="/near" className="text-xs text-primary font-semibold flex items-center gap-1">
             Ver todas <ArrowRight size={12} />
           </Link>
