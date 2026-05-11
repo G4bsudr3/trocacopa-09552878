@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/use-admin";
 import { ChevronLeft, Loader2, Upload, Search, Download } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_app/admin/stickers")({
   head: () => ({ meta: [{ title: "Admin · Figurinhas" }] }),
