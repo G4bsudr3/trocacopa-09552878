@@ -130,6 +130,10 @@ function Trade() {
       const ok = window.confirm("Confirmar que a troca foi realizada presencialmente?");
       if (!ok) return;
     }
+    if (status === "cancelled") {
+      const ok = window.confirm("Cancelar esta troca? Essa ação não pode ser desfeita.");
+      if (!ok) return;
+    }
     const { error } = await supabase.from("trades").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) return toast.error(error.message);
     if (status === "completed") {
@@ -200,13 +204,30 @@ function Trade() {
         </div>
       )}
 
-      {t.status === "accepted" && (
+      {t.status === "pending" && !isReceiver && (
         <button
-          onClick={() => updateStatus("completed")}
-          className="w-full mt-3 gradient-primary text-primary-foreground rounded-full py-3 font-bold glow-primary flex items-center justify-center gap-2"
+          onClick={() => updateStatus("cancelled")}
+          className="w-full mt-3 glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2"
         >
-          <Check size={16} /> Marcar como concluída
+          <X size={14} /> Cancelar solicitação
         </button>
+      )}
+
+      {t.status === "accepted" && (
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <button
+            onClick={() => updateStatus("completed")}
+            className="gradient-primary text-primary-foreground rounded-full py-3 font-bold glow-primary flex items-center justify-center gap-2"
+          >
+            <Check size={16} /> Concluída
+          </button>
+          <button
+            onClick={() => updateStatus("cancelled")}
+            className="glass border border-destructive/30 text-destructive rounded-full py-3 font-bold text-sm flex items-center justify-center gap-2"
+          >
+            <X size={14} /> Cancelar troca
+          </button>
+        </div>
       )}
 
       <StickerExchange
