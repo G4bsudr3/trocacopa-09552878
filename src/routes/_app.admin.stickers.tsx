@@ -379,6 +379,15 @@ function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; o
         </div>
       </div>
       <style>{`.input{width:100%;background:transparent;border:1px solid hsl(var(--border));border-radius:.75rem;padding:.5rem .75rem;font-size:.875rem;outline:none}`}</style>
+      <ConfirmDialog
+        open={confirmRemove}
+        onOpenChange={setConfirmRemove}
+        title={`Excluir ${row.code}?`}
+        description="A figurinha será removida do catálogo. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        destructive
+        onConfirm={() => { setConfirmRemove(false); void remove(); }}
+      />
     </div>
   );
 }
