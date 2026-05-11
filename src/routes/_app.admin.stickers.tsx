@@ -283,6 +283,7 @@ function Stat({ label, value, ok, onClick }: { label: string; value: string; ok:
 
 function EditModal({ row, onClose, onSaved }: { row: Row; onClose: () => void; onSaved: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [country_name, setName] = useState(row.country_name);
   const [country_code, setCode] = useState(row.country_code);
   const [flag_emoji, setFlag] = useState(row.flag_emoji);
