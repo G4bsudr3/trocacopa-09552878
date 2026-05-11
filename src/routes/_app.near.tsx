@@ -276,7 +276,7 @@ function Near() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-display text-2xl text-primary text-glow leading-none">{score}</p>
+                    <p className="font-display text-2xl text-primary text-glow leading-none">{score}<span className="text-sm">%</span></p>
                     <p className="text-[10px] text-gold uppercase tracking-wider">match</p>
                   </div>
                 </div>
