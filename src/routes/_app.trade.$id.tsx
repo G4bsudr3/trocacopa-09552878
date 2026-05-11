@@ -330,6 +330,31 @@ function Trade() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={pendingStatus === "completed"}
+        onOpenChange={(o) => !o && setPendingStatus(null)}
+        title="Confirmar troca realizada?"
+        description="Marque como concluída apenas após o encontro presencial. Vocês poderão se avaliar."
+        confirmLabel="Confirmar troca"
+        onConfirm={() => {
+          setPendingStatus(null);
+          void updateStatus("completed");
+        }}
+      />
+      <ConfirmDialog
+        open={pendingStatus === "cancelled"}
+        onOpenChange={(o) => !o && setPendingStatus(null)}
+        title="Cancelar esta troca?"
+        description="A outra pessoa será avisada e a troca será encerrada. Esta ação não pode ser desfeita."
+        confirmLabel="Cancelar troca"
+        cancelLabel="Voltar"
+        destructive
+        onConfirm={() => {
+          setPendingStatus(null);
+          void updateStatus("cancelled");
+        }}
+      />
     </div>
   );
 }
