@@ -488,9 +488,9 @@ function StickerCell({
           <span className={`font-display text-sm font-bold leading-none mt-1 ${s.owned ? "text-primary" : "text-foreground"}`}>{s.code}</span>
         </>
       )}
-      {!s.owned && s.image_url && (
-        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/80 to-transparent flex items-center justify-center gap-1 py-1">
-          <span className="font-display text-[11px] font-bold text-foreground">{s.code}</span>
+      {s.image_url && (
+        <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center py-1.5">
+          <span className="font-display text-sm font-bold text-white drop-shadow">{s.code}</span>
         </span>
       )}
       {!s.owned && (
