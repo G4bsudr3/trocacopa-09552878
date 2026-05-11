@@ -208,14 +208,14 @@ function Trade() {
       {t.status === "pending" && isReceiver && (
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button
-            onClick={() => updateStatus("accepted")}
+            onClick={() => requestStatus("accepted")}
             disabled={actionBusy}
             className="gradient-primary text-primary-foreground rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Aceitar
           </button>
           <button
-            onClick={() => updateStatus("declined")}
+            onClick={() => requestStatus("declined")}
             disabled={actionBusy}
             className="glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
@@ -226,7 +226,7 @@ function Trade() {
 
       {t.status === "pending" && !isReceiver && (
         <button
-          onClick={() => updateStatus("cancelled")}
+          onClick={() => requestStatus("cancelled")}
           disabled={actionBusy}
           className="w-full mt-3 glass border border-destructive/30 text-destructive rounded-full py-2.5 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
         >
@@ -237,14 +237,14 @@ function Trade() {
       {t.status === "accepted" && (
         <div className="grid grid-cols-2 gap-2 mt-3">
           <button
-            onClick={() => updateStatus("completed")}
+            onClick={() => requestStatus("completed")}
             disabled={actionBusy}
             className="gradient-primary text-primary-foreground rounded-full py-3 font-bold glow-primary flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {actionBusy ? <Loader2 size={14} className="animate-spin" /> : <Check size={16} />} Concluída
           </button>
           <button
-            onClick={() => updateStatus("cancelled")}
+            onClick={() => requestStatus("cancelled")}
             disabled={actionBusy}
             className="glass border border-destructive/30 text-destructive rounded-full py-3 font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
           >
