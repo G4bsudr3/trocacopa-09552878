@@ -44,6 +44,9 @@ function Trade() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [confettiOn, setConfettiOn] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (navTimerRef.current) clearTimeout(navTimerRef.current); }, []);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const trade = useQuery({
@@ -141,6 +144,7 @@ function Trade() {
     const { error } = await supabase.from("trades").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     setActionBusy(false);
     if (error) return toast.error(error.message);
+    trade.refetch();
     if (status === "completed") {
       setConfettiOn(true);
       toast.success("Troca concluída! 🎉");
@@ -149,10 +153,10 @@ function Trade() {
       toast.success("Troca aceita!");
     } else if (status === "declined") {
       toast.success("Troca recusada");
-      setTimeout(goBack, 1200);
+      navTimerRef.current = setTimeout(goBack, 1200);
     } else if (status === "cancelled") {
       toast.success("Troca cancelada");
-      setTimeout(goBack, 1200);
+      navTimerRef.current = setTimeout(goBack, 1200);
     }
   };
 

@@ -361,9 +361,13 @@ function Album() {
                         ? "Foto do time"
                         : current.kind === "special"
                           ? "Especial"
-                          : current.kind === "player"
-                            ? (current.player_name || `Jogador #${current.position}`)
-                            : `#${current.position}`}
+                          : current.kind === "history"
+                            ? "FIFA World Cup History"
+                            : current.kind === "cover"
+                              ? "Capa do álbum"
+                              : current.kind === "player"
+                                ? (current.player_name || `Jogador · pos ${current.position}`)
+                                : `Grupo ${current.group_letter ?? "?"} · pos ${current.position}`}
                   </p>
                   <p className="text-xs mt-1">
                     {current.owned ? (

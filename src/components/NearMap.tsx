@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-le
 import L from "leaflet";
 import Supercluster from "supercluster";
 import "leaflet/dist/leaflet.css";
-import { MessageCircle, Globe2, MapPin, BookOpen } from "lucide-react";
+import { MessageCircle, Globe2, MapPin, BookOpen, Loader2 } from "lucide-react";
 
 export type NearbyGeoRow = {
   id: string;
@@ -28,6 +28,7 @@ type Props = {
   myLng: number;
   radiusKm: number;
   onStartTrade: (otherId: string) => void;
+  loadingTradeId?: string | null;
 };
 
 // Custom marker icon (primary gradient pin)
@@ -56,7 +57,7 @@ const clusterIcon = (count: number) => {
   });
 };
 
-function ClusteredMarkers({ rows, onStartTrade }: { rows: NearbyGeoRow[]; onStartTrade: (id: string) => void }) {
+function ClusteredMarkers({ rows, onStartTrade, loadingTradeId }: { rows: NearbyGeoRow[]; onStartTrade: (id: string) => void; loadingTradeId?: string | null }) {
   const map = useMap();
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
   const [zoom, setZoom] = useState(map.getZoom());
@@ -115,7 +116,7 @@ function ClusteredMarkers({ rows, onStartTrade }: { rows: NearbyGeoRow[]; onStar
               }}
             >
               <Popup maxWidth={280}>
-                <ClusterListPopup rows={leafRows} onStartTrade={onStartTrade} />
+                <ClusterListPopup rows={leafRows} onStartTrade={onStartTrade} loadingTradeId={loadingTradeId} />
               </Popup>
             </Marker>
           );
@@ -124,7 +125,7 @@ function ClusteredMarkers({ rows, onStartTrade }: { rows: NearbyGeoRow[]; onStar
         return (
           <Marker key={row.id} position={[lat, lng]} icon={collectorIcon(row.score_pct)}>
             <Popup maxWidth={260}>
-              <CollectorPopup row={row} onStartTrade={onStartTrade} />
+              <CollectorPopup row={row} onStartTrade={onStartTrade} loadingTradeId={loadingTradeId} />
             </Popup>
           </Marker>
         );
@@ -133,7 +134,7 @@ function ClusteredMarkers({ rows, onStartTrade }: { rows: NearbyGeoRow[]; onStar
   );
 }
 
-function CollectorPopup({ row, onStartTrade }: { row: NearbyGeoRow; onStartTrade: (id: string) => void }) {
+function CollectorPopup({ row, onStartTrade, loadingTradeId }: { row: NearbyGeoRow; onStartTrade: (id: string) => void; loadingTradeId?: string | null }) {
   return (
     <div className="min-w-[220px] space-y-2">
       <div className="flex items-center gap-2">
@@ -172,17 +173,18 @@ function CollectorPopup({ row, onStartTrade }: { row: NearbyGeoRow; onStartTrade
         </div>
       </div>
       <button
-        onClick={() => onStartTrade(row.id)}
-        className="w-full rounded-full py-2 text-xs font-bold text-white flex items-center justify-center gap-1.5 active:scale-95 transition"
+        onClick={() => !loadingTradeId && onStartTrade(row.id)}
+        disabled={!!loadingTradeId}
+        className="w-full rounded-full py-2 text-xs font-bold text-white flex items-center justify-center gap-1.5 active:scale-95 transition disabled:opacity-60"
         style={{ background: "hsl(var(--primary))" }}
       >
-        <MessageCircle size={14} /> Iniciar Troca
+        {loadingTradeId === row.id ? <><Loader2 size={14} className="animate-spin" /> Abrindo...</> : <><MessageCircle size={14} /> Iniciar Troca</>}
       </button>
     </div>
   );
 }
 
-function ClusterListPopup({ rows, onStartTrade }: { rows: NearbyGeoRow[]; onStartTrade: (id: string) => void }) {
+function ClusterListPopup({ rows, onStartTrade, loadingTradeId }: { rows: NearbyGeoRow[]; onStartTrade: (id: string) => void; loadingTradeId?: string | null }) {
   const sorted = [...rows].sort((a, b) => b.score_pct - a.score_pct);
   return (
     <div className="min-w-[240px] max-h-[280px] overflow-y-auto space-y-2">
@@ -199,10 +201,12 @@ function ClusterListPopup({ rows, onStartTrade }: { rows: NearbyGeoRow[]; onStar
             </p>
           </div>
           <button
-            onClick={() => onStartTrade(r.id)}
-            className="rounded-full px-2.5 py-1 text-[10px] font-bold text-white shrink-0"
+            onClick={() => !loadingTradeId && onStartTrade(r.id)}
+            disabled={!!loadingTradeId}
+            className="rounded-full px-2.5 py-1 text-[10px] font-bold text-white shrink-0 flex items-center gap-1 disabled:opacity-60"
             style={{ background: "hsl(var(--primary))" }}
           >
+            {loadingTradeId === r.id ? <Loader2 size={10} className="animate-spin" /> : null}
             Trocar
           </button>
         </div>

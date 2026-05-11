@@ -200,6 +200,7 @@ function Near() {
               myLng={profile!.lng as number}
               radiusKm={radius}
               onStartTrade={startTrade}
+              loadingTradeId={loadingTradeId}
             />
           </Suspense>
           {filtered.filter((r: any) => r.lat_approx != null).length === 0 && (

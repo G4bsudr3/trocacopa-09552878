@@ -11,7 +11,7 @@ export type Sticker = StickerCatalogItem & {
 type Row = { sticker_code: string; duplicates: number };
 
 export function useAlbum() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const qc = useQueryClient();
   const uid = user?.id;
 
@@ -76,6 +76,7 @@ export function useAlbum() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["user_stickers", uid] });
       qc.invalidateQueries({ queryKey: ["profile", uid] });
+      refreshProfile();
     },
   });
 

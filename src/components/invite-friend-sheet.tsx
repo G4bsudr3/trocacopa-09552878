@@ -17,11 +17,13 @@ export function InviteFriendSheet({ open, onOpenChange }: { open: boolean; onOpe
   const { user } = useAuth();
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [inviteError, setInviteError] = useState(false);
 
-  useEffect(() => {
-    if (!open || !user || code) return;
+  const loadCode = async () => {
+    if (!user) return;
+    setInviteError(false);
     setBusy(true);
-    (async () => {
+    try {
       const { data: existing } = await supabase
         .from("invites")
         .select("code")
@@ -35,11 +37,20 @@ export function InviteFriendSheet({ open, onOpenChange }: { open: boolean; onOpe
       } else {
         const newCode = genCode();
         const { error } = await supabase.from("invites").insert({ inviter_id: user.id, code: newCode });
-        if (error) toast.error("Não foi possível gerar o convite");
+        if (error) { setInviteError(true); toast.error("Não foi possível gerar o convite"); }
         else setCode(newCode);
       }
+    } catch {
+      setInviteError(true);
+    } finally {
       setBusy(false);
-    })();
+    }
+  };
+
+  useEffect(() => {
+    if (!open || !user || code) return;
+    loadCode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, user, code]);
 
   const url = code ? `${window.location.origin}/invite/${code}` : "";
@@ -75,7 +86,14 @@ export function InviteFriendSheet({ open, onOpenChange }: { open: boolean; onOpe
             Mostre o QR ou compartilhe o link. Quem entrar já vira seu amigo no app e vocês podem trocar na hora.
           </p>
           <div className="bg-white rounded-2xl p-4 shadow-card">
-            {busy || !url ? (
+            {inviteError ? (
+              <div className="w-[200px] h-[200px] flex flex-col items-center justify-center gap-3">
+                <p className="text-xs text-destructive text-center">Falha ao gerar convite</p>
+                <button onClick={loadCode} className="px-4 py-2 rounded-full text-xs font-bold text-white" style={{ background: "hsl(var(--primary))" }}>
+                  Tentar novamente
+                </button>
+              </div>
+            ) : busy || !url ? (
               <div className="w-[200px] h-[200px] flex items-center justify-center">
                 <Loader2 className="animate-spin text-primary" />
               </div>
