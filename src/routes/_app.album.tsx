@@ -5,6 +5,16 @@ import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown, Repeat2 } 
 import { toast } from "sonner";
 import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/album")({
   head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
@@ -21,10 +31,11 @@ function Album() {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Sticker | null>(null);
   const [openCountry, setOpenCountry] = useState<string | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
 
   const owned = stickers.filter((s) => s.owned).length;
   const dups = stickers.filter((s) => s.duplicates > 1).length;
-  const pct = total > 0 ? Math.round((owned / total) * 100) : 0;
+  const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((owned / total) * 100))) : 0;
 
   const passFilter = (s: Sticker) => {
     if (filter === "owned" && !s.owned) return false;
@@ -126,12 +137,7 @@ function Album() {
             <Repeat2 size={12} /> Repetidas
           </Link>
           <button
-            onClick={() => {
-              if (confirm("Tem certeza que deseja resetar todo o álbum?")) {
-                reset();
-                toast.success("Álbum reiniciado");
-              }
-            }}
+            onClick={() => setResetOpen(true)}
             className="text-xs text-muted-foreground flex items-center gap-1 px-3 py-1.5 rounded-full glass"
           >
             <RotateCcw size={12} /> Resetar
@@ -422,6 +428,28 @@ function Album() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar álbum?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai apagar todas as figurinhas e repetidas que você marcou. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                reset();
+                toast.success("Álbum reiniciado");
+              }}
+            >
+              Resetar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
