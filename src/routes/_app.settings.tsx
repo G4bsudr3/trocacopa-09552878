@@ -53,7 +53,6 @@ function Settings() {
   }, [user?.id]);
 
   const onDeleteContribs = async () => {
-    if (!confirm("Apagar todas as fotos que você doou?")) return;
     setContribBusy(true);
     const n = await deleteAllMyContributions();
     setContribBusy(false);
