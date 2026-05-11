@@ -1,11 +1,12 @@
 ﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, Check, X, Loader2, CalendarClock, MapPin, Edit3 } from "lucide-react";
+import { ArrowLeft, Send, Check, X, Loader2, CalendarClock, MapPin, Edit3, Repeat2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useStickerCatalog } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/trade/$id")({
   head: () => ({ meta: [{ title: "Troca — TrocaCopa" }] }),
@@ -208,6 +209,14 @@ function Trade() {
         </button>
       )}
 
+      <StickerExchange
+        tradeId={id}
+        trade={t}
+        meId={user?.id ?? ""}
+        otherName={otherName}
+        onSaved={() => trade.refetch()}
+      />
+
       {(t.status === "accepted" || t.status === "pending") && (
         <MeetBlock trade={t} meId={user?.id ?? ""} onChange={() => trade.refetch()} />
       )}
@@ -280,6 +289,218 @@ function Trade() {
     </div>
   );
 }
+
+// ─── Sticker Exchange ────────────────────────────────────────────────────────
+
+type StickerRow = { user_id: string; sticker_code: string; duplicates: number };
+
+function StickerExchange({
+  tradeId,
+  trade,
+  meId,
+  otherName,
+  onSaved,
+}: {
+  tradeId: string;
+  trade: TradeRow;
+  meId: string;
+  otherName: string;
+  onSaved: () => void;
+}) {
+  const catalog = useStickerCatalog();
+  const qc = useQueryClient();
+  const editable = trade.status === "pending" || trade.status === "accepted";
+
+  const stickerData = useQuery({
+    queryKey: ["trade_stickers", tradeId],
+    enabled: !!tradeId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<StickerRow[]> => {
+      const { data, error } = await supabase.rpc("get_trade_stickers" as any, { _trade_id: tradeId });
+      if (error) throw error;
+      return (data ?? []) as StickerRow[];
+    },
+  });
+
+  const catalogMap = useMemo(() => {
+    const m = new Map<string, { flag_emoji: string; country_name: string }>();
+    (catalog.data ?? []).forEach((s) => m.set(s.code, { flag_emoji: s.flag_emoji, country_name: s.country_name }));
+    return m;
+  }, [catalog.data]);
+
+  const { myStickers, theirStickers } = useMemo(() => {
+    const rows = stickerData.data ?? [];
+    const mine = rows.filter((r) => r.user_id === meId);
+    const theirs = rows.filter((r) => r.user_id !== meId);
+    const myOwned = new Set(mine.map((r) => r.sticker_code));
+    const theirOwned = new Set(theirs.map((r) => r.sticker_code));
+    // stickers I can offer: my duplicates that the other doesn't have
+    const myStickers = mine
+      .filter((r) => r.duplicates >= 2 && !theirOwned.has(r.sticker_code))
+      .map((r) => r.sticker_code);
+    // stickers they can give me: their duplicates that I don't have
+    const theirStickers = theirs
+      .filter((r) => r.duplicates >= 2 && !myOwned.has(r.sticker_code))
+      .map((r) => r.sticker_code);
+    return { myStickers, theirStickers };
+  }, [stickerData.data, meId]);
+
+  // local selection state initialised from trade record
+  const isRequester = trade.requester_id === meId;
+  const [offering, setOffering] = useState<Set<string>>(
+    () => new Set(isRequester ? trade.offered_stickers : trade.requested_stickers)
+  );
+  const [requesting, setRequesting] = useState<Set<string>>(
+    () => new Set(isRequester ? trade.requested_stickers : trade.offered_stickers)
+  );
+  const [saving, setSaving] = useState(false);
+  const [expanded, setExpanded] = useState(true);
+
+  // sync when trade data refreshes
+  useEffect(() => {
+    setOffering(new Set(isRequester ? trade.offered_stickers : trade.requested_stickers));
+    setRequesting(new Set(isRequester ? trade.requested_stickers : trade.offered_stickers));
+  }, [trade.offered_stickers, trade.requested_stickers, isRequester]);
+
+  const toggle = (set: Set<string>, code: string): Set<string> => {
+    const next = new Set(set);
+    if (next.has(code)) next.delete(code); else next.add(code);
+    return next;
+  };
+
+  const save = async () => {
+    setSaving(true);
+    const payload = isRequester
+      ? { offered_stickers: [...offering], requested_stickers: [...requesting] }
+      : { offered_stickers: [...requesting], requested_stickers: [...offering] };
+    const { error } = await supabase
+      .from("trades")
+      .update({ ...payload, updated_at: new Date().toISOString() })
+      .eq("id", tradeId);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["trade_stickers", tradeId] });
+    toast.success("Proposta salva");
+    onSaved();
+  };
+
+  const loading = stickerData.isLoading || catalog.isLoading;
+
+  const chipCls = (selected: boolean) =>
+    `inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold border transition cursor-pointer select-none ${
+      selected
+        ? "bg-primary/20 border-primary text-primary"
+        : "bg-surface border-border/50 text-muted-foreground"
+    }`;
+
+  const hasProposal = offering.size > 0 || requesting.size > 0;
+
+  return (
+    <div className="glass-strong rounded-3xl mt-4 overflow-hidden">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3"
+      >
+        <span className="font-display text-lg flex items-center gap-2">
+          <Repeat2 size={18} /> Figurinhas da troca
+          {hasProposal && (
+            <span className="text-xs font-sans font-semibold text-primary">
+              ({offering.size} + {requesting.size})
+            </span>
+          )}
+        </span>
+        {expanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+      </button>
+
+      {expanded && (
+        <div className="px-4 pb-4 space-y-4">
+          {loading ? (
+            <div className="h-16 bg-surface rounded-xl animate-pulse" />
+          ) : (
+            <>
+              {/* What I offer */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Você oferece — suas repetidas disponíveis
+                </p>
+                {myStickers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">Sem repetidas disponíveis para oferecer.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {myStickers.map((code) => {
+                      const meta = catalogMap.get(code);
+                      return (
+                        <button
+                          key={code}
+                          disabled={!editable}
+                          onClick={() => setOffering((s) => toggle(s, code))}
+                          className={chipCls(offering.has(code))}
+                          title={meta?.country_name}
+                        >
+                          {meta?.flag_emoji && <span>{meta.flag_emoji}</span>}
+                          {code}
+                          {offering.has(code) && <Check size={9} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* What they offer */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  {otherName} pode te dar — repetidas deles disponíveis
+                </p>
+                {theirStickers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">Sem repetidas disponíveis de {otherName}.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {theirStickers.map((code) => {
+                      const meta = catalogMap.get(code);
+                      return (
+                        <button
+                          key={code}
+                          disabled={!editable}
+                          onClick={() => setRequesting((s) => toggle(s, code))}
+                          className={chipCls(requesting.has(code))}
+                          title={meta?.country_name}
+                        >
+                          {meta?.flag_emoji && <span>{meta.flag_emoji}</span>}
+                          {code}
+                          {requesting.has(code) && <Check size={9} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {editable && (
+                <button
+                  onClick={save}
+                  disabled={saving}
+                  className="w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                  Salvar proposta de troca
+                </button>
+              )}
+
+              {!editable && hasProposal && (
+                <div className="text-xs text-muted-foreground text-center">
+                  Proposta registrada — troca {trade.status === "completed" ? "concluída" : "encerrada"}.
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: TradeRow["status"] }) {
   const map: Record<TradeRow["status"], { label: string; cls: string }> = {
