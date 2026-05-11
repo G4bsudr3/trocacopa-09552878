@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useIsAdmin } from "@/lib/use-admin";
 import { useTheme } from "@/lib/use-theme";
 import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
