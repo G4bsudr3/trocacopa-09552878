@@ -139,9 +139,9 @@ function ConsentPage() {
               <button
                 onClick={approve}
                 disabled={busy}
-                className="flex-1 gradient-primary text-primary-foreground font-bold py-3 rounded-full glow-primary disabled:opacity-50"
+                className="flex-1 gradient-primary text-primary-foreground font-bold py-3 rounded-full glow-primary disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {busy ? "..." : "Autorizo ✓"}
+                {busy ? <Loader2 size={16} className="animate-spin" /> : "Autorizo ✓"}
               </button>
             </div>
           </>

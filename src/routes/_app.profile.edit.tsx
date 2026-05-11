@@ -175,7 +175,7 @@ function EditProfile() {
           />
         </Field>
         <Field label="Estado / Cidade" error={errors.city}>
-          <LocationSelect value={city} onChange={setCity} />
+          <LocationSelect key={profile?.city ?? ""} value={city} onChange={setCity} />
         </Field>
         <Field label="Bio" error={errors.bio}>
           <textarea
@@ -204,7 +204,7 @@ function EditProfile() {
             <Loader2 size={16} className="animate-spin text-primary" />
           ) : (
             <span className="text-xs text-muted-foreground">
-              {profile?.lat ? "✓ ativada" : "obrigatório p/ trocas"}
+              {profile?.lat ? "✓ ativada" : "para distâncias precisas"}
             </span>
           )}
         </button>

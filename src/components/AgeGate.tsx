@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Cake, Shield, Mail, User as UserIcon } from "lucide-react";
+import { Cake, Shield, Mail, User as UserIcon, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -197,7 +197,7 @@ export function AgeGate() {
                   disabled={busy}
                   className="flex-1 gradient-primary text-primary-foreground font-bold py-3 rounded-full glow-primary disabled:opacity-60"
                 >
-                  {busy ? "..." : "Enviar 🛡️"}
+                  {busy ? <Loader2 size={16} className="animate-spin" /> : "Enviar 🛡️"}
                 </button>
               </div>
             </div>

@@ -95,6 +95,7 @@ export function useAlbum() {
       await supabase.from("user_stickers").delete().eq("user_id", uid);
       qc.invalidateQueries({ queryKey: ["user_stickers", uid] });
       qc.invalidateQueries({ queryKey: ["profile", uid] });
+      refreshProfile();
     },
   };
 }
