@@ -10,7 +10,7 @@ import { useTheme } from "@/lib/use-theme";
 import { countMyContributions, deleteAllMyContributions } from "@/lib/contributions";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "Configurações — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Configurações — TrocaAI" }] }),
   component: Settings,
 });
 
@@ -122,7 +122,7 @@ function Settings() {
           )}
         </button>
         {profile?.plan !== "pro" && (
-          <Row icon={<Crown size={18} className="text-gold" />} label="TrocaCopa Pro" to="/pro" />
+          <Row icon={<Crown size={18} className="text-gold" />} label="TrocaAI Pro" to="/pro" />
         )}
         {isAdmin && (
           <Row icon={<Shield size={18} className="text-primary" />} label="Admin · Figurinhas" to="/admin/stickers" />
@@ -200,7 +200,7 @@ function Settings() {
       </Section>
 
       <p className="text-center text-[10px] text-muted-foreground mt-8">
-        TrocaCopa © {new Date().getFullYear()}
+        TrocaAI © {new Date().getFullYear()}
       </p>
     </div>
   );

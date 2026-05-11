@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+﻿import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = data as { ok?: boolean; error?: string } | null;
       if (res?.ok) {
         const { toast } = await import("sonner");
-        toast.success("Você ganhou um novo amigo no TrocaCopa! 🎉");
+        toast.success("Você ganhou um novo amigo no TrocaAI! 🎉");
       }
     } finally {
       localStorage.removeItem("pendingInvite");

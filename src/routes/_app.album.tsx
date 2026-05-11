@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown, Repeat2 } from "lucide-react";
@@ -7,7 +7,7 @@ import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/album")({
-  head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Meu Álbum — TrocaAI" }] }),
   component: Album,
 });
 

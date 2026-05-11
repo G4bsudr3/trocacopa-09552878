@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link, useLocation, Navigate, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Outlet, Link, useLocation, Navigate, useNavigate } from "@tanstack/react-router";
 import { Home, BookOpen, ScanLine, MapPin, User, Bell } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useTheme } from "@/lib/use-theme";
@@ -76,7 +76,7 @@ function AppLayout() {
       <div className="flex min-h-screen items-center justify-center">
         <img
           src={theme === "dark" ? logoBranca : logoPreta}
-          alt="TrocaCopa"
+          alt="TrocaAI"
           className="h-16 object-contain animate-pulse"
         />
       </div>

@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/use-theme";
 import logoBranca from "@/assets/logo-branca.png";
@@ -16,7 +16,7 @@ function Index() {
       <div className="flex min-h-screen items-center justify-center">
         <img
           src={theme === "dark" ? logoBranca : logoPreta}
-          alt="TrocaCopa"
+          alt="TrocaAI"
           className="h-20 object-contain animate-pulse"
         />
       </div>

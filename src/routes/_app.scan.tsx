@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Camera, Check, Repeat, Search, Loader2, Sparkles, X, Gift } from "lucide-react";
@@ -11,7 +11,7 @@ import { uploadContribution } from "@/lib/contributions";
 import { AlbumPageScanner } from "@/components/album-page-scanner";
 
 export const Route = createFileRoute("/_app/scan")({
-  head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Escanear figurinha — TrocaAI" }] }),
   component: Scan,
 });
 

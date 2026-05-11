@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 const NearMap = lazy(() => import("@/components/NearMap"));
 
 export const Route = createFileRoute("/_app/near")({
-  head: () => ({ meta: [{ title: "Perto de mim — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Perto de mim — TrocaAI" }] }),
   component: Near,
 });
 

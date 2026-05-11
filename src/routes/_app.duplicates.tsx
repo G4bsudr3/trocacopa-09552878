@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Minus, Repeat2, ArrowLeft, Sparkles } from "lucide-react";
@@ -7,7 +7,7 @@ import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
 
 export const Route = createFileRoute("/_app/duplicates")({
-  head: () => ({ meta: [{ title: "Minhas Repetidas — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Minhas Repetidas — TrocaAI" }] }),
   component: Duplicates,
 });
 

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
+﻿import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTheme } from "@/lib/use-theme";
 import logoBranca from "@/assets/logo-branca.png";
@@ -17,8 +17,8 @@ import { LocationSelect } from "@/components/location-select";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — TrocaCopa" },
-      { name: "description", content: "Entre no TrocaCopa e troque figurinhas da Copa 2026." },
+      { title: "Entrar — TrocaAI" },
+      { name: "description", content: "Entre no TrocaAI e troque figurinhas da Copa 2026." },
     ],
   }),
   component: LoginPage,
@@ -134,7 +134,7 @@ function LoginPage() {
             });
             toast.success("Conta criada! 🛡️ Avisamos seu responsável por e-mail. Algumas funções ficam pausadas até a aprovação.", { duration: 9000 });
           } else {
-            toast.success("Conta criada! Bem-vindo ao TrocaCopa ⚽");
+            toast.success("Conta criada! Bem-vindo ao TrocaAI ⚽");
           }
           navigate({ to: "/home" });
         } else {
@@ -219,10 +219,13 @@ function LoginPage() {
       >
         <img
           src={theme === "dark" ? logoBranca : logoPreta}
-          alt="TrocaCopa"
-          className="h-24 md:h-28 object-contain mx-auto mb-3"
+          alt=""
+          className="h-20 md:h-24 object-contain mx-auto"
         />
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Copa do Mundo 2026</p>
+        <div className="font-display text-5xl md:text-6xl tracking-widest leading-none mt-1">
+          Troca<span className="text-gold">AI</span>
+        </div>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mt-1">Copa do Mundo 2026</p>
       </motion.div>
 
       <motion.div

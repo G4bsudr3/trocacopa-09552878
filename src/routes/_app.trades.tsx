@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/trades")({
-  head: () => ({ meta: [{ title: "Minhas Trocas — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Minhas Trocas — TrocaAI" }] }),
   component: Trades,
 });
 

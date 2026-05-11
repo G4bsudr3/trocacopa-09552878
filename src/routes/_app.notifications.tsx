@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ const FILTERS = ["all", "trades", "messages", "matches"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export const Route = createFileRoute("/_app/notifications")({
-  head: () => ({ meta: [{ title: "Notificações — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Notificações — TrocaAI" }] }),
   validateSearch: (s: Record<string, unknown>): { filter: Filter } => {
     const f = s.filter;
     return { filter: FILTERS.includes(f as Filter) ? (f as Filter) : "all" };

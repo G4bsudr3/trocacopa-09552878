@@ -1,4 +1,4 @@
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+﻿import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { Home, BookOpen, ScanLine, MapPin, User, Repeat2, ArrowLeftRight, Bell, Settings, LogOut, Sun, Moon, ChevronUp } from "lucide-react";
 import {
   Sidebar,
@@ -59,12 +59,17 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/home" className="flex items-center px-2 py-1.5">
+        <Link to="/home" className="flex items-center gap-2 px-2 py-1.5">
           <img
             src={theme === "dark" ? logoBranca : logoPreta}
-            alt="TrocaCopa"
-            className={collapsed ? "h-5 object-contain" : "h-7 object-contain"}
+            alt=""
+            className="h-6 w-6 object-contain shrink-0"
           />
+          {!collapsed && (
+            <span className="font-display text-xl tracking-widest leading-none">
+              Troca<span className="text-gold">AI</span>
+            </span>
+          )}
         </Link>
       </SidebarHeader>
       <SidebarContent>

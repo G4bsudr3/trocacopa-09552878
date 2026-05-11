@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/invite/$code")({
-  head: () => ({ meta: [{ title: "Convite — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Convite — TrocaAI" }] }),
   component: InvitePage,
 });
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+﻿import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Camera, MapPin, Loader2 } from "lucide-react";
@@ -10,7 +10,7 @@ import { uploadContribution } from "@/lib/contributions";
 import { LocationSelect } from "@/components/location-select";
 
 export const Route = createFileRoute("/_app/profile/edit")({
-  head: () => ({ meta: [{ title: "Editar Perfil — TrocaCopa" }] }),
+  head: () => ({ meta: [{ title: "Editar Perfil — TrocaAI" }] }),
   component: EditProfile,
 });
 
