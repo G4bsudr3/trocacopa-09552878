@@ -186,6 +186,9 @@ function EditProfile() {
             className="w-full bg-input rounded-2xl px-4 py-3 outline-none border border-transparent focus:border-primary resize-none"
             placeholder="Conte um pouco sobre suas trocas..."
           />
+          <p className={`text-[11px] text-right mt-1 ${bio.length > 260 ? "text-gold" : "text-muted-foreground"}`}>
+            {bio.length}/280
+          </p>
         </Field>
 
         <button

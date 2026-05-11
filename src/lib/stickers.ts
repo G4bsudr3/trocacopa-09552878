@@ -14,6 +14,7 @@ export type StickerCatalogItem = {
   group_letter: string;
   flag_emoji: string;
   image_url: string | null;
+  player_name: string | null;
 };
 
 export const GROUP_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"] as const;
@@ -25,7 +26,7 @@ export function useStickerCatalog() {
     queryFn: async (): Promise<StickerCatalogItem[]> => {
       const { data, error } = await supabase
         .from("stickers")
-        .select("code,country_code,country_name,position,kind,group_letter,flag_emoji,image_url")
+        .select("code,country_code,country_name,position,kind,group_letter,flag_emoji,image_url,player_name")
         .order("group_letter")
         .order("country_code")
         .order("position");

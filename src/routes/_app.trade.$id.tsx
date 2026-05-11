@@ -40,6 +40,7 @@ function Trade() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [text, setText] = useState("");
+  const goBack = () => nav({ to: "/trades" });
   const [messages, setMessages] = useState<Message[]>([]);
   const [confettiOn, setConfettiOn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -140,9 +141,15 @@ function Trade() {
       setConfettiOn(true);
       toast.success("Troca concluída! 🎉");
       setTimeout(() => setConfettiOn(false), 4000);
-    } else if (status === "accepted") toast.success("Troca aceita");
-    else if (status === "declined") toast.success("Troca recusada");
-    else if (status === "cancelled") toast.success("Troca cancelada");
+    } else if (status === "accepted") {
+      toast.success("Troca aceita!");
+    } else if (status === "declined") {
+      toast.success("Troca recusada");
+      setTimeout(goBack, 1200);
+    } else if (status === "cancelled") {
+      toast.success("Troca cancelada");
+      setTimeout(goBack, 1200);
+    }
   };
 
   if (trade.isLoading) {
@@ -344,8 +351,8 @@ function StickerExchange({
   });
 
   const catalogMap = useMemo(() => {
-    const m = new Map<string, { flag_emoji: string; country_name: string }>();
-    (catalog.data ?? []).forEach((s) => m.set(s.code, { flag_emoji: s.flag_emoji, country_name: s.country_name }));
+    const m = new Map<string, { flag_emoji: string; country_name: string; player_name: string | null }>();
+    (catalog.data ?? []).forEach((s) => m.set(s.code, { flag_emoji: s.flag_emoji, country_name: s.country_name, player_name: s.player_name }));
     return m;
   }, [catalog.data]);
 
@@ -456,7 +463,7 @@ function StickerExchange({
                           disabled={!editable}
                           onClick={() => setOffering((s) => toggle(s, code))}
                           className={chipCls(offering.has(code))}
-                          title={meta?.country_name}
+                          title={meta?.player_name ?? meta?.country_name}
                         >
                           {meta?.flag_emoji && <span>{meta.flag_emoji}</span>}
                           {code}
@@ -485,7 +492,7 @@ function StickerExchange({
                           disabled={!editable}
                           onClick={() => setRequesting((s) => toggle(s, code))}
                           className={chipCls(requesting.has(code))}
-                          title={meta?.country_name}
+                          title={meta?.player_name ?? meta?.country_name}
                         >
                           {meta?.flag_emoji && <span>{meta.flag_emoji}</span>}
                           {code}

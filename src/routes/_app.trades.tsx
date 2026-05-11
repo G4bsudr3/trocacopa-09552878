@@ -17,6 +17,8 @@ type TradeWithProfiles = {
   created_at: string;
   requester_id: string;
   receiver_id: string;
+  offered_stickers: string[];
+  requested_stickers: string[];
   requester: { full_name: string | null; avatar_url: string | null } | null;
   receiver: { full_name: string | null; avatar_url: string | null } | null;
 };
@@ -31,7 +33,7 @@ function Trades() {
     queryFn: async (): Promise<TradeWithProfiles[]> => {
       const { data, error } = await supabase
         .from("trades")
-        .select("id,status,created_at,requester_id,receiver_id,requester:profiles!trades_requester_profile_fkey(full_name,avatar_url),receiver:profiles!trades_receiver_profile_fkey(full_name,avatar_url)")
+        .select("id,status,created_at,requester_id,receiver_id,offered_stickers,requested_stickers,requester:profiles!trades_requester_profile_fkey(full_name,avatar_url),receiver:profiles!trades_receiver_profile_fkey(full_name,avatar_url)")
         .or(`requester_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -107,11 +109,18 @@ function Trades() {
                     name[0]?.toUpperCase()
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold">{name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{name}</p>
                   <p className="text-xs text-muted-foreground">
                     {isMine ? "Você enviou" : "Recebida"} · {new Date(t.created_at).toLocaleDateString("pt-BR")}
                   </p>
+                  {(t.offered_stickers.length > 0 || t.requested_stickers.length > 0) && (
+                    <p className="text-[11px] text-primary font-semibold mt-0.5">
+                      {t.offered_stickers.length > 0 && `${t.offered_stickers.length} oferecida${t.offered_stickers.length > 1 ? "s" : ""}`}
+                      {t.offered_stickers.length > 0 && t.requested_stickers.length > 0 && " · "}
+                      {t.requested_stickers.length > 0 && `${t.requested_stickers.length} pedida${t.requested_stickers.length > 1 ? "s" : ""}`}
+                    </p>
+                  )}
                 </div>
                 <StatusBadge status={t.status} />
               </Link>

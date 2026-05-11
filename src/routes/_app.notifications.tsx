@@ -106,29 +106,43 @@ function Notifs() {
 
   const markAllRead = async () => {
     if (!user) return;
+    // optimistic: mark all as read locally immediately
+    qc.setQueryData<Notif[]>(["notifications", user.id], (old) =>
+      (old ?? []).map((n) => ({ ...n, read: true }))
+    );
+    qc.invalidateQueries({ queryKey: ["unread", user.id] });
     const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
-    if (error) return toast.error(error.message);
-    invalidate();
+    if (error) { toast.error(error.message); invalidate(); }
   };
 
   const markRead = async (id: string) => {
+    // optimistic: mark this one as read
+    qc.setQueryData<Notif[]>(["notifications", user!.id], (old) =>
+      (old ?? []).map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+    qc.invalidateQueries({ queryKey: ["unread", user!.id] });
     const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
-    if (error) return toast.error(error.message);
-    invalidate();
+    if (error) { toast.error(error.message); invalidate(); }
   };
 
   const removeOne = async (id: string) => {
+    // optimistic: remove from list immediately
+    qc.setQueryData<Notif[]>(["notifications", user!.id], (old) =>
+      (old ?? []).filter((n) => n.id !== id)
+    );
+    qc.invalidateQueries({ queryKey: ["unread", user!.id] });
     const { error } = await supabase.from("notifications").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    invalidate();
+    if (error) { toast.error(error.message); invalidate(); }
   };
 
   const removeAll = async () => {
     if (!user) return;
     if (!confirm("Apagar todas as notificações?")) return;
+    // optimistic: clear list immediately
+    qc.setQueryData<Notif[]>(["notifications", user.id], []);
+    qc.invalidateQueries({ queryKey: ["unread", user.id] });
     const { error } = await supabase.from("notifications").delete().eq("user_id", user.id);
-    if (error) return toast.error(error.message);
-    invalidate();
+    if (error) { toast.error(error.message); invalidate(); }
   };
 
   const all = notifs.data ?? [];

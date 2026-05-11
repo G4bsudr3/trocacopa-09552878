@@ -332,16 +332,18 @@ function Scan() {
                   <span className="font-display text-xl text-primary">{result.code}</span>
                   <span className="text-lg">{result.flag_emoji}</span>
                 </div>
-                <p className="font-semibold text-sm truncate mt-0.5">{result.country_name}</p>
+                <p className="font-semibold text-sm truncate mt-0.5">
+                  {result.kind === "player" && result.player_name ? result.player_name : result.country_name}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {result.kind === "country"
-                    ? `Grupo ${result.group_letter} · pos ${result.position}`
-                    : result.kind === "history"
-                      ? "FIFA World Cup History"
-                      : result.kind === "special"
-                        ? "Coca-Cola"
-                        : result.kind === "player"
-                          ? `Jogador · pos ${result.position}`
+                  {result.kind === "player"
+                    ? `${result.country_name} · pos ${result.position}`
+                    : result.kind === "country"
+                      ? `Grupo ${result.group_letter} · pos ${result.position}`
+                      : result.kind === "history"
+                        ? "FIFA World Cup History"
+                        : result.kind === "special"
+                          ? "Coca-Cola"
                           : "Capa do álbum"}
                 </p>
               </div>
@@ -500,15 +502,19 @@ function Scan() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{s.country_name}</p>
+                  <p className="font-semibold text-sm truncate">
+                    {s.kind === "player" && s.player_name ? s.player_name : s.country_name}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {s.kind === "country"
-                      ? `Grupo ${s.group_letter} · pos ${s.position}`
-                      : s.kind === "history"
-                        ? "FIFA World Cup History"
-                        : s.kind === "special"
-                          ? "Coca-Cola"
-                          : "Capa do álbum"}
+                    {s.kind === "player"
+                      ? `${s.country_name} · pos ${s.position}`
+                      : s.kind === "country"
+                        ? `Grupo ${s.group_letter} · pos ${s.position}`
+                        : s.kind === "history"
+                          ? "FIFA World Cup History"
+                          : s.kind === "special"
+                            ? "Coca-Cola"
+                            : "Capa do álbum"}
                   </p>
                 </div>
                 <div className="flex">

@@ -34,7 +34,14 @@ function Settings() {
   const [localPrefs, setLocalPrefs] = useState<Prefs>(serverPrefs);
   const [localDiscoverable, setLocalDiscoverable] = useState(serverDiscoverable);
 
-  // Sync local state when profile loads/refreshes
+  // Sync local state when profile arrives or refreshes (only if not mid-save)
+  useEffect(() => {
+    if (prefsSaving || discoverableSaving) return;
+    setLocalPrefs((profile?.notification_prefs as Prefs) ?? { trades: true, messages: true, matches: true });
+    setLocalDiscoverable(profile?.discoverable !== false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.notification_prefs, profile?.discoverable]);
+
   const prefs = localPrefs;
   const discoverable = localDiscoverable;
 

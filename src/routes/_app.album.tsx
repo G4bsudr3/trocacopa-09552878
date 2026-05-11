@@ -44,6 +44,7 @@ function Album() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [stickers, filter, q],
   );
+  const groupedCountries = useMemo(() => groupByCountry(countryStickers), [countryStickers]);
 
   const current = selected ? stickers.find((s) => s.code === selected.code) ?? selected : null;
 
@@ -206,7 +207,7 @@ function Album() {
 
       {!isLoading && tab === "selecoes" && (
         <div className="mt-4 space-y-3">
-          {groupByCountry(countryStickers).map((c) => {
+          {groupedCountries.map((c) => {
             const isOpen = openCountry === c.country_code;
             const countryOwned = c.stickers.filter((s) => (s as Sticker).owned).length;
             return (
