@@ -5,7 +5,7 @@ import logoBranca from "@/assets/logo-branca.png";
 import logoPreta from "@/assets/logo-preta.png";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2, AlertTriangle, Copy } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -56,6 +56,34 @@ function translateAuthError(message: string): string {
   return message;
 }
 
+// Detecta navegadores embutidos (WebView dentro de Instagram, FB, TikTok, LinkedIn, Gmail etc.)
+// onde o Google bloqueia OAuth com a política "Use navegadores seguros".
+function detectInAppBrowser(): { isInApp: boolean; appName: string | null } {
+  if (typeof navigator === "undefined") return { isInApp: false, appName: null };
+  const ua = navigator.userAgent || "";
+  const checks: Array<[RegExp, string]> = [
+    [/Instagram/i, "Instagram"],
+    [/FBAN|FBAV|FB_IAB|FBIOS/i, "Facebook"],
+    [/Messenger/i, "Messenger"],
+    [/Twitter/i, "Twitter/X"],
+    [/Line\//i, "LINE"],
+    [/MicroMessenger/i, "WeChat"],
+    [/TikTok|musical_ly|Bytedance/i, "TikTok"],
+    [/LinkedInApp/i, "LinkedIn"],
+    [/Snapchat/i, "Snapchat"],
+    [/Pinterest/i, "Pinterest"],
+    [/GSA\//i, "Google App"],
+    [/KAKAOTALK/i, "KakaoTalk"],
+  ];
+  for (const [re, name] of checks) if (re.test(ua)) return { isInApp: true, appName: name };
+  // iOS WebView genérico (sem Safari token) — geralmente embutido
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  if (isIOS && !/Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua)) {
+    return { isInApp: true, appName: "outro app" };
+  }
+  return { isInApp: false, appName: null };
+}
+
 function LoginPage() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
@@ -71,6 +99,16 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showReset, setShowReset] = useState(false);
+  const [inApp] = useState(() => detectInAppBrowser());
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copiado! Cole no Safari para entrar com Google.");
+    } catch {
+      toast.error("Não consegui copiar — copie manualmente da barra de endereço.");
+    }
+  };
 
   const ag = birthDate ? computeAgeGroup(birthDate) : null;
   const willBeMinor = isMinor(ag);
@@ -199,6 +237,13 @@ function LoginPage() {
   };
 
   const handleGoogle = async () => {
+    if (inApp.isInApp) {
+      toast.error(
+        `O Google bloqueia login dentro do ${inApp.appName ?? "app"}. Abra no Safari/Chrome para continuar.`,
+        { duration: 6000 },
+      );
+      return;
+    }
     setBusy(true);
 
     if (Capacitor.isNativePlatform()) {
@@ -266,6 +311,27 @@ function LoginPage() {
             </button>
           ))}
         </div>
+
+        {inApp.isInApp && !Capacitor.isNativePlatform() && (
+          <div className="mb-5 rounded-2xl border border-gold/40 bg-gold/10 p-3 text-xs space-y-2">
+            <div className="flex items-start gap-2 text-gold">
+              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+              <p className="font-semibold leading-snug">
+                Você abriu pelo {inApp.appName ?? "outro app"}. O Google bloqueia login aqui dentro.
+              </p>
+            </div>
+            <p className="text-muted-foreground leading-snug">
+              Para usar <strong>Entrar com Google</strong>, abra este link no Safari ou Chrome.
+              Você também pode entrar normalmente por <strong>e-mail e senha</strong> abaixo.
+            </p>
+            <button
+              onClick={copyLink}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-surface-elevated border border-border py-2 font-semibold hover:bg-surface transition active:scale-95"
+            >
+              <Copy size={13} /> Copiar link para abrir no Safari
+            </button>
+          </div>
+        )}
 
         {showReset ? (
           <div className="space-y-3">
