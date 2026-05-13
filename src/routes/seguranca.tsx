@@ -5,8 +5,12 @@ export const Route = createFileRoute("/seguranca")({
   head: () => ({
     meta: [
       { title: "Segurança e Crianças — TrocaCopa" },
-      { name: "description", content: "Como o TrocaCopa protege crianças e adolescentes conforme a Lei nº 15.211/2025 (ECA Digital)." },
+      { name: "description", content: "Como o TrocaCopa protege crianças e adolescentes conforme a Lei nº 15.211/2025 (ECA Digital): consentimento parental, modo Kids e canal de denúncia." },
+      { property: "og:title", content: "Segurança e Crianças — TrocaCopa" },
+      { property: "og:description", content: "Verificação de idade, consentimento do responsável, Modo Kids e canal de denúncia para proteger menores no TrocaCopa." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/seguranca" },
     ],
+    links: [{ rel: "canonical", href: "https://trocacopa.lovable.app/seguranca" }],
   }),
   component: SegurancaPage,
 });

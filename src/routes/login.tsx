@@ -20,8 +20,12 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Entrar — TrocaCopa" },
-      { name: "description", content: "Entre no TrocaCopa e troque figurinhas da Copa 2026." },
+      { name: "description", content: "Entre ou crie sua conta no TrocaCopa para trocar figurinhas da Copa 2026 com colecionadores próximos." },
+      { property: "og:title", content: "Entrar — TrocaCopa" },
+      { property: "og:description", content: "Entre ou crie sua conta no TrocaCopa para trocar figurinhas da Copa 2026 com colecionadores próximos." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/login" },
     ],
+    links: [{ rel: "canonical", href: "https://trocacopa.lovable.app/login" }],
   }),
   component: LoginPage,
 });
@@ -275,7 +279,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10">
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-10">
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -434,7 +438,7 @@ function LoginPage() {
           Privacidade
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
 

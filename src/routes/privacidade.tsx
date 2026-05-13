@@ -5,8 +5,12 @@ export const Route = createFileRoute("/privacidade")({
   head: () => ({
     meta: [
       { title: "Política de Privacidade — TrocaCopa" },
-      { name: "description", content: "Política de privacidade e proteção de dados da plataforma TrocaCopa." },
+      { name: "description", content: "Quais dados o TrocaCopa coleta, por quê, com quem compartilhamos e como exercer seus direitos sob a LGPD." },
+      { property: "og:title", content: "Política de Privacidade — TrocaCopa" },
+      { property: "og:description", content: "Dados coletados, base legal, compartilhamento e direitos do titular sob a LGPD no TrocaCopa." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/privacidade" },
     ],
+    links: [{ rel: "canonical", href: "https://trocacopa.lovable.app/privacidade" }],
   }),
   component: PrivacidadePage,
 });

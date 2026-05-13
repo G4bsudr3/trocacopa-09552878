@@ -5,6 +5,12 @@ import logoBranca from "@/assets/logo-branca.png";
 import logoPreta from "@/assets/logo-preta.png";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { property: "og:url", content: "https://trocacopa.lovable.app/" },
+    ],
+    links: [{ rel: "canonical", href: "https://trocacopa.lovable.app/" }],
+  }),
   component: Index,
 });
 
