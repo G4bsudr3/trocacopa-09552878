@@ -20,8 +20,12 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Entrar — TrocaCopa" },
-      { name: "description", content: "Entre no TrocaCopa e troque figurinhas da Copa 2026." },
+      { name: "description", content: "Entre ou crie sua conta no TrocaCopa para trocar figurinhas da Copa 2026 com colecionadores próximos." },
+      { property: "og:title", content: "Entrar — TrocaCopa" },
+      { property: "og:description", content: "Entre ou crie sua conta no TrocaCopa para trocar figurinhas da Copa 2026 com colecionadores próximos." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/login" },
     ],
+    links: [{ rel: "canonical", href: "https://trocacopa.lovable.app/login" }],
   }),
   component: LoginPage,
 });
