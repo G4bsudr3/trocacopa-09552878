@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /home
+Disallow: /album
+Disallow: /trades
+Disallow: /trade/
+Disallow: /near
+Disallow: /scan
+Disallow: /profile
+Disallow: /settings
+Disallow: /notifications
+Disallow: /duplicates
+Disallow: /pro
+Disallow: /invite/
+Disallow: /consent/
+Disallow: /reset-password
+Disallow: /api/
+
+Sitemap: https://trocacopa.lovable.app/sitemap.xml

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -36,6 +37,11 @@ import { Route as ApiPublicHooksScanMatchAlertsRouteImport } from './routes/api/
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SegurancaRoute = SegurancaRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/album': typeof AppAlbumRoute
   '/duplicates': typeof AppDuplicatesRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/album': typeof AppAlbumRoute
   '/duplicates': typeof AppDuplicatesRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/reset-password': typeof ResetPasswordRoute
   '/seguranca': typeof SegurancaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/_app/album': typeof AppAlbumRoute
   '/_app/duplicates': typeof AppDuplicatesRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/reset-password'
     | '/seguranca'
+    | '/sitemap.xml'
     | '/termos'
     | '/album'
     | '/duplicates'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/reset-password'
     | '/seguranca'
+    | '/sitemap.xml'
     | '/termos'
     | '/album'
     | '/duplicates'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/reset-password'
     | '/seguranca'
+    | '/sitemap.xml'
     | '/termos'
     | '/_app/album'
     | '/_app/duplicates'
@@ -306,6 +318,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SegurancaRoute: typeof SegurancaRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
   ConsentTokenRoute: typeof ConsentTokenRoute
   InviteCodeRoute: typeof InviteCodeRoute
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seguranca': {
@@ -529,6 +549,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SegurancaRoute: SegurancaRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermosRoute: TermosRoute,
   ConsentTokenRoute: ConsentTokenRoute,
   InviteCodeRoute: InviteCodeRoute,
