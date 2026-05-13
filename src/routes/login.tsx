@@ -434,7 +434,7 @@ function LoginPage() {
           Privacidade
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
 
