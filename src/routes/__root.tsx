@@ -70,6 +70,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "google-site-verification", content: "WxCS_IBwsqOSckb6dX3FkBCKvZqJPa60WsT3YW-_0nw" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://trocacopa.lovable.app/#organization",
+              name: "TrocaCopa",
+              url: "https://trocacopa.lovable.app/",
+              logo: "https://trocacopa.lovable.app/logo-branca.png",
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://trocacopa.lovable.app/#website",
+              url: "https://trocacopa.lovable.app/",
+              name: "TrocaCopa",
+              description: "Plataforma comunitária para colecionadores trocarem figurinhas da Copa do Mundo 2026 com pessoas próximas.",
+              publisher: { "@id": "https://trocacopa.lovable.app/#organization" },
+              inLanguage: "pt-BR",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
