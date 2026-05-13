@@ -8,6 +8,17 @@ const cors = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
+  // Guard: require SEED_SECRET header to prevent unauthorized admin account creation.
+  // Set the SEED_SECRET env var in the Supabase dashboard to enable this function.
+  // Without the env var set, the function is effectively disabled in production.
+  const seedSecret = Deno.env.get("SEED_SECRET");
+  if (!seedSecret || req.headers.get("X-Seed-Secret") !== seedSecret) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 403,
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,

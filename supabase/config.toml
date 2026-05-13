@@ -1,7 +1,7 @@
 project_id = "mnxlzdsroqzdbqejszwm"
 
 [functions.identify-page]
-verify_jwt = false
+verify_jwt = true
 
 [functions.seed-test-users]
 verify_jwt = false
