@@ -5,8 +5,12 @@ export const Route = createFileRoute("/termos")({
   head: () => ({
     meta: [
       { title: "Termos de Uso — TrocaCopa" },
-      { name: "description", content: "Termos e condições de uso da plataforma TrocaCopa." },
+      { name: "description", content: "Termos e condições de uso da plataforma TrocaCopa: regras de cadastro, conduta nas trocas, responsabilidades e cancelamento de conta." },
+      { property: "og:title", content: "Termos de Uso — TrocaCopa" },
+      { property: "og:description", content: "Regras de cadastro, conduta, responsabilidades e cancelamento ao usar o TrocaCopa." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/termos" },
     ],
+    links: [{ rel: "canonical", href: "https://trocacopa.lovable.app/termos" }],
   }),
   component: TermosPage,
 });
