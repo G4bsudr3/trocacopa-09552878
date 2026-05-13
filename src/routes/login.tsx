@@ -99,6 +99,16 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showReset, setShowReset] = useState(false);
+  const [inApp] = useState(() => detectInAppBrowser());
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copiado! Cole no Safari para entrar com Google.");
+    } catch {
+      toast.error("Não consegui copiar — copie manualmente da barra de endereço.");
+    }
+  };
 
   const ag = birthDate ? computeAgeGroup(birthDate) : null;
   const willBeMinor = isMinor(ag);
