@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (_uid: string) => {
+  const fetchProfile = async () => {
     const { data, error } = await supabase.rpc("get_my_profile").maybeSingle();
     if (error) {
       console.error("[Auth] fetchProfile:", error.message);
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (s?.user) {
-        setTimeout(() => fetchProfile(s.user.id), 0);
+        setTimeout(() => fetchProfile(), 0);
         setTimeout(() => consumePendingInvite(), 100);
       } else {
         setProfile(null);
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
-      if (data.session?.user) await fetchProfile(data.session.user.id);
+      if (data.session?.user) await fetchProfile();
       setLoading(false);
     });
 
