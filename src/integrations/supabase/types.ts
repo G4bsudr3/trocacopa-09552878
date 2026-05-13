@@ -442,10 +442,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "trades_receiver_profile_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "trades_requester_profile_fkey"
             columns: ["requester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trades_requester_profile_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -533,7 +547,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          age_group: Database["public"]["Enums"]["age_group"] | null
+          album_progress: number | null
+          avatar_url: string | null
+          city: string | null
+          discoverable: boolean | null
+          full_name: string | null
+          id: string | null
+          plan: string | null
+          trades_count: number | null
+        }
+        Insert: {
+          age_group?: Database["public"]["Enums"]["age_group"] | null
+          album_progress?: number | null
+          avatar_url?: string | null
+          city?: string | null
+          discoverable?: boolean | null
+          full_name?: string | null
+          id?: string | null
+          plan?: string | null
+          trades_count?: number | null
+        }
+        Update: {
+          age_group?: Database["public"]["Enums"]["age_group"] | null
+          album_progress?: number | null
+          avatar_url?: string | null
+          city?: string | null
+          discoverable?: boolean | null
+          full_name?: string | null
+          id?: string | null
+          plan?: string | null
+          trades_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invite: { Args: { _code: string }; Returns: Json }
