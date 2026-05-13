@@ -71,7 +71,7 @@ function Trade() {
     enabled: !!otherId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id,full_name,city,avatar_url,plan")
         .eq("id", otherId!)
         .maybeSingle();
