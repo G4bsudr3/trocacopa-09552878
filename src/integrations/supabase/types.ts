@@ -537,6 +537,38 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { _code: string }; Returns: Json }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          age_group: Database["public"]["Enums"]["age_group"] | null
+          album_progress: number
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
+          created_at: string
+          discoverable: boolean
+          full_name: string | null
+          guardian_consent_at: string | null
+          guardian_email: string | null
+          guardian_name: string | null
+          id: string
+          kids_mode: boolean
+          lat: number | null
+          lng: number | null
+          location_updated_at: string | null
+          notification_prefs: Json
+          plan: string
+          trades_count: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       guardian_consent_approve: { Args: { _token: string }; Returns: boolean }
       guardian_consent_lookup: {
         Args: { _token: string }
