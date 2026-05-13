@@ -1,0 +1,13 @@
+# TrocaCopa
+
+> Plataforma comunitária brasileira para colecionadores trocarem figurinhas do álbum oficial da Copa do Mundo 2026 com pessoas próximas, com foco em segurança de menores (ECA Digital · Lei 15.211/2025).
+
+TrocaCopa conecta colecionadores por geolocalização, organiza álbuns e figurinhas repetidas, e facilita combinações de trocas presenciais. A plataforma é gratuita, não comercializa figurinhas e não intermedia pagamentos.
+
+## Pages
+
+- [Início](/): Página inicial — entrar ou criar conta.
+- [Entrar](/login): Login e cadastro de novos colecionadores.
+- [Segurança e Crianças](/seguranca): Como protegemos menores: verificação de idade, consentimento parental, Modo Kids e canal de denúncia.
+- [Termos de Uso](/termos): Regras de cadastro, conduta nas trocas e responsabilidades.
+- [Política de Privacidade](/privacidade): Dados coletados, base legal e direitos do titular sob a LGPD.
