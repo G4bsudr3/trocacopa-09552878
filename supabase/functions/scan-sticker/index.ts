@@ -185,6 +185,15 @@ function trigramSimilarity(a: string, b: string): number {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    // Auth check — prevent anonymous AI credit abuse
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData } = await userClient.auth.getUser();
+    if (!userData?.user) return json({ error: "unauthorized" }, 401);
+
     const { image } = await req.json();
     if (!image) return json({ error: "image required" }, 400);
 
