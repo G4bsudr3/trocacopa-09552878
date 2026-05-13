@@ -41,8 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (uid: string) => {
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+  const fetchProfile = async (_uid: string) => {
+    const { data, error } = await supabase.rpc("get_my_profile").maybeSingle();
     if (error) {
       console.error("[Auth] fetchProfile:", error.message);
       return;
