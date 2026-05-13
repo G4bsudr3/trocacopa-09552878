@@ -237,6 +237,13 @@ function LoginPage() {
   };
 
   const handleGoogle = async () => {
+    if (inApp.isInApp) {
+      toast.error(
+        `O Google bloqueia login dentro do ${inApp.appName ?? "app"}. Abra no Safari/Chrome para continuar.`,
+        { duration: 6000 },
+      );
+      return;
+    }
     setBusy(true);
 
     if (Capacitor.isNativePlatform()) {
