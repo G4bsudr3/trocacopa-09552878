@@ -5,7 +5,7 @@ import logoBranca from "@/assets/logo-branca.png";
 import logoPreta from "@/assets/logo-preta.png";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, User as UserIcon, Cake, Shield, Eye, EyeOff, Loader2, AlertTriangle, Copy } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
