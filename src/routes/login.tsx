@@ -56,6 +56,34 @@ function translateAuthError(message: string): string {
   return message;
 }
 
+// Detecta navegadores embutidos (WebView dentro de Instagram, FB, TikTok, LinkedIn, Gmail etc.)
+// onde o Google bloqueia OAuth com a política "Use navegadores seguros".
+function detectInAppBrowser(): { isInApp: boolean; appName: string | null } {
+  if (typeof navigator === "undefined") return { isInApp: false, appName: null };
+  const ua = navigator.userAgent || "";
+  const checks: Array<[RegExp, string]> = [
+    [/Instagram/i, "Instagram"],
+    [/FBAN|FBAV|FB_IAB|FBIOS/i, "Facebook"],
+    [/Messenger/i, "Messenger"],
+    [/Twitter/i, "Twitter/X"],
+    [/Line\//i, "LINE"],
+    [/MicroMessenger/i, "WeChat"],
+    [/TikTok|musical_ly|Bytedance/i, "TikTok"],
+    [/LinkedInApp/i, "LinkedIn"],
+    [/Snapchat/i, "Snapchat"],
+    [/Pinterest/i, "Pinterest"],
+    [/GSA\//i, "Google App"],
+    [/KAKAOTALK/i, "KakaoTalk"],
+  ];
+  for (const [re, name] of checks) if (re.test(ua)) return { isInApp: true, appName: name };
+  // iOS WebView genérico (sem Safari token) — geralmente embutido
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  if (isIOS && !/Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua)) {
+    return { isInApp: true, appName: "outro app" };
+  }
+  return { isInApp: false, appName: null };
+}
+
 function LoginPage() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
