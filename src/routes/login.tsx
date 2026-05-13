@@ -312,6 +312,27 @@ function LoginPage() {
           ))}
         </div>
 
+        {inApp.isInApp && !Capacitor.isNativePlatform() && (
+          <div className="mb-5 rounded-2xl border border-gold/40 bg-gold/10 p-3 text-xs space-y-2">
+            <div className="flex items-start gap-2 text-gold">
+              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+              <p className="font-semibold leading-snug">
+                Você abriu pelo {inApp.appName ?? "outro app"}. O Google bloqueia login aqui dentro.
+              </p>
+            </div>
+            <p className="text-muted-foreground leading-snug">
+              Para usar <strong>Entrar com Google</strong>, abra este link no Safari ou Chrome.
+              Você também pode entrar normalmente por <strong>e-mail e senha</strong> abaixo.
+            </p>
+            <button
+              onClick={copyLink}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-surface-elevated border border-border py-2 font-semibold hover:bg-surface transition active:scale-95"
+            >
+              <Copy size={13} /> Copiar link para abrir no Safari
+            </button>
+          </div>
+        )}
+
         {showReset ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
