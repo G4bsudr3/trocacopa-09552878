@@ -323,6 +323,7 @@ function Album() {
             >
               <button
                 onClick={() => setSelected(null)}
+                aria-label="Fechar ficha da figurinha"
                 className="absolute top-4 right-4 w-8 h-8 rounded-full glass flex items-center justify-center"
               >
                 <X size={16} />
