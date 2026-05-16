@@ -606,3 +606,27 @@ function fileToDataUrl(file: File): Promise<string> {
     r.readAsDataURL(file);
   });
 }
+
+// Center-crop to a square and downscale to ~1024px so the AI sees the sticker, not the table.
+async function preprocessStickerImage(dataUrl: string, target = 1024, quality = 0.9): Promise<string> {
+  try {
+    const img = await new Promise<HTMLImageElement>((res, rej) => {
+      const el = new Image();
+      el.onload = () => res(el);
+      el.onerror = rej;
+      el.src = dataUrl;
+    });
+    const side = Math.min(img.width, img.height);
+    const sx = Math.round((img.width - side) / 2);
+    const sy = Math.round((img.height - side) / 2);
+    const canvas = document.createElement("canvas");
+    canvas.width = target;
+    canvas.height = target;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, sx, sy, side, side, 0, 0, target, target);
+    return canvas.toDataURL("image/jpeg", quality);
+  } catch {
+    return dataUrl;
+  }
+}
