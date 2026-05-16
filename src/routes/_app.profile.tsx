@@ -11,7 +11,15 @@ import { useAlbum } from "@/lib/use-album";
 const InviteFriendSheet = lazy(() => import("@/components/invite-friend-sheet").then((m) => ({ default: m.InviteFriendSheet })));
 
 export const Route = createFileRoute("/_app/profile")({
-  head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Perfil — TrocaCopa" },
+      { name: "description", content: "Veja suas estatísticas de trocas, reviews recebidas e gerencie seu perfil de colecionador da Copa 2026." },
+      { property: "og:title", content: "Perfil — TrocaCopa" },
+      { property: "og:description", content: "Suas estatísticas, reviews e perfil de colecionador no TrocaCopa." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/profile" },
+    ],
+  }),
   component: Profile,
 });
 
