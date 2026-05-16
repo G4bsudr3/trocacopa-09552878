@@ -60,10 +60,12 @@ function Near() {
   const [sortMode, setSortMode] = useState<SortMode>("match");
   const [view, setView] = useState<ViewMode>("list");
   const [loadingTradeId, setLoadingTradeId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const hasGeo = profile?.lat != null && profile?.lng != null;
   const hasCity = !!profile?.city;
   const isMinor = profile?.kids_mode === true || profile?.age_group === "child" || profile?.age_group === "teen";
+  const isPro = profile?.plan === "pro";
   const canShowMap = hasGeo && !isMinor;
 
   const nearby = useQuery({
