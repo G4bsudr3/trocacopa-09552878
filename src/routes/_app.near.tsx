@@ -311,15 +311,42 @@ function Near() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => startTrade(c.id)}
-                  disabled={!!loadingTradeId}
-                  className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-70"
-                >
-                  {loadingTradeId === c.id
-                    ? <><Loader2 size={16} className="animate-spin" /> Abrindo...</>
-                    : <><MessageCircle size={16} /> Iniciar Troca</>}
-                </button>
+                <MatchPreviewBlock
+                  otherId={c.id}
+                  expanded={expandedId === c.id}
+                  onToggle={() => setExpandedId((cur) => (cur === c.id ? null : c.id))}
+                  isPro={isPro}
+                />
+
+                {(() => {
+                  const canTrade = isPro || c.mutual_count >= 1;
+                  if (canTrade) {
+                    return (
+                      <button
+                        onClick={() => startTrade(c.id)}
+                        disabled={!!loadingTradeId}
+                        className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-70"
+                      >
+                        {loadingTradeId === c.id
+                          ? <><Loader2 size={16} className="animate-spin" /> Abrindo...</>
+                          : <><MessageCircle size={16} /> Iniciar Troca</>}
+                      </button>
+                    );
+                  }
+                  return (
+                    <div className="mt-3 space-y-2">
+                      <div className="w-full glass rounded-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 text-muted-foreground">
+                        <Lock size={14} /> Sem match 1-1 ainda
+                      </div>
+                      <Link
+                        to="/pro"
+                        className="w-full gradient-gold text-gold-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition glow-gold"
+                      >
+                        <Crown size={14} /> Desbloquear com Pro
+                      </Link>
+                    </div>
+                  );
+                })()}
               </motion.div>
             );
           })}
