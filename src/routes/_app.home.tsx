@@ -11,7 +11,15 @@ import logoBranca from "@/assets/logo-branca.png";
 import logoPreta from "@/assets/logo-preta.png";
 
 export const Route = createFileRoute("/_app/home")({
-  head: () => ({ meta: [{ title: "Início — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Início — TrocaCopa" },
+      { name: "description", content: "Acompanhe seu progresso no álbum, veja propostas de troca e ações rápidas no painel TrocaCopa." },
+      { property: "og:title", content: "Início — TrocaCopa" },
+      { property: "og:description", content: "Acompanhe seu progresso no álbum e as próximas trocas no painel TrocaCopa." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/home" },
+    ],
+  }),
   component: Home,
 });
 
