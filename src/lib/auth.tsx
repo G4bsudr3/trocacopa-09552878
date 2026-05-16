@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await supabase.auth.signOut();
         },
         refreshProfile: async () => {
-          if (session?.user) await fetchProfile(session.user.id);
+          if (session?.user) await fetchProfile();
         },
       }}
     >
