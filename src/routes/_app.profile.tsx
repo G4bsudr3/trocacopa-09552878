@@ -11,7 +11,15 @@ import { useAlbum } from "@/lib/use-album";
 const InviteFriendSheet = lazy(() => import("@/components/invite-friend-sheet").then((m) => ({ default: m.InviteFriendSheet })));
 
 export const Route = createFileRoute("/_app/profile")({
-  head: () => ({ meta: [{ title: "Perfil — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Perfil — TrocaCopa" },
+      { name: "description", content: "Veja suas estatísticas de trocas, reviews recebidas e gerencie seu perfil de colecionador da Copa 2026." },
+      { property: "og:title", content: "Perfil — TrocaCopa" },
+      { property: "og:description", content: "Suas estatísticas, reviews e perfil de colecionador no TrocaCopa." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/profile" },
+    ],
+  }),
   component: Profile,
 });
 
@@ -71,7 +79,7 @@ function Profile() {
     <div className="px-5 pt-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-3xl tracking-wide">Perfil</h1>
-        <Link to="/settings" className="w-10 h-10 rounded-full glass flex items-center justify-center">
+        <Link to="/settings" aria-label="Configurações" className="w-10 h-10 rounded-full glass flex items-center justify-center">
           <SettingsIcon size={18} />
         </Link>
       </div>

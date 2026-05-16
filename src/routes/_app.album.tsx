@@ -17,7 +17,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/album")({
-  head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Meu Álbum — TrocaCopa" },
+      { name: "description", content: "Visualize seu progresso e organize suas figurinhas repetidas da Copa 2026 no seu álbum digital." },
+      { property: "og:title", content: "Meu Álbum — TrocaCopa" },
+      { property: "og:description", content: "Gerencie sua coleção de figurinhas da Copa 2026." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/album" },
+    ],
+  }),
   component: Album,
 });
 
@@ -212,9 +220,9 @@ function Album() {
                   <div className="flex items-center gap-3 min-w-0">
                     <FlagImg emoji={c.flag_emoji} />
                     <div className="text-left min-w-0">
-                      <p className="font-display text-base tracking-wide truncate">
+                      <h2 className="font-display text-base tracking-wide truncate">
                         {c.country_name}
-                      </p>
+                      </h2>
                       <p className="text-[11px] text-muted-foreground">
                         {c.country_code} · {countryOwned}/{c.stickers.length} figurinhas
                       </p>
@@ -315,6 +323,7 @@ function Album() {
             >
               <button
                 onClick={() => setSelected(null)}
+                aria-label="Fechar ficha da figurinha"
                 className="absolute top-4 right-4 w-8 h-8 rounded-full glass flex items-center justify-center"
               >
                 <X size={16} />
