@@ -1,50 +1,40 @@
-## Por que está lento
+## Diagnóstico
 
-- Cache do React Query desligado: `staleTime: 0` em todo lugar → cada visita à Home/Near/Trades refaz tudo no Supabase.
-- RPC `match_collectors` (consulta pesada) é chamada em Home + Near sem reutilização.
-- `_app.tsx` espera `loading` do auth (getSession + fetchProfile) antes de renderizar a casca da app, então a primeira tela parece travada.
-- Realtime do toast re-cria o channel toda vez que `profile.notification_prefs` muda.
-- `leaflet` (mapa do Near) e `qrcode.react` (sheet de convite) são importados eager, então pesam no bundle inicial mesmo quando não usados.
-- Em `_app.near.tsx` o `useQuery` consulta `trades` duas vezes seguidas (give/receive) — dá pra unir em uma chamada só.
+**1. FWC2..FWC8** — verifiquei: as 9 figurinhas FWC00, FWC1..FWC8 existem na tabela `stickers` (`kind='special'`) e todas as imagens retornam HTTP 200 no storage (tamanhos ~70–160 KB). Ou seja, no banco/storage está tudo certo. Se elas "não aparecem no app", pode ser:
+   - bug visual na aba **Especiais** (renderização/ordenação),
+   - cache antigo do React Query (TTL de 1h),
+   - ou o usuário está olhando a aba errada (FWC9..FWC19 são `kind='history'`, aparecem dentro de **Seleções → SPECIAL**, não em Especiais).
 
-## Plano
+**2. Imagens faltando** — 175 figurinhas estão com `image_url` vazio (NULL ou `''`). Exemplos: NZL3, NZL7, NZL8, NZL12, NZL16, NZL19, NZL20, e dezenas de outras (BEL5/6/8, EGY4/6/8, IRN3/4, ESP4/6/7, etc). Todas são `kind='player'`.
 
-1. **Cache global do React Query**
-   - Em `src/router.tsx`, configurar `QueryClient` com `defaultOptions: { queries: { staleTime: 60_000, gcTime: 5*60_000, refetchOnWindowFocus: false, retry: 1 } }`.
-   - Tirar `defaultPreloadStaleTime: 0` (deixar default 30s) para o preload do TanStack realmente reaproveitar dados.
+A edge function `generate-sticker-images` já existe e gera SVG placeholder por jogador, mas só processa onde `image_url IS NULL`. Como muitas têm `image_url = ''` (string vazia), elas são ignoradas. Além disso, é um botão admin manual — não roda sozinho.
 
-2. **Cache específico nas queries pesadas**
-   - `match_collectors` (Home `featured-match` e Near `nearby`): `staleTime: 2 * 60_000`, `placeholderData: keepPreviousData` para não piscar entre navegações.
-   - `user_stickers` da Home (`album-dups`): `staleTime: 30_000`.
-   - Trades list e notifications: `staleTime: 30_000`.
+**3. Admin** — encontrei dois perfis: `Juan Kleber` (`f47c52dc…`) e `Juan (Admin)` (`8db05199…`). Preciso confirmar pelo e-mail real em `auth.users` (vou fazer dentro de uma migração que tem permissão).
 
-3. **Render imediato da casca em `_app.tsx`**
-   - Não bloquear o layout inteiro com `loading`; mostrar `Outlet` assim que tiver `session` (mesmo sem `profile`), e fazer o splash só enquanto `session === undefined`.
-   - Mover o `useEffect` do realtime para depender apenas de `user?.id` (ler `prefs` via `ref` ou recomputar dentro do callback). Evita re-subscribe a cada update de profile.
+---
 
-4. **Lazy-load de bibliotecas pesadas**
-   - `NearMap` (leaflet) → `const NearMap = lazy(() => import("@/components/NearMap"))` + `<Suspense>` dentro de `_app.near.tsx`.
-   - `InviteFriendSheet` (qrcode.react) → lazy no `_app.profile.tsx`, só monta quando o usuário clica em "Convidar amigo".
-   - Conferir `framer-motion` em telas que só usam 1 fade simples; trocar por CSS quando trivial.
+## Plano de ação
 
-5. **Limpar duplicação no Near**
-   - `_app.near.tsx`: unir as duas chamadas a `trades` (linhas 86 e 96) em uma só com `or(...)` ou pegar tudo onde o user é participante e filtrar no client.
+### Passo 1 — Forçar regeneração de imagens (item 2)
+- Migração SQL: normalizar `image_url = ''` para `NULL` nos 175 registros, para que a edge function reconheça como pendente.
+- Ajustar a edge function `generate-sticker-images` para:
+  - tratar `''` como ausente (where `image_url IS NULL OR image_url = ''`),
+  - aumentar limite default e processar em lote,
+  - retornar progresso.
+- Rodar a função (admin → endpoint) para gerar SVG placeholder das 175. Imagens reais de jogadores não estão disponíveis publicamente; o placeholder mantém cor da seleção + número da camisa + código + bandeira (mesmo padrão já usado nos demais jogadores).
 
-6. **Pré-warm do perfil**
-   - Em `auth.tsx`, passar o `profile` direto via `queryClient.setQueryData(["profile", uid], data)` depois do `fetchProfile`, e nas telas trocar leituras diretas por `useQuery(["profile", uid], ...)` com `staleTime: Infinity` enquanto a sessão durar.
+> ⚠️ Importante: **não tenho acesso às fotos oficiais dos jogadores** (Panini). O que vai aparecer é a arte placeholder colorida, igual à que já existe para os outros 805 jogadores. Se você quiser fotos reais, precisa enviar as imagens (zip) ou usar um catálogo licenciado.
 
-## Detalhes técnicos
+### Passo 2 — Tornar juan.kleberstyle@gmail.com admin (item 3)
+- Migração que insere em `user_roles` o `role='admin'` para o `user_id` correspondente ao e-mail `juan.kleberstyle@gmail.com` (busca via `auth.users` dentro da migração, que tem permissão).
 
-- `keepPreviousData` vem de `@tanstack/react-query` v5 como `placeholderData: keepPreviousData`.
-- Manter `enabled: !!user` em todas as queries que dependem do user.
-- Não mexer em RLS nem em migrations — é só perf de frontend + config de cliente.
-- Não tocar em `src/integrations/supabase/client.ts` nem `types.ts`.
+### Passo 3 — Investigar FWC2..FWC8 (item 1)
+Antes de mexer no código, preciso entender o que você está vendo. Vou perguntar abaixo.
 
-## Fora de escopo
+---
 
-- Reescrever `match_collectors` no banco (dá pra otimizar depois com índice/materialized view, mas não agora).
-- Mudar layout/responsividade visual — a queixa é tempo de carregamento, não breakpoint.
-
-## Confirmação
-
-Posso seguir com esse plano? Se quiser, posso também já adicionar índices auxiliares no banco para `match_collectors` numa segunda etapa.
+## Técnico (resumo)
+- Migração #1: `UPDATE stickers SET image_url=NULL WHERE image_url=''`.
+- Migração #2: `INSERT INTO user_roles (user_id, role) SELECT id, 'admin' FROM auth.users WHERE email='juan.kleberstyle@gmail.com' ON CONFLICT DO NOTHING`.
+- Edit em `supabase/functions/generate-sticker-images/index.ts`: filtro `.or('image_url.is.null,image_url.eq.')` e limite 500+.
+- Após deploy, chamar a função autenticado como admin para popular as 175.
