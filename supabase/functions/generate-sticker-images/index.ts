@@ -88,10 +88,10 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => ({}));
   const overwrite: boolean = body.overwrite === true;
-  const limit: number = Math.min(Number(body.limit ?? 500), 2000);
+  const limit: number = Math.min(Number(body.limit ?? 1000), 2000);
 
   let q = admin.from("stickers").select("code,country_code,country_name,flag_emoji,position,kind").eq("kind", "player");
-  if (!overwrite) q = q.is("image_url", null);
+  if (!overwrite) q = q.or("image_url.is.null,image_url.eq.");
   q = q.limit(limit);
 
   const { data: list, error } = await q;
