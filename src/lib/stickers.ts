@@ -91,5 +91,8 @@ export function groupByCountry(items: StickerCatalogItem[]): CountryGroup[] {
     map.get(key)!.stickers.push(s);
   }
   for (const g of map.values()) g.stickers.sort((a, b) => a.position - b.position);
-  return Array.from(map.values());
+  return Array.from(map.values()).sort((a, b) => {
+    if (a.group_letter !== b.group_letter) return a.group_letter.localeCompare(b.group_letter);
+    return countryOrderIndex(a.country_code) - countryOrderIndex(b.country_code);
+  });
 }
