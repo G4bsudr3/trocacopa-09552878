@@ -17,7 +17,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/album")({
-  head: () => ({ meta: [{ title: "Meu Álbum — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Meu Álbum — TrocaCopa" },
+      { name: "description", content: "Visualize seu progresso e organize suas figurinhas repetidas da Copa 2026 no seu álbum digital." },
+      { property: "og:title", content: "Meu Álbum — TrocaCopa" },
+      { property: "og:description", content: "Gerencie sua coleção de figurinhas da Copa 2026." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/album" },
+    ],
+  }),
   component: Album,
 });
 
