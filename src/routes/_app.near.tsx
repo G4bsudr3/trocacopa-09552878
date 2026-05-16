@@ -2,10 +2,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon, Repeat2, Target, BookOpen, Moon } from "lucide-react";
+import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon, Repeat2, Target, BookOpen, Moon, Crown, Lock, ChevronDown, ChevronUp, Gift, ArrowDownToLine } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useStickerCatalog } from "@/lib/stickers";
 
 const NearMap = lazy(() => import("@/components/NearMap"));
 
@@ -59,10 +60,12 @@ function Near() {
   const [sortMode, setSortMode] = useState<SortMode>("match");
   const [view, setView] = useState<ViewMode>("list");
   const [loadingTradeId, setLoadingTradeId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const hasGeo = profile?.lat != null && profile?.lng != null;
   const hasCity = !!profile?.city;
   const isMinor = profile?.kids_mode === true || profile?.age_group === "child" || profile?.age_group === "teen";
+  const isPro = profile?.plan === "pro";
   const canShowMap = hasGeo && !isMinor;
 
   const nearby = useQuery({
@@ -308,15 +311,42 @@ function Near() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => startTrade(c.id)}
-                  disabled={!!loadingTradeId}
-                  className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-70"
-                >
-                  {loadingTradeId === c.id
-                    ? <><Loader2 size={16} className="animate-spin" /> Abrindo...</>
-                    : <><MessageCircle size={16} /> Iniciar Troca</>}
-                </button>
+                <MatchPreviewBlock
+                  otherId={c.id}
+                  expanded={expandedId === c.id}
+                  onToggle={() => setExpandedId((cur) => (cur === c.id ? null : c.id))}
+                  isPro={isPro}
+                />
+
+                {(() => {
+                  const canTrade = isPro || c.mutual_count >= 1;
+                  if (canTrade) {
+                    return (
+                      <button
+                        onClick={() => startTrade(c.id)}
+                        disabled={!!loadingTradeId}
+                        className="mt-3 w-full gradient-primary text-primary-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition disabled:opacity-70"
+                      >
+                        {loadingTradeId === c.id
+                          ? <><Loader2 size={16} className="animate-spin" /> Abrindo...</>
+                          : <><MessageCircle size={16} /> Iniciar Troca</>}
+                      </button>
+                    );
+                  }
+                  return (
+                    <div className="mt-3 space-y-2">
+                      <div className="w-full glass rounded-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 text-muted-foreground">
+                        <Lock size={14} /> Sem match 1-1 ainda
+                      </div>
+                      <Link
+                        to="/pro"
+                        className="w-full gradient-gold text-gold-foreground rounded-full py-2.5 text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition glow-gold"
+                      >
+                        <Crown size={14} /> Desbloquear com Pro
+                      </Link>
+                    </div>
+                  );
+                })()}
               </motion.div>
             );
           })}
@@ -350,6 +380,110 @@ function Near() {
       {nearby.isFetching && nearby.data && (
         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-3">
           <Loader2 size={12} className="animate-spin" /> Atualizando...
+        </div>
+      )}
+    </div>
+  );
+}
+
+type PreviewRow = { direction: "give" | "receive"; code: string };
+
+function MatchPreviewBlock({
+  otherId,
+  expanded,
+  onToggle,
+  isPro,
+}: {
+  otherId: string;
+  expanded: boolean;
+  onToggle: () => void;
+  isPro: boolean;
+}) {
+  const catalog = useStickerCatalog();
+  const limit = isPro ? 50 : 5;
+  const q = useQuery({
+    queryKey: ["match_preview", otherId, limit],
+    enabled: expanded,
+    staleTime: 60_000,
+    queryFn: async (): Promise<PreviewRow[]> => {
+      const { data, error } = await supabase.rpc("match_preview_stickers" as any, {
+        _other: otherId,
+        _limit: limit,
+      });
+      if (error) throw error;
+      return (data ?? []) as PreviewRow[];
+    },
+  });
+
+  const meta = (code: string) => (catalog.data ?? []).find((c) => c.code === code);
+  const gives = (q.data ?? []).filter((r) => r.direction === "give");
+  const receives = (q.data ?? []).filter((r) => r.direction === "receive");
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={onToggle}
+        className="w-full glass rounded-2xl px-3 py-2 text-xs font-semibold flex items-center justify-between"
+      >
+        <span className="flex items-center gap-1.5">
+          <Gift size={12} className="text-primary" />
+          {expanded ? "Ocultar figurinhas em comum" : "Ver figurinhas em comum"}
+          {!isPro && <span className="text-[10px] text-muted-foreground">(prévia)</span>}
+        </span>
+        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+
+      {expanded && (
+        <div className="mt-2 glass-strong rounded-2xl p-3 space-y-3">
+          {q.isLoading && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 size={12} className="animate-spin" /> Carregando...
+            </div>
+          )}
+          {!q.isLoading && (q.data ?? []).length === 0 && (
+            <p className="text-xs text-muted-foreground">Nenhuma figurinha em comum por enquanto.</p>
+          )}
+          {gives.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <ArrowDownToLine size={11} className="text-primary" />
+                <p className="text-[11px] font-bold uppercase tracking-wide">Ele(a) tem pra você</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {gives.map((r) => {
+                  const m = meta(r.code);
+                  return (
+                    <span key={"g" + r.code} className="text-[11px] font-semibold px-2 py-1 rounded-full bg-primary/15 text-primary">
+                      {m?.flag_emoji ?? "⚽"} {r.code}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {receives.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Repeat2 size={11} className="text-gold" />
+                <p className="text-[11px] font-bold uppercase tracking-wide">Você oferece</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {receives.map((r) => {
+                  const m = meta(r.code);
+                  return (
+                    <span key={"r" + r.code} className="text-[11px] font-semibold px-2 py-1 rounded-full bg-gold/15 text-gold">
+                      {m?.flag_emoji ?? "⚽"} {r.code}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {!isPro && (q.data ?? []).length >= limit && (
+            <Link to="/pro" className="block text-center text-[11px] font-bold text-gold mt-2">
+              <Crown size={11} className="inline mr-1" /> Ver todas com Pro
+            </Link>
+          )}
         </div>
       )}
     </div>

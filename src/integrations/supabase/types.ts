@@ -694,6 +694,13 @@ export type Database = {
           trades_count: number
         }[]
       }
+      match_preview_stickers: {
+        Args: { _limit?: number; _other: string }
+        Returns: {
+          code: string
+          direction: string
+        }[]
+      }
       nearby_collectors: {
         Args: { _radius_km?: number }
         Returns: {

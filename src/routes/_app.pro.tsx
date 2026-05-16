@@ -14,6 +14,8 @@ const features = [
   { label: "Radar de colecionadores", free: "Até 10km", pro: "Ilimitado" },
   { label: "Escanear figurinhas", free: "20/dia", pro: "Ilimitado" },
   { label: "Chats simultâneos", free: "5", pro: "Ilimitados" },
+  { label: "Figurinhas em comum no match", free: "Prévia (5)", pro: "Todas" },
+  { label: "Falar sem match 1-1", free: false, pro: true },
   { label: "Localizar figurinha específica", free: false, pro: true },
   { label: "Match automático", free: false, pro: true },
   { label: "Notificações em tempo real", free: false, pro: true },
