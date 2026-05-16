@@ -79,7 +79,7 @@ function Profile() {
     <div className="px-5 pt-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-3xl tracking-wide">Perfil</h1>
-        <Link to="/settings" className="w-10 h-10 rounded-full glass flex items-center justify-center">
+        <Link to="/settings" aria-label="Configurações" className="w-10 h-10 rounded-full glass flex items-center justify-center">
           <SettingsIcon size={18} />
         </Link>
       </div>
