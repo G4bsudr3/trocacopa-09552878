@@ -11,7 +11,15 @@ import { uploadContribution } from "@/lib/contributions";
 import { AlbumPageScanner } from "@/components/album-page-scanner";
 
 export const Route = createFileRoute("/_app/scan")({
-  head: () => ({ meta: [{ title: "Escanear figurinha — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Escanear figurinha — TrocaCopa" },
+      { name: "description", content: "Use a câmera para identificar figurinhas da Copa 2026 e adicioná-las direto ao seu álbum." },
+      { property: "og:title", content: "Escanear figurinha — TrocaCopa" },
+      { property: "og:description", content: "Identifique e adicione figurinhas ao álbum com a câmera." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/scan" },
+    ],
+  }),
   component: Scan,
 });
 
