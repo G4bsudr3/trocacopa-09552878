@@ -290,6 +290,7 @@ function Toggle({ icon, label, checked, saving, onChange }: { icon?: React.React
         onClick={() => !saving && onChange(!checked)}
         disabled={saving}
         aria-pressed={checked}
+        aria-label={label}
         className={`w-12 h-7 rounded-full p-0.5 transition-colors relative ${checked ? "bg-primary" : "bg-surface"} ${saving ? "opacity-60 cursor-wait" : ""}`}
       >
         <span className={`block w-6 h-6 rounded-full bg-background transition-transform ${checked ? "translate-x-5" : ""}`} />
