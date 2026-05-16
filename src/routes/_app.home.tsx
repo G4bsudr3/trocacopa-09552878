@@ -78,7 +78,7 @@ function Home() {
               </span>
             )}
           </Link>
-          <Link to="/profile" className="w-9 h-9 rounded-xl overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground text-sm shrink-0">
+          <Link to="/profile" aria-label="Meu perfil" className="w-9 h-9 rounded-xl overflow-hidden gradient-primary flex items-center justify-center font-bold text-primary-foreground text-sm shrink-0">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -90,7 +90,7 @@ function Home() {
 
       {/* Greeting */}
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
-        <p className="text-xl font-semibold">{greeting}, {name} 👋</p>
+        <h1 className="text-xl font-semibold">{greeting}, {name} 👋</h1>
         <p className="text-sm text-muted-foreground">Pronto para mais trocas hoje?</p>
       </motion.div>
 
