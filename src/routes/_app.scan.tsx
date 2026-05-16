@@ -135,15 +135,16 @@ function Scan() {
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) return toast.error("Envie uma imagem");
-    const dataUrl = await fileToDataUrl(file);
-    setPreview(dataUrl);
+    const rawDataUrl = await fileToDataUrl(file);
+    setPreview(rawDataUrl);
     setScanning(true);
     setSuggestions([]);
     setResult(null);
     setLastFile(file);
     setDonated(false);
     try {
-      const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: dataUrl } });
+      const processed = await preprocessStickerImage(rawDataUrl);
+      const { data, error } = await supabase.functions.invoke("scan-sticker", { body: { image: processed } });
       if (error) throw error;
       if (data?.error === "credits_exhausted") return toast.error("Créditos de IA esgotados");
       if (data?.error === "rate_limited") return toast.error("Muitas requisições, aguarde um instante");
