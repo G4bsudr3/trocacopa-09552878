@@ -2,10 +2,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon, Repeat2, Target, BookOpen, Moon } from "lucide-react";
+import { MessageCircle, MapPin, Compass, Loader2, Globe2, List, Map as MapIcon, Repeat2, Target, BookOpen, Moon, Crown, Lock, ChevronDown, ChevronUp, Gift, ArrowDownToLine } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useStickerCatalog } from "@/lib/stickers";
 
 const NearMap = lazy(() => import("@/components/NearMap"));
 
