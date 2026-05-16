@@ -385,3 +385,107 @@ function Near() {
     </div>
   );
 }
+
+type PreviewRow = { direction: "give" | "receive"; code: string };
+
+function MatchPreviewBlock({
+  otherId,
+  expanded,
+  onToggle,
+  isPro,
+}: {
+  otherId: string;
+  expanded: boolean;
+  onToggle: () => void;
+  isPro: boolean;
+}) {
+  const catalog = useStickerCatalog();
+  const limit = isPro ? 50 : 5;
+  const q = useQuery({
+    queryKey: ["match_preview", otherId, limit],
+    enabled: expanded,
+    staleTime: 60_000,
+    queryFn: async (): Promise<PreviewRow[]> => {
+      const { data, error } = await supabase.rpc("match_preview_stickers" as any, {
+        _other: otherId,
+        _limit: limit,
+      });
+      if (error) throw error;
+      return (data ?? []) as PreviewRow[];
+    },
+  });
+
+  const meta = (code: string) => (catalog.data ?? []).find((c) => c.code === code);
+  const gives = (q.data ?? []).filter((r) => r.direction === "give");
+  const receives = (q.data ?? []).filter((r) => r.direction === "receive");
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={onToggle}
+        className="w-full glass rounded-2xl px-3 py-2 text-xs font-semibold flex items-center justify-between"
+      >
+        <span className="flex items-center gap-1.5">
+          <Gift size={12} className="text-primary" />
+          {expanded ? "Ocultar figurinhas em comum" : "Ver figurinhas em comum"}
+          {!isPro && <span className="text-[10px] text-muted-foreground">(prévia)</span>}
+        </span>
+        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+
+      {expanded && (
+        <div className="mt-2 glass-strong rounded-2xl p-3 space-y-3">
+          {q.isLoading && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 size={12} className="animate-spin" /> Carregando...
+            </div>
+          )}
+          {!q.isLoading && (q.data ?? []).length === 0 && (
+            <p className="text-xs text-muted-foreground">Nenhuma figurinha em comum por enquanto.</p>
+          )}
+          {gives.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <ArrowDownToLine size={11} className="text-primary" />
+                <p className="text-[11px] font-bold uppercase tracking-wide">Ele(a) tem pra você</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {gives.map((r) => {
+                  const m = meta(r.code);
+                  return (
+                    <span key={"g" + r.code} className="text-[11px] font-semibold px-2 py-1 rounded-full bg-primary/15 text-primary">
+                      {m?.flag_emoji ?? "⚽"} {r.code}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {receives.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Repeat2 size={11} className="text-gold" />
+                <p className="text-[11px] font-bold uppercase tracking-wide">Você oferece</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {receives.map((r) => {
+                  const m = meta(r.code);
+                  return (
+                    <span key={"r" + r.code} className="text-[11px] font-semibold px-2 py-1 rounded-full bg-gold/15 text-gold">
+                      {m?.flag_emoji ?? "⚽"} {r.code}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {!isPro && (q.data ?? []).length >= limit && (
+            <Link to="/pro" className="block text-center text-[11px] font-bold text-gold mt-2">
+              <Crown size={11} className="inline mr-1" /> Ver todas com Pro
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
