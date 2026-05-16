@@ -10,7 +10,15 @@ import { useAuth } from "@/lib/auth";
 const NearMap = lazy(() => import("@/components/NearMap"));
 
 export const Route = createFileRoute("/_app/near")({
-  head: () => ({ meta: [{ title: "Perto de mim — TrocaCopa" }] }),
+  head: () => ({
+    meta: [
+      { title: "Perto de mim — TrocaCopa" },
+      { name: "description", content: "Encontre colecionadores próximos da Copa 2026 e veja quem tem as figurinhas que faltam no seu álbum." },
+      { property: "og:title", content: "Perto de mim — TrocaCopa" },
+      { property: "og:description", content: "Encontre colecionadores próximos para trocar figurinhas." },
+      { property: "og:url", content: "https://trocacopa.lovable.app/near" },
+    ],
+  }),
   component: Near,
 });
 
