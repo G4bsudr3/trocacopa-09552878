@@ -220,9 +220,9 @@ function Album() {
                   <div className="flex items-center gap-3 min-w-0">
                     <FlagImg emoji={c.flag_emoji} />
                     <div className="text-left min-w-0">
-                      <p className="font-display text-base tracking-wide truncate">
+                      <h2 className="font-display text-base tracking-wide truncate">
                         {c.country_name}
-                      </p>
+                      </h2>
                       <p className="text-[11px] text-muted-foreground">
                         {c.country_code} · {countryOwned}/{c.stickers.length} figurinhas
                       </p>
