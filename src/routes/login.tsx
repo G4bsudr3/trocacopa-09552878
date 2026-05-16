@@ -280,6 +280,7 @@ function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-10">
+      <h1 className="sr-only">Entrar ou criar conta — TrocaCopa</h1>
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
