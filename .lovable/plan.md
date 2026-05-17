@@ -1,32 +1,26 @@
-## Objetivo
-Exibir os países de cada grupo na ordem oficial do álbum, em vez da ordem alfabética por código.
+## Diagnóstico
 
-## Mudança
-Apenas frontend, em `src/lib/stickers.ts`:
+Hoje o catálogo tem 980 figurinhas. Destas:
+- **805** com imagem real do álbum (`.jpg` vindo do site Central da Copa)
+- **175** com a imagem **genérica** SVG (gerada localmente pela função `generate-sticker-images` como fallback) — todas do tipo `player`
+- 0 sem imagem
 
-1. Adicionar um mapa `COUNTRY_ORDER` (índice 0–3 por `country_code` dentro de cada grupo) refletindo a ordem do álbum:
+A função `import-checklist` (que baixa as imagens reais do site original) só tenta novamente quando `image_url IS NULL`. Como o fallback genérico preencheu o campo com a URL do SVG, ela está pulando essas 175.
 
-```
-A: MEX, RSA, KOR, CZE
-B: CAN, BIH, QAT, SUI
-C: BRA, MAR, HAI, SCO
-D: USA, PAR, AUS, TUR
-E: GER, CUW, CIV, ECU
-F: NED, JPN, SWE, TUN
-G: BEL, EGY, IRN, NZL
-H: ESP, CPV, KSA, URU
-I: FRA, SEN, IRQ, NOR
-J: ARG, ALG, AUT, JOR
-K: POR, COL, COD, UZB
-L: ENG, CRO, GHA, PAN
-```
+## Plano
 
-2. Alterar `groupByCountry()` para retornar os países ordenados por `(group_letter, COUNTRY_ORDER[country_code])` em vez de pela ordem alfabética que vem do banco.
+1. **Limpar somente as 175 imagens genéricas**, colocando `image_url = NULL` apenas onde a URL aponta para `/sticker-images/players/*.svg` (não toca nas 805 boas).
+2. **Rodar `import-checklist` com `{ resume: true, limit: 200 }`**, que baixará novamente do site `centraldacopa.app` apenas as figurinhas com `image_url` nulo.
+3. **Conferir o resultado** com uma query: quantas ficaram com `.jpg` real, quantas continuam faltando (caso o site não tenha o arquivo de alguma).
+4. **Para as que permanecerem faltando** (provavelmente nenhuma, mas se acontecer), oferecer duas opções:
+   - manter o placeholder genérico atual, ou
+   - tentar novamente outra fonte.
 
-## Impacto
-- Página **Álbum** (`_app.album.tsx`) passa a listar os países na ordem oficial dentro de cada grupo.
-- Qualquer outra tela que use `groupByCountry` herda a mesma ordem automaticamente.
-- Não muda banco, não muda RLS, não muda figurinhas — só a ordem de exibição.
+Nenhuma mudança de UI, schema ou RLS — só dados.
 
-## Observações
-- O código `COD` no banco corresponde a "RD Congo" (nome atualmente armazenado como "Congo"); a ordenação usa o código, então funciona normalmente. Posso ajustar o `country_name` para "RD Congo" se você quiser — me avise.
+## Detalhes técnicos
+
+- O update de `image_url = NULL` precisa de migration (UPDATE não é permitido via insert tool).
+- A função `import-checklist` já está deployada e usa `seq = stickers.position` para montar a URL `https://firebasestorage.googleapis.com/.../WC2026_BR/{seq}.jpg`.
+- O loop processa 200 por chamada (`limit`), então uma única invocação cobre as 175.
+- Risco baixo: se o download falhar para algum código, a função grava `image_url = ""` (marcador "tentado, indisponível"); podemos re-gerar o SVG genérico depois para esses casos específicos.
