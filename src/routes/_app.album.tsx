@@ -207,8 +207,31 @@ function Album() {
       )}
 
       {!isLoading && tab === "selecoes" && (
-        <div className="mt-4 space-y-3">
-          {groupedCountries.map((c) => {
+        <div className="mt-4 space-y-5">
+          {(() => {
+            const byGroup = new Map<string, typeof groupedCountries>();
+            for (const c of groupedCountries) {
+              const k = c.group_letter || "?";
+              if (!byGroup.has(k)) byGroup.set(k, [] as typeof groupedCountries);
+              byGroup.get(k)!.push(c);
+            }
+            return Array.from(byGroup.entries()).map(([letter, countries]) => {
+              const groupTotal = countries.reduce((a, c) => a + c.stickers.length, 0);
+              const groupOwned = countries.reduce(
+                (a, c) => a + c.stickers.filter((s) => (s as Sticker).owned).length,
+                0,
+              );
+              return (
+                <div key={letter} className="space-y-3">
+                  <div className="flex items-baseline justify-between px-1">
+                    <h2 className="font-display text-sm tracking-[0.2em] text-muted-foreground uppercase">
+                      Grupo {letter}
+                    </h2>
+                    <span className="text-[10px] font-bold text-muted-foreground">
+                      {groupOwned}/{groupTotal}
+                    </span>
+                  </div>
+                  {countries.map((c) => {
             const isOpen = openCountry === c.country_code;
             const countryOwned = c.stickers.filter((s) => (s as Sticker).owned).length;
             return (
@@ -257,6 +280,19 @@ function Album() {
                   )}
                 </AnimatePresence>
               </section>
+            );
+                  })}
+                </div>
+              );
+            });
+          })()}
+          {(() => {
+            const _legacy = false;
+            return _legacy ? (groupedCountries.map((c) => {
+            const isOpen = openCountry === c.country_code;
+            const countryOwned = c.stickers.filter((s) => (s as Sticker).owned).length;
+            return (
+              <section key={c.country_code}>{c.country_name}{isOpen ? countryOwned : null}</section>
             );
           })}
 
