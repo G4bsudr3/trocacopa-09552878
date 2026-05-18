@@ -286,15 +286,6 @@ function Album() {
               );
             });
           })()}
-          {(() => {
-            const _legacy = false;
-            return _legacy ? (groupedCountries.map((c) => {
-            const isOpen = openCountry === c.country_code;
-            const countryOwned = c.stickers.filter((s) => (s as Sticker).owned).length;
-            return (
-              <section key={c.country_code}>{c.country_name}{isOpen ? countryOwned : null}</section>
-            );
-          })}
 
           {countryStickers.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-10">
