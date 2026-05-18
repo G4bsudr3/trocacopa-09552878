@@ -123,28 +123,45 @@ function Duplicates() {
 
       {/* Country view */}
       {!isLoading && dupAll.length > 0 && view === "country" && (
-        <div className="mt-4 space-y-4">
-          {grouped.map((c) => {
-            const extras = (c.stickers as Sticker[]).reduce((a, s) => a + (s.duplicates - 1), 0);
-            return (
-              <section key={c.country_code} className="glass rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xl">{c.flag_emoji}</span>
-                    <p className="font-display text-base tracking-wide truncate">{c.country_name}</p>
-                  </div>
-                  <span className="text-[10px] font-bold text-gold bg-gold/15 px-2 py-1 rounded-full whitespace-nowrap">
-                    {extras} trocáveis
-                  </span>
+        <div className="mt-4 space-y-5">
+          {(() => {
+            const byGroup = new Map<string, typeof grouped>();
+            for (const c of grouped) {
+              const k = c.group_letter || "?";
+              if (!byGroup.has(k)) byGroup.set(k, [] as typeof grouped);
+              byGroup.get(k)!.push(c);
+            }
+            return Array.from(byGroup.entries()).map(([letter, countries]) => (
+              <div key={letter} className="space-y-3">
+                <div className="flex items-baseline justify-between px-1">
+                  <h2 className="font-display text-sm tracking-[0.2em] text-muted-foreground uppercase">
+                    Grupo {letter}
+                  </h2>
                 </div>
-                <div className="space-y-2">
-                  {(c.stickers as Sticker[]).map((s) => (
-                    <DupRow key={s.code} s={s} onPlus={() => addDuplicate(s.code)} onMinus={() => { removeDuplicate(s.code); toast.success(`${s.code} ajustada`); }} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+                {countries.map((c) => {
+                  const extras = (c.stickers as Sticker[]).reduce((a, s) => a + (s.duplicates - 1), 0);
+                  return (
+                    <section key={c.country_code} className="glass rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-xl">{c.flag_emoji}</span>
+                          <p className="font-display text-base tracking-wide truncate">{c.country_name}</p>
+                        </div>
+                        <span className="text-[10px] font-bold text-gold bg-gold/15 px-2 py-1 rounded-full whitespace-nowrap">
+                          {extras} trocáveis
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {(c.stickers as Sticker[]).map((s) => (
+                          <DupRow key={s.code} s={s} onPlus={() => addDuplicate(s.code)} onMinus={() => { removeDuplicate(s.code); toast.success(`${s.code} ajustada`); }} />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            ));
+          })()}
 
           {specials.length > 0 && (
             <section className="glass rounded-2xl p-4">

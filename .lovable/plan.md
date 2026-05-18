@@ -1,26 +1,29 @@
-## Diagnóstico
+## Objetivo
 
-Hoje o catálogo tem 980 figurinhas. Destas:
-- **805** com imagem real do álbum (`.jpg` vindo do site Central da Copa)
-- **175** com a imagem **genérica** SVG (gerada localmente pela função `generate-sticker-images` como fallback) — todas do tipo `player`
-- 0 sem imagem
+A ordenação dos países dentro de cada grupo (México, África do Sul, Coreia do Sul, Rep. Tcheca etc.) já foi aplicada na turn anterior em `src/lib/stickers.ts` via `groupByCountry()` — os países hoje aparecem na ordem correta do álbum.
 
-A função `import-checklist` (que baixa as imagens reais do site original) só tenta novamente quando `image_url IS NULL`. Como o fallback genérico preencheu o campo com a URL do SVG, ela está pulando essas 175.
+O que ainda falta para "ficar mais fácil" como você pediu é a **separação visual por grupo**: hoje a página `/album` lista os 48 países em sequência, sem cabeçalho de grupo, então fica difícil enxergar o bloco "GRUPO A → México, RSA, KOR, CZE".
 
 ## Plano
 
-1. **Limpar somente as 175 imagens genéricas**, colocando `image_url = NULL` apenas onde a URL aponta para `/sticker-images/players/*.svg` (não toca nas 805 boas).
-2. **Rodar `import-checklist` com `{ resume: true, limit: 200 }`**, que baixará novamente do site `centraldacopa.app` apenas as figurinhas com `image_url` nulo.
-3. **Conferir o resultado** com uma query: quantas ficaram com `.jpg` real, quantas continuam faltando (caso o site não tenha o arquivo de alguma).
-4. **Para as que permanecerem faltando** (provavelmente nenhuma, mas se acontecer), oferecer duas opções:
-   - manter o placeholder genérico atual, ou
-   - tentar novamente outra fonte.
+### 1. Adicionar cabeçalho "GRUPO X" no álbum
+Em `src/routes/_app.album.tsx` (aba **Seleções**):
+- Antes de renderizar a lista `groupedCountries`, agrupar os países por `group_letter` mantendo a ordem já correta.
+- Renderizar para cada grupo:
+  - Um cabeçalho fino com `GRUPO A`, `GRUPO B`, ... (font-display, com a contagem `x/16` de figurinhas do grupo coletadas).
+  - Os 4 cards de país do grupo logo abaixo (sem mudar o card em si).
+- Aplicar o mesmo agrupamento na aba quando o filtro estiver em "Tenho/Faltam/Repetidas" — os cabeçalhos seguem aparecendo, e grupos vazios após filtro são ocultados.
 
-Nenhuma mudança de UI, schema ou RLS — só dados.
+### 2. Aplicar mesmo agrupamento na página de repetidas
+Em `src/routes/_app.duplicates.tsx`, que também usa `groupByCountry`, adicionar os mesmos cabeçalhos "GRUPO X" para manter consistência.
 
-## Detalhes técnicos
+### 3. Sem mudanças em dados / backend
+- Nada muda em SQL, RLS ou edge functions.
+- A ordem já está garantida em `src/lib/stickers.ts` (`COUNTRY_ORDER_LIST`).
 
-- O update de `image_url = NULL` precisa de migration (UPDATE não é permitido via insert tool).
-- A função `import-checklist` já está deployada e usa `seq = stickers.position` para montar a URL `https://firebasestorage.googleapis.com/.../WC2026_BR/{seq}.jpg`.
-- O loop processa 200 por chamada (`limit`), então uma única invocação cobre as 175.
-- Risco baixo: se o download falhar para algum código, a função grava `image_url = ""` (marcador "tentado, indisponível"); podemos re-gerar o SVG genérico depois para esses casos específicos.
+## Arquivos afetados
+- `src/routes/_app.album.tsx` — adicionar agrupamento por `group_letter` com cabeçalho.
+- `src/routes/_app.duplicates.tsx` — idem.
+
+## Pergunta antes de implementar
+Confirma que é isso que você quer (adicionar os cabeçalhos "GRUPO A..L" separando os 4 países de cada grupo no álbum e na tela de repetidas)? Ou existe outra tela específica onde a ordem ainda está errada — se for o caso, me diga qual.
