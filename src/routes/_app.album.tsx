@@ -192,6 +192,9 @@ function Album() {
         )}
       </div>
 
+      {/* Exportar listas */}
+      <ExportSection stickers={stickers} who={profile?.full_name ?? undefined} />
+
       {/* Filters */}
       <div className="flex gap-2 mt-3 overflow-x-auto -mx-5 px-5 pb-1 scrollbar-none">
         {filters.map((f) => (
