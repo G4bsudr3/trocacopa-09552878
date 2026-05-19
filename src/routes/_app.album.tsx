@@ -43,6 +43,7 @@ type Tab = "selecoes" | "especiais";
 type Filter = "all" | "owned" | "missing" | "dup";
 
 function Album() {
+  const { profile } = useAuth();
   const { stickers, total, toggleOwned, addDuplicate, removeDuplicate, reset, isLoading } = useAlbum();
   const [tab, setTab] = useState<Tab>("selecoes");
   const [filter, setFilter] = useState<Filter>("all");
