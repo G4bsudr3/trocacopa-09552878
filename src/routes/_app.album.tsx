@@ -667,3 +667,83 @@ function Ring({ pct }: { pct: number }) {
     </div>
   );
 }
+
+function ExportSection({ stickers, who }: { stickers: Sticker[]; who?: string }) {
+  const missingCount = stickers.filter((s) => !s.owned).length;
+  const dupCount = stickers.reduce((a, s) => a + Math.max(0, s.duplicates - 1), 0);
+
+  const handle = (kind: "missing" | "duplicates", fmt: "csv" | "txt" | "pdf") => {
+    try {
+      exportStickers(stickers, kind, fmt, who);
+      toast.success(`Lista exportada (${fmt.toUpperCase()})`);
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível exportar");
+    }
+  };
+
+  return (
+    <div className="mt-3 glass rounded-2xl p-3">
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <Download size={14} className="text-primary" />
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Exportar listas
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <ExportButton
+          label="Faltam"
+          count={missingCount}
+          onPick={(fmt) => handle("missing", fmt)}
+        />
+        <ExportButton
+          label="Repetidas"
+          count={dupCount}
+          onPick={(fmt) => handle("duplicates", fmt)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ExportButton({
+  label,
+  count,
+  onPick,
+}: {
+  label: string;
+  count: number;
+  onPick: (fmt: "csv" | "txt" | "pdf") => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          disabled={count === 0}
+          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl glass-strong text-left active:scale-[0.98] transition disabled:opacity-50 disabled:active:scale-100"
+        >
+          <span>
+            <span className="block text-sm font-bold">{label}</span>
+            <span className="block text-[11px] text-muted-foreground">
+              {count} {count === 1 ? "item" : "itens"}
+            </span>
+          </span>
+          <ChevronDown size={14} className="text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuLabel>Baixar como</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => onPick("pdf")}>
+          <FileText size={14} className="mr-2" /> PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onPick("csv")}>
+          <FileSpreadsheet size={14} className="mr-2" /> CSV
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onPick("txt")}>
+          <FileType size={14} className="mr-2" /> TXT
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
