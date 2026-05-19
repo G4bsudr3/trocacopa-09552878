@@ -1,10 +1,20 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown, Repeat2 } from "lucide-react";
+import { Search, Lock, Check, Plus, Minus, X, RotateCcw, ChevronDown, Repeat2, Download, FileText, FileSpreadsheet, FileType } from "lucide-react";
 import { toast } from "sonner";
 import { useAlbum, type Sticker } from "@/lib/use-album";
 import { groupByCountry } from "@/lib/stickers";
+import { useAuth } from "@/lib/auth";
+import { exportStickers } from "@/lib/export-stickers";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
