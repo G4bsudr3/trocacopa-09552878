@@ -1,29 +1,42 @@
-## Objetivo
+## Exportar listas de figurinhas (faltam / repetidas)
 
-A ordenação dos países dentro de cada grupo (México, África do Sul, Coreia do Sul, Rep. Tcheca etc.) já foi aplicada na turn anterior em `src/lib/stickers.ts` via `groupByCountry()` — os países hoje aparecem na ordem correta do álbum.
+Adicionar uma seção "Exportar listas" na página **Meu Álbum** (`src/routes/_app.album.tsx`) com dois botões principais:
 
-O que ainda falta para "ficar mais fácil" como você pediu é a **separação visual por grupo**: hoje a página `/album` lista os 48 países em sequência, sem cabeçalho de grupo, então fica difícil enxergar o bloco "GRUPO A → México, RSA, KOR, CZE".
+- **Faltam** — gera a lista de figurinhas que o usuário ainda não tem
+- **Repetidas** — gera a lista de figurinhas com `duplicates > 1` (quantidade trocável = duplicates − 1)
 
-## Plano
+Cada botão abre um pequeno menu (dropdown) com 3 formatos: **CSV**, **TXT** e **PDF**.
 
-### 1. Adicionar cabeçalho "GRUPO X" no álbum
-Em `src/routes/_app.album.tsx` (aba **Seleções**):
-- Antes de renderizar a lista `groupedCountries`, agrupar os países por `group_letter` mantendo a ordem já correta.
-- Renderizar para cada grupo:
-  - Um cabeçalho fino com `GRUPO A`, `GRUPO B`, ... (font-display, com a contagem `x/16` de figurinhas do grupo coletadas).
-  - Os 4 cards de país do grupo logo abaixo (sem mudar o card em si).
-- Aplicar o mesmo agrupamento na aba quando o filtro estiver em "Tenho/Faltam/Repetidas" — os cabeçalhos seguem aparecendo, e grupos vazios após filtro são ocultados.
+### Conteúdo dos arquivos
 
-### 2. Aplicar mesmo agrupamento na página de repetidas
-Em `src/routes/_app.duplicates.tsx`, que também usa `groupByCountry`, adicionar os mesmos cabeçalhos "GRUPO X" para manter consistência.
+Organizado por **GRUPO A..L**, na ordem oficial do álbum (já definida em `COUNTRY_ORDER_LIST`). Para cada país: nome + bandeira, seguido das figurinhas (código, posição, nome do jogador quando houver). Nas repetidas, mostrar também a quantidade trocável.
 
-### 3. Sem mudanças em dados / backend
-- Nada muda em SQL, RLS ou edge functions.
-- A ordem já está garantida em `src/lib/stickers.ts` (`COUNTRY_ORDER_LIST`).
+Exemplo (TXT):
+```
+TrocaCopa — Figurinhas que faltam (João, 12/05/2026)
+Total: 415 de 980
 
-## Arquivos afetados
-- `src/routes/_app.album.tsx` — adicionar agrupamento por `group_letter` com cabeçalho.
-- `src/routes/_app.duplicates.tsx` — idem.
+GRUPO A
+México (4 faltando)
+  MEX3  — Edson Álvarez
+  MEX7  — Santiago Giménez
+  ...
+```
 
-## Pergunta antes de implementar
-Confirma que é isso que você quer (adicionar os cabeçalhos "GRUPO A..L" separando os 4 países de cada grupo no álbum e na tela de repetidas)? Ou existe outra tela específica onde a ordem ainda está errada — se for o caso, me diga qual.
+PDF segue o mesmo layout, com cabeçalho, contagem por grupo e quebra de página entre grupos quando necessário.
+
+### Implementação técnica
+
+1. Novo módulo `src/lib/export-stickers.ts` com helpers puros:
+   - `buildMissingList(stickers)` e `buildDuplicatesList(stickers)` — retornam estrutura `{ group, countries: [{ name, flag, items: [...] }] }` usando a ordenação já existente em `groupByCountry`.
+   - `toCSV(data, kind)`, `toTXT(data, kind)` — geram string.
+   - `toPDF(data, kind, meta)` — usa `jspdf` para gerar Blob.
+2. Helper `downloadBlob(filename, blob)` aciona download no navegador.
+3. Nova seção "Exportar listas" no topo do `_app.album.tsx` (acima dos filtros), usando os componentes shadcn `DropdownMenu` + `Button` já presentes. Nomes de arquivo: `trocacopa-faltam-AAAA-MM-DD.csv`, etc.
+4. Dependência nova: `jspdf` (pura JS, funciona no browser). Instalada via `bun add jspdf`.
+
+### Fora do escopo
+
+- Sem alterações de backend, RLS, schema ou Supabase.
+- Sem mudança na página de Repetidas além do botão (se desejar, posso replicar lá também — confirmar).
+- Sem envio por e-mail / compartilhamento nativo nesta etapa.
